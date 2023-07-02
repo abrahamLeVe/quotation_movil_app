@@ -4,7 +4,7 @@ import 'package:pract_01/models/enviroment_model.dart';
 import 'package:pract_01/screens/product_list_screen.dart';
 
 Future<void> main() async {
-  await dotenv.load(fileName: Enviroment.fileName);
+  await dotenv.load(fileName: Environment.fileName);
 
   runApp(const MyApp());
 }

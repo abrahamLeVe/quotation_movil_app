@@ -10,13 +10,13 @@ class NetworkManager {
   }
 
   Map<String, String> get headers => {
-        'Authorization': 'Bearer ${Enviroment.apiToken}',
+        'Authorization': 'Bearer ${Environment.apiToken}',
         "Content-Type": "application/json",
       };
 
   Future<QuotationModel> getAll() async {
     final response = await _dio.get(
-      "${Enviroment.apiUrl}/quotations?populate=*",
+      "${Environment.apiUrl}/quotations?populate=*",
       options: Options(headers: headers),
     );
     return QuotationModel.fromJson(response.data);
@@ -24,7 +24,7 @@ class NetworkManager {
 
   Future<ProductModel> getAllProduct() async {
     final response = await _dio.get(
-      "${Enviroment.apiUrl}/products?populate=*",
+      "${Environment.apiUrl}/products?populate=*",
       options: Options(headers: headers),
     );
     return ProductModel.fromJson(response.data);
