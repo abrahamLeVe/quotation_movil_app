@@ -35,8 +35,7 @@ class Quotation {
     required this.attributes,
   });
 
-  factory Quotation.fromJson(Map<String, dynamic> json) =>
-      Quotation(
+  factory Quotation.fromJson(Map<String, dynamic> json) => Quotation(
         id: json["id"],
         attributes: PurpleAttributes.fromJson(json["attributes"]),
       );

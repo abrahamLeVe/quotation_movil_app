@@ -9,6 +9,8 @@
 
 // String productModelToJson(ProductModel data) => json.encode(data.toJson());
 
+
+
 class ProductModel {
   List<Product> data;
   Meta meta;
@@ -19,14 +21,30 @@ class ProductModel {
   });
 
   factory ProductModel.fromJson(Map<String, dynamic> json) => ProductModel(
-        data: List<Product>.from(
-            json["data"].map((x) => Product.fromJson(x))),
+        data: List<Product>.from(json["data"].map((x) => Product.fromJson(x))),
         meta: Meta.fromJson(json["meta"]),
       );
 
   Map<String, dynamic> toJson() => {
         "data": List<dynamic>.from(data.map((x) => x.toJson())),
         "meta": meta.toJson(),
+      };
+}
+
+class ProductUpdateModel {
+  Product data;
+
+  ProductUpdateModel({
+    required this.data,
+  });
+
+  factory ProductUpdateModel.fromJson(Map<String, dynamic> json) =>
+      ProductUpdateModel(
+        data: Product.fromJson(json["data"]),
+      );
+
+  Map<String, dynamic> toJson() => {
+        "data": data.toJson(),
       };
 }
 
@@ -39,8 +57,7 @@ class Product {
     required this.attributes,
   });
 
-  factory Product.fromJson(Map<String, dynamic> json) =>
-      Product(
+  factory Product.fromJson(Map<String, dynamic> json) => Product(
         id: json["id"],
         attributes: PurpleAttributes.fromJson(json["attributes"]),
       );
@@ -56,7 +73,7 @@ class PurpleAttributes {
   dynamic subtitle;
   String description;
   String slug;
-  int? quotationPrice;
+  double? quotationPrice;
   DateTime createdAt;
   DateTime updatedAt;
   DateTime publishedAt;
@@ -86,7 +103,7 @@ class PurpleAttributes {
         subtitle: json["subtitle"],
         description: json["description"],
         slug: json["slug"],
-        quotationPrice: json["quotation_price"],
+        quotationPrice: json["quotation_price"]?.toDouble(),
         createdAt: DateTime.parse(json["createdAt"]),
         updatedAt: DateTime.parse(json["updatedAt"]),
         publishedAt: DateTime.parse(json["publishedAt"]),
@@ -381,7 +398,6 @@ class Small {
       };
 }
 
-// ignore: constant_identifier_names
 enum Mime { IMAGE_WEBP }
 
 final mimeValues = EnumValues({"image/webp": Mime.IMAGE_WEBP});
@@ -407,7 +423,6 @@ class ProviderMetadata {
       };
 }
 
-// ignore: constant_identifier_names
 enum ResourceType { IMAGE }
 
 final resourceTypeValues = EnumValues({"image": ResourceType.IMAGE});
@@ -451,14 +466,14 @@ class ProductSizesDatum {
 }
 
 class StickyAttributes {
-  int quotationPrice;
+  double? quotationPrice;
   String val;
   DateTime createdAt;
   DateTime updatedAt;
   DateTime publishedAt;
 
   StickyAttributes({
-    required this.quotationPrice,
+    this.quotationPrice,
     required this.val,
     required this.createdAt,
     required this.updatedAt,
@@ -467,7 +482,7 @@ class StickyAttributes {
 
   factory StickyAttributes.fromJson(Map<String, dynamic> json) =>
       StickyAttributes(
-        quotationPrice: json["quotation_price"],
+        quotationPrice: json["quotation_price"]?.toDouble(),
         val: json["val"],
         createdAt: DateTime.parse(json["createdAt"]),
         updatedAt: DateTime.parse(json["updatedAt"]),
@@ -616,7 +631,7 @@ class FluffyFormats {
 }
 
 class Meta {
-  Pagination pagination;
+  Pagination? pagination;
 
   Meta({
     required this.pagination,
@@ -627,7 +642,7 @@ class Meta {
       );
 
   Map<String, dynamic> toJson() => {
-        "pagination": pagination.toJson(),
+        "pagination": pagination?.toJson(),
       };
 }
 

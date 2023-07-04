@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:pract_01/models/product_model.dart';
 import 'package:pract_01/screens/edit_product_screen.dart';
+import 'package:pract_01/screens/edit_product_size_screen.dart';
+
 import 'package:pract_01/services/network_manager.dart';
 
 class ProductListScreen extends StatefulWidget {
@@ -36,9 +38,7 @@ class _ProductListScreenState extends State<ProductListScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        title: const Text("Producto"),
-        actions: const [],
+        title: Text('Productos (${products.length})'),
       ),
       body: isLoading
           ? const Center(
@@ -58,30 +58,54 @@ class _ProductListScreenState extends State<ProductListScreen> {
                             .thumbnail
                             .data
                             .attributes
+                            .formats
+                            .thumbnail
                             .url,
                       ),
                     ),
-                    title: Text(products[index].attributes.name),
-                    subtitle: Text(products[index].attributes.quotationPrice !=
-                            null
-                        ? 'Precio: USD ${products[index].attributes.quotationPrice}'
-                        : 'Medidas: ${products[index].attributes.productSizes.data.length}'),
+                    title: Text(products[index].attributes.name.toUpperCase()),
+                    subtitle: Text(products[index]
+                            .attributes
+                            .productSizes
+                            .data
+                            .isNotEmpty
+                        ? 'Medidas: ${products[index].attributes.productSizes.data.length}'
+                        : 'Precio: USD ${products[index].attributes.quotationPrice}'),
+                    trailing: GestureDetector(
+                      onTap: () {
+                        if (products[index]
+                            .attributes
+                            .productSizes
+                            .data
+                            .isEmpty) {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) =>
+                                  EditProductScreen(product: products[index]),
+                            ),
+                          );
+                        } else {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => EditProductSizesScreen(
+                                product: products[index],
+                                sizes: products[index]
+                                    .attributes
+                                    .productSizes
+                                    .data,
+                              ),
+                            ),
+                          );
+                        }
+                      },
+                      child: const Icon(Icons.edit),
+                    ),
                   ),
                 );
               },
             ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) =>
-                  const EditProductScreen(), // Reemplaza 'EditProductScreen' con el nombre de la pantalla de edición de productos
-            ),
-          );
-        },
-        child: const Icon(Icons.add),
-      ),
     );
   }
 }
