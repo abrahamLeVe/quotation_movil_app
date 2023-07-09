@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:pract_01/components/loading_dialog.dart';
+import 'package:pract_01/widgets/loading_dialog.dart';
 
 void showLoadingDialog(BuildContext context) {
   showDialog(

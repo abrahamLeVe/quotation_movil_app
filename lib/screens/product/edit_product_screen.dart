@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:pract_01/models/product_model.dart' as product_model;
-import 'package:pract_01/screens/product_list_screen.dart';
-import 'package:pract_01/services/network_manager.dart';
 import 'package:flutter/services.dart';
+import 'package:pract_01/models/product/product_model.dart' as product_model;
+import 'package:pract_01/screens/product/list_product_screen.dart';
+import 'package:pract_01/services/product_service.dart';
 import 'package:pract_01/utils/dialog_utils.dart';
 
 class EditProductScreen extends StatefulWidget {
@@ -22,7 +22,7 @@ class _EditProductScreenState extends State<EditProductScreen> {
   final TextEditingController _priceController = TextEditingController();
   bool _isLoading = false;
   void _handleButtonPress(BuildContext context) {
-    showLoadingDialog(context); // Mostrar el diálogo de carga
+    showLoadingDialog(context); 
   }
 
   @override
@@ -49,24 +49,24 @@ class _EditProductScreenState extends State<EditProductScreen> {
     _handleButtonPress(context);
 
     try {
-      await NetworkManager().updateProduct(widget.product.id, newPrice);
+      await ProductService().updateProduct(widget.product.id, newPrice);
 
       if (context.mounted) {
-        Navigator.pop(context); // Cerrar el modal de progreso
+        Navigator.pop(context);
 
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Producto actualizado')),
         );
 
-        Navigator.pop(context); // Volver a la pantalla anterior
+        Navigator.pop(context); 
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (_) => const ProductListScreen()),
-        ); // Navegar a la pantalla de lista de productos y actualizarla
+        ); 
       }
     } catch (error) {
       if (context.mounted) {
-        Navigator.pop(context); // Cerrar el modal de progreso
+        Navigator.pop(context);
 
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Error al actualizar el producto')),
@@ -89,13 +89,13 @@ class _EditProductScreenState extends State<EditProductScreen> {
           actions: <Widget>[
             TextButton(
               onPressed: () {
-                Navigator.pop(context, false); // Respuesta negativa: No
+                Navigator.pop(context, false); 
               },
               child: const Text('No'),
             ),
             TextButton(
               onPressed: () {
-                Navigator.pop(context, true); // Respuesta positiva: Sí
+                Navigator.pop(context, true); 
               },
               child: const Text('Sí'),
             ),
@@ -113,37 +113,38 @@ class _EditProductScreenState extends State<EditProductScreen> {
     _handleButtonPress(context);
 
     try {
-      await NetworkManager().deleteProduct(widget.product.id);
+      await ProductService().deleteProduct(widget.product.id);
 
       if (context.mounted) {
-        Navigator.pop(context); // Cerrar el modal de progreso
+        Navigator.pop(context); 
 
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Producto eliminado')),
         );
 
-        Navigator.pop(context); // Volver a la pantalla anterior
+        Navigator.pop(context); 
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (_) => const ProductListScreen()),
-        ); // Navegar a la pantalla de lista de productos y actualizarla
+        ); 
       }
     } catch (error) {
       if (context.mounted) {
-        Navigator.pop(context); // Cerrar el modal de progreso
+        Navigator.pop(context); 
 
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Error al eliminar el producto')),
         );
 
-        Navigator.pop(context); // Volver a la pantalla anterior
+        Navigator.pop(context); 
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (_) => const ProductListScreen()),
-        ); // Navegar a la pantalla de lista de productos y actualizarla
+        );
       }
     }
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -171,7 +172,6 @@ class _EditProductScreenState extends State<EditProductScreen> {
             const SizedBox(height: 16),
             const Text('Precio de cotización'),
             TextFormField(
-             
               textAlign: TextAlign.center,
               controller: _priceController,
               keyboardType: TextInputType.number,

@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:pract_01/models/product_model.dart';
-import 'package:pract_01/screens/edit_product_screen.dart';
-import 'package:pract_01/screens/edit_product_size_screen.dart';
-
-import 'package:pract_01/services/network_manager.dart';
+import 'package:pract_01/models/product/product_model.dart';
+import 'package:pract_01/screens/product/edit_product_screen.dart';
+import 'package:pract_01/screens/product/edit_product_size_screen.dart';
+import 'package:pract_01/services/product_service.dart';
 
 class ProductListScreen extends StatefulWidget {
   const ProductListScreen({Key? key}) : super(key: key);
@@ -21,7 +20,7 @@ class _ProductListScreenState extends State<ProductListScreen> {
     setState(() {
       isLoading = true;
     });
-    final result = await NetworkManager().getAllProduct();
+    final result = await ProductService().getAllProduct();
     products = result.data;
     setState(() {
       isLoading = false;
@@ -102,10 +101,12 @@ class _ProductListScreenState extends State<ProductListScreen> {
                       },
                       child: const Icon(Icons.edit),
                     ),
+                  
                   ),
                 );
               },
             ),
+   
     );
   }
 }

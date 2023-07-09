@@ -1,43 +1,36 @@
-// import 'dart:convert';
-
-// QuotationModel quotationModelFromJson(String str) =>
-//     QuotationModel.fromJson(json.decode(str));
-
-// String quotationModelToJson(QuotationModel data) => json.encode(data.toJson());
-
-class QuotationModel {
-  List<Quotation> data;
+class GetDetailsQuotation {
+  Data data;
   Meta meta;
 
-  QuotationModel({
+  GetDetailsQuotation({
     required this.data,
     required this.meta,
   });
 
-  factory QuotationModel.fromJson(Map<String, dynamic> json) => QuotationModel(
-        data: List<Quotation>.from(
-            json["data"].map((x) => Quotation.fromJson(x))),
+  factory GetDetailsQuotation.fromJson(Map<String, dynamic> json) =>
+      GetDetailsQuotation(
+        data: Data.fromJson(json["data"]),
         meta: Meta.fromJson(json["meta"]),
       );
 
   Map<String, dynamic> toJson() => {
-        "data": List<dynamic>.from(data.map((x) => x.toJson())),
+        "data": data.toJson(),
         "meta": meta.toJson(),
       };
 }
 
-class Quotation {
+class Data {
   int id;
-  PurpleAttributes attributes;
+  DataAttributes attributes;
 
-  Quotation({
+  Data({
     required this.id,
     required this.attributes,
   });
 
-  factory Quotation.fromJson(Map<String, dynamic> json) => Quotation(
+  factory Data.fromJson(Map<String, dynamic> json) => Data(
         id: json["id"],
-        attributes: PurpleAttributes.fromJson(json["attributes"]),
+        attributes: DataAttributes.fromJson(json["attributes"]),
       );
 
   Map<String, dynamic> toJson() => {
@@ -46,18 +39,20 @@ class Quotation {
       };
 }
 
-class PurpleAttributes {
+class DataAttributes {
   String name;
   String phone;
   String message;
   String email;
-  List<Product> products;
+  List<ProductDeail> products;
   DateTime createdAt;
   DateTime updatedAt;
   DateTime publishedAt;
+  String codeQuotation;
   PdfVoucher pdfVoucher;
+  PdfVoucher statusQuotation;
 
-  PurpleAttributes({
+  DataAttributes({
     required this.name,
     required this.phone,
     required this.message,
@@ -66,21 +61,24 @@ class PurpleAttributes {
     required this.createdAt,
     required this.updatedAt,
     required this.publishedAt,
+    required this.codeQuotation,
     required this.pdfVoucher,
+    required this.statusQuotation,
   });
 
-  factory PurpleAttributes.fromJson(Map<String, dynamic> json) =>
-      PurpleAttributes(
+  factory DataAttributes.fromJson(Map<String, dynamic> json) => DataAttributes(
         name: json["name"],
         phone: json["phone"],
         message: json["message"],
         email: json["email"],
-        products: List<Product>.from(
-            json["products"].map((x) => Product.fromJson(x))),
+        products: List<ProductDeail>.from(
+            json["products"].map((x) => ProductDeail.fromJson(x))),
         createdAt: DateTime.parse(json["createdAt"]),
         updatedAt: DateTime.parse(json["updatedAt"]),
         publishedAt: DateTime.parse(json["publishedAt"]),
+        codeQuotation: json["code_quotation"],
         pdfVoucher: PdfVoucher.fromJson(json["pdfVoucher"]),
+        statusQuotation: PdfVoucher.fromJson(json["status_quotation"]),
       );
 
   Map<String, dynamic> toJson() => {
@@ -92,40 +90,44 @@ class PurpleAttributes {
         "createdAt": createdAt.toIso8601String(),
         "updatedAt": updatedAt.toIso8601String(),
         "publishedAt": publishedAt.toIso8601String(),
+        "code_quotation": codeQuotation,
         "pdfVoucher": pdfVoucher.toJson(),
+        "status_quotation": statusQuotation.toJson(),
       };
 }
 
 class PdfVoucher {
-  List<PdfVoucherDatum> data;
+  List<Datum>? data;
 
   PdfVoucher({
-    required this.data,
+    this.data,
   });
 
   factory PdfVoucher.fromJson(Map<String, dynamic> json) => PdfVoucher(
-        data: List<PdfVoucherDatum>.from(
-            json["data"].map((x) => PdfVoucherDatum.fromJson(x))),
+        data: json["data"] == null
+            ? []
+            : List<Datum>.from(json["data"]!.map((x) => Datum.fromJson(x))),
       );
 
   Map<String, dynamic> toJson() => {
-        "data": List<dynamic>.from(data.map((x) => x.toJson())),
+        "data": data == null
+            ? []
+            : List<dynamic>.from(data!.map((x) => x.toJson())),
       };
 }
 
-class PdfVoucherDatum {
+class Datum {
   int id;
-  FluffyAttributes attributes;
+  DatumAttributes attributes;
 
-  PdfVoucherDatum({
+  Datum({
     required this.id,
     required this.attributes,
   });
 
-  factory PdfVoucherDatum.fromJson(Map<String, dynamic> json) =>
-      PdfVoucherDatum(
+  factory Datum.fromJson(Map<String, dynamic> json) => Datum(
         id: json["id"],
-        attributes: FluffyAttributes.fromJson(json["attributes"]),
+        attributes: DatumAttributes.fromJson(json["attributes"]),
       );
 
   Map<String, dynamic> toJson() => {
@@ -134,7 +136,7 @@ class PdfVoucherDatum {
       };
 }
 
-class FluffyAttributes {
+class DatumAttributes {
   String name;
   dynamic alternativeText;
   dynamic caption;
@@ -152,7 +154,7 @@ class FluffyAttributes {
   DateTime createdAt;
   DateTime updatedAt;
 
-  FluffyAttributes({
+  DatumAttributes({
     required this.name,
     this.alternativeText,
     this.caption,
@@ -171,8 +173,8 @@ class FluffyAttributes {
     required this.updatedAt,
   });
 
-  factory FluffyAttributes.fromJson(Map<String, dynamic> json) =>
-      FluffyAttributes(
+  factory DatumAttributes.fromJson(Map<String, dynamic> json) =>
+      DatumAttributes(
         name: json["name"],
         alternativeText: json["alternativeText"],
         caption: json["caption"],
@@ -232,14 +234,14 @@ class ProviderMetadata {
       };
 }
 
-class Product {
+class ProductDeail {
   int id;
   String name;
   List<Size> size;
   int quantity;
-  int? quotationPrice;
+  double? quotationPrice;
 
-  Product({
+  ProductDeail({
     required this.id,
     required this.name,
     required this.size,
@@ -247,12 +249,12 @@ class Product {
     this.quotationPrice,
   });
 
-  factory Product.fromJson(Map<String, dynamic> json) => Product(
+  factory ProductDeail.fromJson(Map<String, dynamic> json) => ProductDeail(
         id: json["id"],
         name: json["name"],
         size: List<Size>.from(json["size"].map((x) => Size.fromJson(x))),
         quantity: json["quantity"],
-        quotationPrice: json["quotation_price"],
+        quotationPrice: json["quotation_price"]?.toDouble(),
       );
 
   Map<String, dynamic> toJson() => {
@@ -268,21 +270,22 @@ class Size {
   int id;
   String val;
   int quantity;
-  int quotationPrice;
+  double? quotationPrice;
 
   Size({
     required this.id,
     required this.val,
     required this.quantity,
-    required this.quotationPrice,
+    this.quotationPrice,
   });
 
   factory Size.fromJson(Map<String, dynamic> json) => Size(
         id: json["id"],
         val: json["val"],
         quantity: json["quantity"],
-        quotationPrice: json["quotation_price"],
+        quotationPrice: json["quotation_price"]?.toDouble(),
       );
+
 
   Map<String, dynamic> toJson() => {
         "id": id,
@@ -293,45 +296,9 @@ class Size {
 }
 
 class Meta {
-  Pagination pagination;
+  Meta();
 
-  Meta({
-    required this.pagination,
-  });
+  factory Meta.fromJson(Map<String, dynamic> json) => Meta();
 
-  factory Meta.fromJson(Map<String, dynamic> json) => Meta(
-        pagination: Pagination.fromJson(json["pagination"]),
-      );
-
-  Map<String, dynamic> toJson() => {
-        "pagination": pagination.toJson(),
-      };
-}
-
-class Pagination {
-  int page;
-  int pageSize;
-  int pageCount;
-  int total;
-
-  Pagination({
-    required this.page,
-    required this.pageSize,
-    required this.pageCount,
-    required this.total,
-  });
-
-  factory Pagination.fromJson(Map<String, dynamic> json) => Pagination(
-        page: json["page"],
-        pageSize: json["pageSize"],
-        pageCount: json["pageCount"],
-        total: json["total"],
-      );
-
-  Map<String, dynamic> toJson() => {
-        "page": page,
-        "pageSize": pageSize,
-        "pageCount": pageCount,
-        "total": total,
-      };
+  Map<String, dynamic> toJson() => {};
 }

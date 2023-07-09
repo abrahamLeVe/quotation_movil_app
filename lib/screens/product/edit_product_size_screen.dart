@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:pract_01/models/product_model.dart' as product_model;
-import 'package:pract_01/screens/product_list_screen.dart';
-import 'package:pract_01/services/network_manager.dart';
 import 'package:flutter/services.dart';
+import 'package:pract_01/models/product/product_model.dart' as product_model;
+import 'package:pract_01/screens/product/list_product_screen.dart';
+import 'package:pract_01/services/product_service.dart';
 import 'package:pract_01/utils/dialog_utils.dart';
 
 class EditProductSizesScreen extends StatefulWidget {
@@ -63,7 +63,7 @@ class _EditProductSizesScreenState extends State<EditProductSizesScreen> {
       for (final size in _modifiedSizes) {
         final index = widget.sizes.indexOf(size);
         final newPrice = _sizePrices[index];
-        await NetworkManager().updateSize(size.id, newPrice);
+        await ProductService().updateSize(size.id, newPrice);
       }
       if (context.mounted) {
         Navigator.pop(context); // Cerrar el modal de progreso
