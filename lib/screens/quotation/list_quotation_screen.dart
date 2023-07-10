@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:pract_01/models/quotation/get_all_quotation_model.dart';
 import 'package:pract_01/providers/quotation_state.dart';
-import 'package:pract_01/services/quotation_service.dart';
 import 'package:pract_01/utils/quotation_utils.dart' as utils;
 import 'package:pract_01/widgets/quotation/quotation_list_item.dart';
 import 'package:provider/provider.dart' as provider;
@@ -15,34 +14,13 @@ class QuotationListScreen extends StatefulWidget {
 }
 
 class _QuotationListScreenState extends State<QuotationListScreen> {
-  List<Quotation> quotations = [];
   List<Quotation> filteredQuotations = [];
   bool isLoading = false;
   String filter = 'Todos';
   String selectedFilter = 'Todos';
   TextEditingController searchController = TextEditingController();
 
-  Future<void> refreshData() async {
-    setState(() {
-      isLoading = true;
-    });
-    final result = await QuotationService().getAllQuotation();
-    final allQuotations = result.data;
-
-    final quotationState =
-        // ignore: use_build_context_synchronously
-        provider.Provider.of<QuotationState>(context, listen: false);
-    quotationState.setQuotations(
-        allQuotations); // Actualiza el estado global de las cotizaciones
-
-    setState(() {
-      isLoading = false;
-      quotations = allQuotations;
-      filterQuotations(); // Aplica los filtros inicialmente
-    });
-  }
-
-  void filterQuotations() {
+  void filterQuotations(List<Quotation> quotations) {
     filteredQuotations = utils.filterQuotations(quotations, selectedFilter);
     final String searchText = searchController.text;
 
@@ -57,8 +35,7 @@ class _QuotationListScreenState extends State<QuotationListScreen> {
   @override
   void initState() {
     super.initState();
-    initializeDateFormatting(); // Inicializa el formato de fecha para la localización actual
-    refreshData();
+    initializeDateFormatting();
   }
 
   @override
@@ -74,7 +51,10 @@ class _QuotationListScreenState extends State<QuotationListScreen> {
                   controller: searchController,
                   onChanged: (value) {
                     setState(() {
-                      filterQuotations(); // Aplica el filtro de búsqueda cada vez que se cambia el texto
+                      final quotationState =
+                          provider.Provider.of<QuotationState>(context,
+                              listen: false);
+                      filterQuotations(quotationState.quotations);
                     });
                   },
                   decoration: const InputDecoration(
@@ -85,13 +65,16 @@ class _QuotationListScreenState extends State<QuotationListScreen> {
               ),
             ),
             SizedBox(
-              width: 100, // Ajusta el ancho según tus necesidades
+              width: 100,
               child: DropdownButton<String>(
                 value: selectedFilter,
                 onChanged: (String? value) {
                   setState(() {
                     selectedFilter = value!;
-                    filterQuotations(); // Aplica los filtros cuando se cambia el filtro
+                    final quotationState = provider.Provider.of<QuotationState>(
+                        context,
+                        listen: false);
+                    filterQuotations(quotationState.quotations);
                   });
                 },
                 items: [
@@ -111,29 +94,28 @@ class _QuotationListScreenState extends State<QuotationListScreen> {
           ],
         ),
       ),
-      body: isLoading
-          ? const Center(
-              child: CircularProgressIndicator(),
-            )
-          : provider.Consumer<QuotationState>(
-              builder: (context, quotationState, _) {
-                return SingleChildScrollView(
-                  child: Column(
-                    children: [
-                      ListView.builder(
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        itemCount: filteredQuotations.length,
-                        itemBuilder: (BuildContext context, int index) {
-                          final quotation = filteredQuotations[index];
-                          return QuotationItem(quotation: quotation);
-                        },
-                      ),
-                    ],
-                  ),
-                );
-              },
+      body: provider.Consumer<QuotationState>(
+        builder: (context, quotationState, _) {
+          final quotations = quotationState.quotations;
+          filterQuotations(quotations);
+
+          return SingleChildScrollView(
+            child: Column(
+              children: [
+                ListView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: filteredQuotations.length,
+                  itemBuilder: (BuildContext context, int index) {
+                    final quotation = filteredQuotations[index];
+                    return QuotationItem(quotation: quotation);
+                  },
+                ),
+              ],
             ),
+          );
+        },
+      ),
     );
   }
 }

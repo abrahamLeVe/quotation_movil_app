@@ -1,5 +1,5 @@
 class GetDetailsQuotation {
-  Data data;
+  DataQuotationDetails data;
   Meta meta;
 
   GetDetailsQuotation({
@@ -9,7 +9,7 @@ class GetDetailsQuotation {
 
   factory GetDetailsQuotation.fromJson(Map<String, dynamic> json) =>
       GetDetailsQuotation(
-        data: Data.fromJson(json["data"]),
+        data: DataQuotationDetails.fromJson(json["data"]),
         meta: Meta.fromJson(json["meta"]),
       );
 
@@ -19,16 +19,17 @@ class GetDetailsQuotation {
       };
 }
 
-class Data {
+class DataQuotationDetails {
   int id;
   DataAttributes attributes;
 
-  Data({
+  DataQuotationDetails({
     required this.id,
     required this.attributes,
   });
 
-  factory Data.fromJson(Map<String, dynamic> json) => Data(
+  factory DataQuotationDetails.fromJson(Map<String, dynamic> json) =>
+      DataQuotationDetails(
         id: json["id"],
         attributes: DataAttributes.fromJson(json["attributes"]),
       );
@@ -285,7 +286,6 @@ class Size {
         quantity: json["quantity"],
         quotationPrice: json["quotation_price"]?.toDouble(),
       );
-
 
   Map<String, dynamic> toJson() => {
         "id": id,

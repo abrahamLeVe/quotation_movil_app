@@ -48,9 +48,11 @@ class _HomeScreenState extends State<HomeScreen>
   }
 
   void _loadQuotations() async {
-    final result = await QuotationService().getAllQuotation();
-    final allQuotations = result.data;
-    _quotationState.setQuotations(allQuotations);
+    if (_quotationState.quotations.isEmpty) {
+      final result = await QuotationService().getAllQuotation();
+      final allQuotations = result.data;
+      _quotationState.setQuotations(allQuotations);
+    }
   }
 
   void openEditProductScreen(Product product) async {

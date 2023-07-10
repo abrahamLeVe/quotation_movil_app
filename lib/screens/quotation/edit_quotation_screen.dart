@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:pract_01/models/quotation/get_details_quotation_model.dart';
+import 'package:pract_01/providers/quotation_state.dart';
 import 'package:pract_01/screens/home_screen.dart';
 import 'package:pract_01/screens/quotation/list_quotation_screen.dart';
 import 'package:pract_01/services/quotation_service.dart';
@@ -20,14 +21,20 @@ class EditQuotationScreen extends StatefulWidget {
 }
 
 class _EditQuotationScreenState extends State<EditQuotationScreen> {
+  final QuotationState _quotationState = QuotationState();
   List<ProductDeail> products = [];
   bool _isLoading = false;
   late GetDetailsQuotation productDetail;
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    refreshData();
+  }
+
+  @override
   void initState() {
     super.initState();
-    refreshData();
   }
 
   Future<void> refreshData() async {
@@ -37,10 +44,11 @@ class _EditQuotationScreenState extends State<EditQuotationScreen> {
 
     try {
       final quotationDetails =
-          await QuotationService().getDeatilsQuotation(widget.quotationId);
+          await _quotationState.getQuotationById(widget.quotationId);
+
       setState(() {
         _isLoading = false;
-        productDetail = quotationDetails;
+        productDetail = quotationDetails as GetDetailsQuotation;
         products = productDetail.data.attributes.products;
       });
     } catch (error) {
@@ -48,10 +56,13 @@ class _EditQuotationScreenState extends State<EditQuotationScreen> {
         setState(() {
           _isLoading = false;
         });
-        ScaffoldMessenger.of(context).showSnackBar(
+        final scaffoldMessenger = ScaffoldMessenger.of(context);
+        scaffoldMessenger.showSnackBar(
           const SnackBar(
-              content: Text('Error al cargar los detalles de la cotización')),
+            content: Text('Error al cargar los detalles de la cotización'),
+          ),
         );
+        scaffoldMessenger.hideCurrentSnackBar();
         Navigator.pop(context);
         Navigator.pushReplacement(
           context,
@@ -172,13 +183,13 @@ class _EditQuotationScreenState extends State<EditQuotationScreen> {
           actions: <Widget>[
             TextButton(
               onPressed: () {
-                Navigator.pop(context, false); // Respuesta negativa: No
+                Navigator.pop(context, false);
               },
               child: const Text('No'),
             ),
             TextButton(
               onPressed: () {
-                Navigator.pop(context, true); // Respuesta positiva: Sí
+                Navigator.pop(context, true);
               },
               child: const Text('Sí'),
             ),
@@ -199,38 +210,38 @@ class _EditQuotationScreenState extends State<EditQuotationScreen> {
       await QuotationService().deleteQuotation(widget.quotationId);
 
       if (mounted) {
-        Navigator.pop(context); // Cerrar el modal de progreso
+        Navigator.pop(context);
 
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Cotización eliminada')),
         );
 
-        // Navegar a la pantalla de inicio con la pestaña de cotizaciones activa
         Navigator.pushAndRemoveUntil(
           context,
-          MaterialPageRoute(builder: (_) =>const HomeScreen(selectedTabIndex: 1)),
+          MaterialPageRoute(
+              builder: (_) => const HomeScreen(selectedTabIndex: 1)),
           (route) => false,
         );
       }
     } catch (error) {
       if (mounted) {
-        Navigator.pop(context); // Cerrar el modal de progreso
+        Navigator.pop(context);
 
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Error al eliminar cotización')),
         );
 
-        // Navegar a la pantalla de inicio con la pestaña de cotizaciones activa
         Navigator.pushAndRemoveUntil(
           context,
-          MaterialPageRoute(builder: (_) => const HomeScreen(selectedTabIndex: 1)),
+          MaterialPageRoute(
+              builder: (_) => const HomeScreen(selectedTabIndex: 1)),
           (route) => false,
         );
       }
     }
   }
 
-  void updateQuotation() {
+  void archiveQuotation() {
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -241,13 +252,13 @@ class _EditQuotationScreenState extends State<EditQuotationScreen> {
           actions: <Widget>[
             TextButton(
               onPressed: () {
-                Navigator.pop(context, false); // Respuesta negativa: No
+                Navigator.pop(context, false); 
               },
               child: const Text('No'),
             ),
             TextButton(
               onPressed: () {
-                Navigator.pop(context, true); // Respuesta positiva: Sí
+                Navigator.pop(context, true); 
               },
               child: const Text('Sí'),
             ),
@@ -268,31 +279,31 @@ class _EditQuotationScreenState extends State<EditQuotationScreen> {
       await QuotationService().archiveQuotation(widget.quotationId);
 
       if (mounted) {
-        Navigator.pop(context); // Cerrar el modal de progreso
+        Navigator.pop(context);
 
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Cotización archivada')),
         );
 
-        // Navegar a la pantalla de inicio con la pestaña de cotizaciones activa
         Navigator.pushAndRemoveUntil(
           context,
-          MaterialPageRoute(builder: (_) => const HomeScreen(selectedTabIndex: 1)),
+          MaterialPageRoute(
+              builder: (_) => const HomeScreen(selectedTabIndex: 1)),
           (route) => false,
         );
       }
     } catch (error) {
       if (mounted) {
-        Navigator.pop(context); // Cerrar el modal de progreso
+        Navigator.pop(context);
 
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Error al archivar cotización')),
         );
 
-        // Navegar a la pantalla de inicio con la pestaña de cotizaciones activa
         Navigator.pushAndRemoveUntil(
           context,
-          MaterialPageRoute(builder: (_) => const HomeScreen(selectedTabIndex: 1)),
+          MaterialPageRoute(
+              builder: (_) => const HomeScreen(selectedTabIndex: 1)),
           (route) => false,
         );
       }
@@ -311,19 +322,19 @@ class _EditQuotationScreenState extends State<EditQuotationScreen> {
                 onTap: deleteQuotation,
                 child: const Row(
                   children: [
-                    Icon(Icons.delete), // Ícono a la izquierda
-                    SizedBox(width: 8), // Espacio entre el ícono y el texto
-                    Text('Eliminar'), // Texto
+                    Icon(Icons.delete),
+                    SizedBox(width: 8),
+                    Text('Eliminar'),
                   ],
                 ),
               ),
               PopupMenuItem(
-                onTap: updateQuotation,
+                onTap: archiveQuotation,
                 child: const Row(
                   children: [
-                    Icon(Icons.archive), // Ícono a la izquierda
-                    SizedBox(width: 8), // Espacio entre el ícono y el texto
-                    Text('Archivar'), // Texto
+                    Icon(Icons.archive),
+                    SizedBox(width: 8),
+                    Text('Archivar'),
                   ],
                 ),
               ),
@@ -389,13 +400,13 @@ class _EditQuotationScreenState extends State<EditQuotationScreen> {
                 },
               ),
             ],
-            icon: const Icon(Icons.more_vert), // Icono de menú
+            icon: const Icon(Icons.more_vert),
           ),
         ],
       ),
       body: _isLoading
           ? const Center(
-              child: CircularProgressIndicator(), // Mostrar el spinner
+              child: CircularProgressIndicator(),
             )
           : Padding(
               padding: const EdgeInsets.all(10.0),

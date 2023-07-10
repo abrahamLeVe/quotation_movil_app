@@ -43,7 +43,7 @@ class QuotationService {
     }
   }
 
-  Future<GetDetailsQuotation> getDeatilsQuotation(int id) async {
+  Future<GetDetailsQuotation> getDetailsQuotation(int id) async {
     try {
       final response = await _dio.get(
         "${Environment.apiUrl}/quotations/$id?populate=*",

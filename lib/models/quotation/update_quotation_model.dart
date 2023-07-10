@@ -82,7 +82,6 @@ class DataQuotation {
         "createdBy": createdBy,
         "updatedBy": updatedBy,
         "code_quotation": codeQuotation,
-
       };
 }
 

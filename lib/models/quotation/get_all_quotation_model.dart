@@ -81,7 +81,6 @@ class PurpleAttributes {
     required this.pdfVoucher,
     required this.statusQuotation,
     required this.codeQuotation,
-
   });
 
   factory PurpleAttributes.fromJson(Map<String, dynamic> json) =>
@@ -98,7 +97,6 @@ class PurpleAttributes {
         pdfVoucher: PdfVoucher.fromJson(json["pdfVoucher"]),
         statusQuotation: StatusQuotation.fromJson(json["status_quotation"]),
         codeQuotation: json["code_quotation"],
-
       );
 
   Map<String, dynamic> toJson() => {
@@ -388,7 +386,6 @@ class DataAttributes {
         publishedAt: DateTime.parse(json["publishedAt"]),
       );
 
-
   Map<String, dynamic> toJson() => {
         "status": status,
         "createdAt": createdAt.toIso8601String(),
@@ -452,6 +449,3 @@ class EnumValues<T> {
     return reverseMap;
   }
 }
-
-
-
