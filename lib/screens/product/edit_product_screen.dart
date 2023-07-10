@@ -1,40 +1,35 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:pract_01/models/product/product_model.dart' as product_model;
-import 'package:pract_01/screens/product/list_product_screen.dart';
 import 'package:pract_01/services/product_service.dart';
 import 'package:pract_01/utils/dialog_utils.dart';
 
 class EditProductScreen extends StatefulWidget {
   final product_model.Product product;
+  final Function(product_model.Product) onProductUpdated;
 
-  const EditProductScreen({Key? key, required this.product}) : super(key: key);
+  const EditProductScreen({
+    Key? key,
+    required this.product,
+    required this.onProductUpdated,
+  }) : super(key: key);
 
   @override
   State<EditProductScreen> createState() => _EditProductScreenState();
 }
 
 class _EditProductScreenState extends State<EditProductScreen> {
-  final TextEditingController _nameController = TextEditingController();
-  final priceFormatter = FilteringTextInputFormatter.allow(
-    RegExp(r'^\d{1,6}(\.\d{0,2})?$'),
-  );
   final TextEditingController _priceController = TextEditingController();
   bool _isLoading = false;
-  void _handleButtonPress(BuildContext context) {
-    showLoadingDialog(context); 
-  }
 
   @override
   void initState() {
     super.initState();
-    _nameController.text = widget.product.attributes.name;
     _priceController.text = widget.product.attributes.quotationPrice.toString();
   }
 
   @override
   void dispose() {
-    _nameController.dispose();
     _priceController.dispose();
     super.dispose();
   }
@@ -46,23 +41,17 @@ class _EditProductScreenState extends State<EditProductScreen> {
 
     double newPrice = double.tryParse(_priceController.text) ?? 0.0;
 
-    _handleButtonPress(context);
+    showLoadingDialog(context);
 
     try {
       await ProductService().updateProduct(widget.product.id, newPrice);
 
       if (context.mounted) {
+        widget.onProductUpdated(widget.product);
         Navigator.pop(context);
-
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Producto actualizado')),
         );
-
-        Navigator.pop(context); 
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (_) => const ProductListScreen()),
-        ); 
       }
     } catch (error) {
       if (context.mounted) {
@@ -79,73 +68,6 @@ class _EditProductScreenState extends State<EditProductScreen> {
     }
   }
 
-  void deleteProduct() {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Eliminar Producto'),
-          content: const Text('¿Estás seguro de eliminar este producto?'),
-          actions: <Widget>[
-            TextButton(
-              onPressed: () {
-                Navigator.pop(context, false); 
-              },
-              child: const Text('No'),
-            ),
-            TextButton(
-              onPressed: () {
-                Navigator.pop(context, true); 
-              },
-              child: const Text('Sí'),
-            ),
-          ],
-        );
-      },
-    ).then((confirmed) {
-      if (confirmed != null && confirmed) {
-        performDeleteAction();
-      }
-    });
-  }
-
-  void performDeleteAction() async {
-    _handleButtonPress(context);
-
-    try {
-      await ProductService().deleteProduct(widget.product.id);
-
-      if (context.mounted) {
-        Navigator.pop(context); 
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Producto eliminado')),
-        );
-
-        Navigator.pop(context); 
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (_) => const ProductListScreen()),
-        ); 
-      }
-    } catch (error) {
-      if (context.mounted) {
-        Navigator.pop(context); 
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Error al eliminar el producto')),
-        );
-
-        Navigator.pop(context); 
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (_) => const ProductListScreen()),
-        );
-      }
-    }
-  }
-
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -157,10 +79,6 @@ class _EditProductScreenState extends State<EditProductScreen> {
             Text(
               widget.product.attributes.name,
               style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            Text(
-              'Categorías: ${widget.product.attributes.categories.data.map((category) => category.attributes.name).join(", ")}',
-              style: const TextStyle(fontSize: 18),
             ),
             const SizedBox(height: 16),
             Image.network(
@@ -175,22 +93,17 @@ class _EditProductScreenState extends State<EditProductScreen> {
               textAlign: TextAlign.center,
               controller: _priceController,
               keyboardType: TextInputType.number,
-              inputFormatters: [priceFormatter],
+              inputFormatters: [
+                FilteringTextInputFormatter.allow(
+                  RegExp(r'^\d{1,6}(\.\d{0,2})?$'),
+                ),
+              ],
             ),
             const SizedBox(height: 16),
             ElevatedButton(
               onPressed: _isLoading ? null : updateProduct,
               child: const Text('Guardar'),
             ),
-            // const SizedBox(height: 8),
-            // ElevatedButton(
-
-            //   onPressed: deleteProduct,
-            //   style: ElevatedButton.styleFrom(
-            //     backgroundColor: Colors.red,
-            //   ),
-            //   child: const Text('Eliminar'),
-            // ),
           ],
         ),
       ),

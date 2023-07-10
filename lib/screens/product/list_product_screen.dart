@@ -1,99 +1,118 @@
 import 'package:flutter/material.dart';
 import 'package:pract_01/models/product/product_model.dart';
-import 'package:pract_01/screens/product/edit_product_screen.dart';
 import 'package:pract_01/screens/product/edit_product_size_screen.dart';
-import 'package:pract_01/services/product_service.dart';
 
 class ProductListScreen extends StatefulWidget {
-  const ProductListScreen({Key? key}) : super(key: key);
+  final List<Product> productList;
+  final void Function(Product) openEditProductScreen;
+
+  const ProductListScreen({
+    Key? key,
+    required this.productList,
+    required this.openEditProductScreen,
+  }) : super(key: key);
 
   @override
   State<ProductListScreen> createState() => _ProductListScreenState();
 }
 
 class _ProductListScreenState extends State<ProductListScreen> {
-  List<Product> products = [];
-
-  bool isLoading = false;
-
-  Future<void> refreshData() async {
-    setState(() {
-      isLoading = true;
-    });
-    final result = await ProductService().getAllProduct();
-    products = result.data;
-    setState(() {
-      isLoading = false;
-    });
-  }
+  late List<Product> filteredProducts;
+  bool showProductsWithoutSizes = true;
+  late TextEditingController _searchController;
 
   @override
   void initState() {
     super.initState();
-    refreshData();
+    filteredProducts = widget.productList;
+    _searchController = TextEditingController();
+    _searchController.addListener(_filterProducts);
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  void _filterProducts() {
+    final searchTerm = _searchController.text.toLowerCase();
+    setState(() {
+      filteredProducts = widget.productList.where((product) {
+        final name = product.attributes.name.toLowerCase();
+        final hasSizes = product.attributes.productSizes.data.isNotEmpty;
+
+        if (showProductsWithoutSizes) {
+          return name.contains(searchTerm);
+        } else {
+          return name.contains(searchTerm) && hasSizes;
+        }
+      }).toList();
+    });
+  }
+
+  void _toggleShowProductsWithoutSizes(bool value) {
+    setState(() {
+      showProductsWithoutSizes = value;
+      _filterProducts();
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Productos (${products.length})'),
+        title: TextField(
+          controller: _searchController,
+          onChanged: (_) => _filterProducts(),
+          decoration: const InputDecoration(
+            hintText: 'Buscar por nombre',
+          ),
+        ),
+        actions: [
+          Switch(
+            value: showProductsWithoutSizes,
+            onChanged: _toggleShowProductsWithoutSizes,
+          ),
+          const SizedBox(width: 8),
+          const Text('Mostrar sin medidas'),
+          const SizedBox(width: 16),
+        ],
       ),
-      body: isLoading
+      body: filteredProducts.isEmpty
           ? const Center(
               child: CircularProgressIndicator(),
             )
           : ListView.builder(
-              itemCount: products.length,
+              itemCount: filteredProducts.length,
               physics: const ScrollPhysics(),
               itemBuilder: (BuildContext context, int index) {
+                final product = filteredProducts[index];
+                final productSizes = product.attributes.productSizes.data;
+                final thumbnailUrl = product
+                    .attributes.thumbnail.data.attributes.formats.thumbnail.url;
+
                 return Card(
                   child: ListTile(
                     leading: CircleAvatar(
                       backgroundColor: Colors.grey[200],
-                      backgroundImage: NetworkImage(
-                        products[index]
-                            .attributes
-                            .thumbnail
-                            .data
-                            .attributes
-                            .formats
-                            .thumbnail
-                            .url,
-                      ),
+                      backgroundImage: NetworkImage(thumbnailUrl),
                     ),
-                    title: Text(products[index].attributes.name.toUpperCase()),
-                    subtitle: Text(products[index]
-                            .attributes
-                            .productSizes
-                            .data
-                            .isNotEmpty
-                        ? 'Medidas: ${products[index].attributes.productSizes.data.length}'
-                        : 'Precio: USD ${products[index].attributes.quotationPrice}'),
+                    title: Text(product.attributes.name.toUpperCase()),
+                    subtitle: Text(productSizes.isNotEmpty
+                        ? 'Medidas: ${productSizes.length}'
+                        : 'Precio: USD ${product.attributes.quotationPrice}'),
                     trailing: GestureDetector(
                       onTap: () {
-                        if (products[index]
-                            .attributes
-                            .productSizes
-                            .data
-                            .isEmpty) {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) =>
-                                  EditProductScreen(product: products[index]),
-                            ),
-                          );
+                        if (productSizes.isEmpty) {
+                          widget.openEditProductScreen(product);
                         } else {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
                               builder: (context) => EditProductSizesScreen(
-                                product: products[index],
-                                sizes: products[index]
-                                    .attributes
-                                    .productSizes
-                                    .data,
+                                product: product,
+                                sizes: productSizes,
                               ),
                             ),
                           );
@@ -101,12 +120,10 @@ class _ProductListScreenState extends State<ProductListScreen> {
                       },
                       child: const Icon(Icons.edit),
                     ),
-                  
                   ),
                 );
               },
             ),
-   
     );
   }
 }

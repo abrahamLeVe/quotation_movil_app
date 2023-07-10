@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:pract_01/models/quotation/get_details_quotation_model.dart';
+import 'package:pract_01/screens/home_screen.dart';
 import 'package:pract_01/screens/quotation/list_quotation_screen.dart';
 import 'package:pract_01/services/quotation_service.dart';
 import 'package:pract_01/utils/dialog_utils.dart';
@@ -204,11 +205,12 @@ class _EditQuotationScreenState extends State<EditQuotationScreen> {
           const SnackBar(content: Text('Cotización eliminada')),
         );
 
-        Navigator.pop(context); // Volver a la pantalla anterior
-        Navigator.pushReplacement(
+        // Navegar a la pantalla de inicio con la pestaña de cotizaciones activa
+        Navigator.pushAndRemoveUntil(
           context,
-          MaterialPageRoute(builder: (_) => const QuotationListScreen()),
-        ); // Navegar a la pantalla de lista de productos y actualizarla
+          MaterialPageRoute(builder: (_) =>const HomeScreen(selectedTabIndex: 1)),
+          (route) => false,
+        );
       }
     } catch (error) {
       if (mounted) {
@@ -218,11 +220,12 @@ class _EditQuotationScreenState extends State<EditQuotationScreen> {
           const SnackBar(content: Text('Error al eliminar cotización')),
         );
 
-        Navigator.pop(context); //Volver a la pantalla anterior
-        Navigator.pushReplacement(
+        // Navegar a la pantalla de inicio con la pestaña de cotizaciones activa
+        Navigator.pushAndRemoveUntil(
           context,
-          MaterialPageRoute(builder: (_) => const QuotationListScreen()),
-        ); // Navegar a la pantalla de lista de productos y actualizarla
+          MaterialPageRoute(builder: (_) => const HomeScreen(selectedTabIndex: 1)),
+          (route) => false,
+        );
       }
     }
   }
@@ -271,11 +274,12 @@ class _EditQuotationScreenState extends State<EditQuotationScreen> {
           const SnackBar(content: Text('Cotización archivada')),
         );
 
-        Navigator.pop(context); // Volver a la pantalla anterior
-        Navigator.pushReplacement(
+        // Navegar a la pantalla de inicio con la pestaña de cotizaciones activa
+        Navigator.pushAndRemoveUntil(
           context,
-          MaterialPageRoute(builder: (_) => const QuotationListScreen()),
-        ); // Navegar a la pantalla de lista de productos y actualizarla
+          MaterialPageRoute(builder: (_) => const HomeScreen(selectedTabIndex: 1)),
+          (route) => false,
+        );
       }
     } catch (error) {
       if (mounted) {
@@ -285,11 +289,12 @@ class _EditQuotationScreenState extends State<EditQuotationScreen> {
           const SnackBar(content: Text('Error al archivar cotización')),
         );
 
-        Navigator.pop(context); // Volver a la pantalla anterior
-        Navigator.pushReplacement(
+        // Navegar a la pantalla de inicio con la pestaña de cotizaciones activa
+        Navigator.pushAndRemoveUntil(
           context,
-          MaterialPageRoute(builder: (_) => const QuotationListScreen()),
-        ); // Navegar a la pantalla de lista de productos y actualizarla
+          MaterialPageRoute(builder: (_) => const HomeScreen(selectedTabIndex: 1)),
+          (route) => false,
+        );
       }
     }
   }

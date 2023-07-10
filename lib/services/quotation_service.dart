@@ -23,10 +23,8 @@ class QuotationService {
         "${Environment.apiUrl}/quotations?populate=*&sort=createdAt:DESC",
         options: Options(headers: headers),
       );
-      print('getallQuotation ok ${response}');
       return QuotationModel.fromJson(response.data);
     } catch (error) {
-      print('getallQuotation error ${error}');
       rethrow;
     }
   }
