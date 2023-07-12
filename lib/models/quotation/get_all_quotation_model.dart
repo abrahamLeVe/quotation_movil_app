@@ -66,7 +66,7 @@ class PurpleAttributes {
   DateTime updatedAt;
   DateTime publishedAt;
   PdfVoucher pdfVoucher;
-  StatusQuotation statusQuotation;
+  StatusQuotation? statusQuotation;
   String codeQuotation;
 
   PurpleAttributes({
@@ -79,7 +79,7 @@ class PurpleAttributes {
     required this.updatedAt,
     required this.publishedAt,
     required this.pdfVoucher,
-    required this.statusQuotation,
+    this.statusQuotation,
     required this.codeQuotation,
   });
 
@@ -109,7 +109,7 @@ class PurpleAttributes {
         "updatedAt": updatedAt.toIso8601String(),
         "publishedAt": publishedAt.toIso8601String(),
         "pdfVoucher": pdfVoucher.toJson(),
-        "status_quotation": statusQuotation.toJson(),
+        "status_quotation": statusQuotation?.toJson(),
       };
 }
 

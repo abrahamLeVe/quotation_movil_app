@@ -97,14 +97,13 @@ class _EditProductSizesScreenState extends State<EditProductSizesScreen> {
       }
 
       if (context.mounted) {
-        Navigator.pop(context); // Cerrar el modal de progreso
+        Navigator.pop(context);
 
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Precios de medidas actualizados')),
         );
 
         setState(() {
-          // Actualizar el estado para reflejar los cambios en la lista de tamaños
           _modifiedSizes.clear();
         });
       }
@@ -149,17 +148,16 @@ class _EditProductSizesScreenState extends State<EditProductSizesScreen> {
   Widget build(BuildContext context) {
     return WillPopScope(
       onWillPop: () async {
-        // Si el usuario intenta regresar sin guardar los cambios, mostrar un diálogo de confirmación
         if (_modifiedSizes.isNotEmpty) {
           final confirmDiscard = await _showDiscardConfirmationDialog();
           if (confirmDiscard) {
-            return true; // Permitir regresar
+            return true;
           } else {
-            return false; // Bloquear el regreso
+            return false;
           }
         }
 
-        return true; // Permitir regresar si no hay cambios
+        return true;
       },
       child: Scaffold(
         appBar: AppBar(
@@ -189,9 +187,7 @@ class _EditProductSizesScreenState extends State<EditProductSizesScreen> {
                     initialValue:
                         size.attributes.quotationPrice?.toString() ?? '',
                     keyboardType: TextInputType.number,
-                    inputFormatters: [
-                      priceFormatter
-                    ], // Aplicar el formatter aquí
+                    inputFormatters: [priceFormatter],
                     onChanged: (value) {
                       _updateSizePrice(size, value);
                     },

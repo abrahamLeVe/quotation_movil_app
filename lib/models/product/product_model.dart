@@ -9,8 +9,6 @@
 
 // String productModelToJson(ProductModel data) => json.encode(data.toJson());
 
-
-
 class ProductModel {
   List<Product> data;
   Meta meta;
@@ -74,6 +72,7 @@ class PurpleAttributes {
   String description;
   String slug;
   double? quotationPrice;
+  int? quantity;
   DateTime createdAt;
   DateTime updatedAt;
   DateTime publishedAt;
@@ -88,6 +87,8 @@ class PurpleAttributes {
     required this.description,
     required this.slug,
     this.quotationPrice,
+    this.quantity,
+
     required this.createdAt,
     required this.updatedAt,
     required this.publishedAt,
@@ -104,6 +105,8 @@ class PurpleAttributes {
         description: json["description"],
         slug: json["slug"],
         quotationPrice: json["quotation_price"]?.toDouble(),
+        quantity: json["quantity"],
+
         createdAt: DateTime.parse(json["createdAt"]),
         updatedAt: DateTime.parse(json["updatedAt"]),
         publishedAt: DateTime.parse(json["publishedAt"]),
@@ -119,6 +122,8 @@ class PurpleAttributes {
         "description": description,
         "slug": slug,
         "quotation_price": quotationPrice,
+        "quantity": quantity,
+
         "createdAt": createdAt.toIso8601String(),
         "updatedAt": updatedAt.toIso8601String(),
         "publishedAt": publishedAt.toIso8601String(),
@@ -467,6 +472,7 @@ class ProductSizesDatum {
 
 class StickyAttributes {
   double? quotationPrice;
+  int? quantity;
   String val;
   DateTime createdAt;
   DateTime updatedAt;
@@ -474,6 +480,7 @@ class StickyAttributes {
 
   StickyAttributes({
     this.quotationPrice,
+    this.quantity,
     required this.val,
     required this.createdAt,
     required this.updatedAt,
@@ -483,6 +490,7 @@ class StickyAttributes {
   factory StickyAttributes.fromJson(Map<String, dynamic> json) =>
       StickyAttributes(
         quotationPrice: json["quotation_price"]?.toDouble(),
+        quantity: json["quantity"],
         val: json["val"],
         createdAt: DateTime.parse(json["createdAt"]),
         updatedAt: DateTime.parse(json["updatedAt"]),
@@ -491,6 +499,7 @@ class StickyAttributes {
 
   Map<String, dynamic> toJson() => {
         "quotation_price": quotationPrice,
+        "quotation": quantity,
         "val": val,
         "createdAt": createdAt.toIso8601String(),
         "updatedAt": updatedAt.toIso8601String(),

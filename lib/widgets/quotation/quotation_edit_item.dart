@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:pract_01/models/quotation/get_details_quotation_model.dart';
+import 'package:pract_01/models/quotation/get_all_quotation_model.dart'
+    as model_quotation;
 
 class QuotationEditItem extends StatelessWidget {
-  final ProductDeail product;
+  final model_quotation.Product product;
   final int productIndex;
-  final List<ProductDeail> products;
+  final List<model_quotation.Product> products;
   final void Function(int, int, double) onPriceUpdate;
 
   const QuotationEditItem({

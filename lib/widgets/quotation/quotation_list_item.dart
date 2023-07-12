@@ -1,12 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:pract_01/models/quotation/get_all_quotation_model.dart';
-import 'package:pract_01/screens/quotation/edit_quotation_screen.dart';
 import 'package:pract_01/utils/date_utils.dart' as util_format;
 
 class QuotationItem extends StatelessWidget {
   final Quotation quotation;
+  final void Function(Quotation) openEditQuotationScreen;
 
-  const QuotationItem({Key? key, required this.quotation}) : super(key: key);
+  const QuotationItem({
+    Key? key,
+    required this.quotation,
+    required this.openEditQuotationScreen,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -41,13 +45,7 @@ class QuotationItem extends StatelessWidget {
           children: [
             GestureDetector(
               onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) =>
-                        EditQuotationScreen(quotationId: quotation.id),
-                  ),
-                );
+                openEditQuotationScreen(quotation);
               },
               child: const Icon(Icons.edit),
             ),

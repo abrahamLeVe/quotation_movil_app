@@ -1,8 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:pract_01/models/quotation/get_all_quotation_model.dart';
-import 'package:pract_01/models/quotation/get_details_quotation_model.dart';
-import 'package:pract_01/services/quotation_service.dart';
 
 class QuotationState with ChangeNotifier {
   List<Quotation> _quotations = [];
@@ -29,23 +27,11 @@ class QuotationState with ChangeNotifier {
     notifyListeners();
   }
 
-  void filterQuotationId(int quotationId) {
-    final filteredQuotations = _quotations.where((quotation) {
-      final code = quotation.attributes.codeQuotation.toUpperCase();
-      return code.contains(quotationId as Pattern);
-    }).toList();
-
-    _quotations = filteredQuotations;
-    notifyListeners();
-  }
-
-  Future<GetDetailsQuotation?> getQuotationById(int quotationId) async {
-    try {
-      final quotationDetails =
-          await QuotationService().getDetailsQuotation(quotationId);
-      return quotationDetails;
-    } catch (error) {
-      return null;
+  void updateQuotationProvider(Quotation updatedQuotation) {
+    final index = _quotations.indexWhere((q) => q.id == updatedQuotation.id);
+    if (index != -1) {
+      _quotations[index] = updatedQuotation;
+      notifyListeners();
     }
   }
 }

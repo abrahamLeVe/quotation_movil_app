@@ -7,8 +7,14 @@ import 'package:pract_01/widgets/quotation/quotation_list_item.dart';
 import 'package:provider/provider.dart' as provider;
 
 class QuotationListScreen extends StatefulWidget {
-  const QuotationListScreen({Key? key}) : super(key: key);
+  final List<Quotation> quotationList;
+  final void Function(Quotation) openEditQuotationScreen;
 
+  const QuotationListScreen({
+    Key? key,
+    required this.quotationList,
+    required this.openEditQuotationScreen,
+  }) : super(key: key);
   @override
   State<QuotationListScreen> createState() => _QuotationListScreenState();
 }
@@ -108,7 +114,10 @@ class _QuotationListScreenState extends State<QuotationListScreen> {
                   itemCount: filteredQuotations.length,
                   itemBuilder: (BuildContext context, int index) {
                     final quotation = filteredQuotations[index];
-                    return QuotationItem(quotation: quotation);
+                    return QuotationItem(
+                      openEditQuotationScreen: widget.openEditQuotationScreen,
+                      quotation: quotation,
+                    );
                   },
                 ),
               ],

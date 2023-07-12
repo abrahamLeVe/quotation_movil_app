@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:pract_01/models/enviroment_model.dart';
+import 'package:pract_01/providers/product_state.dart';
 import 'package:pract_01/providers/quotation_state.dart';
 import 'package:pract_01/screens/home_screen.dart';
 import 'package:provider/provider.dart';
@@ -20,6 +21,9 @@ class MyApp extends StatelessWidget {
       providers: [
         ChangeNotifierProvider<QuotationState>(
           create: (_) => QuotationState(),
+        ),
+        ChangeNotifierProvider<ProductState>(
+          create: (_) => ProductState(),
         ),
         // Otros proveedores aquí si los tienes
       ],
