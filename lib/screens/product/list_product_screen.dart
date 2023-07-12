@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:pract_01/models/product/product_model.dart';
 import 'package:pract_01/screens/product/edit_product_size_screen.dart';
+import 'package:pract_01/utils/currency_formatter.dart';
 
 class ProductListScreen extends StatefulWidget {
   final List<Product> productList;
@@ -101,7 +102,7 @@ class _ProductListScreenState extends State<ProductListScreen> {
                     title: Text(product.attributes.name.toUpperCase()),
                     subtitle: Text(productSizes.isNotEmpty
                         ? 'Medidas: ${productSizes.length}'
-                        : 'Precio: USD ${product.attributes.quotationPrice}'),
+                        : 'Precio: ${CurrencyFormatter.format(product.attributes.quotationPrice as double)}'),
                     trailing: GestureDetector(
                       onTap: () {
                         if (productSizes.isEmpty) {

@@ -21,7 +21,7 @@ class _EditProductSizesScreenState extends State<EditProductSizesScreen> {
   final List<double?> _sizePrices = [];
   final List<product_model.ProductSizesDatum> _modifiedSizes = [];
   final priceFormatter = FilteringTextInputFormatter.allow(
-    RegExp(r'^\d{1,6}(\.\d{0,2})?$'),
+    RegExp(r'^\d{1,9}(\.\d{0,2})?$'),
   );
 
   @override

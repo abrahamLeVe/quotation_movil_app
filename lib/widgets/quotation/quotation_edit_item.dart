@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:pract_01/models/quotation/get_all_quotation_model.dart'
     as model_quotation;
+import 'package:flutter/services.dart';
+import 'package:pract_01/utils/currency_formatter.dart';
 
 class QuotationEditItem extends StatelessWidget {
   final model_quotation.Product product;
@@ -49,14 +51,17 @@ class QuotationEditItem extends StatelessWidget {
                     ),
                     Row(
                       children: [
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text('Precio: ${size.quotationPrice}'),
-                            const SizedBox(width: 8),
-                            Text('Cantidad: ${size.quantity}'),
-                            const SizedBox(width: 8),
-                          ],
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                  'Precio: ${CurrencyFormatter.format(size.quotationPrice as double)}'),
+                              const SizedBox(width: 8),
+                              Text('Cantidad: ${size.quantity}'),
+                              const SizedBox(width: 8),
+                            ],
+                          ),
                         ),
                         TextButton(
                           onPressed: () {
@@ -67,6 +72,11 @@ class QuotationEditItem extends StatelessWidget {
                                   title: const Text('Modificar precio'),
                                   content: TextField(
                                     keyboardType: TextInputType.number,
+                                    inputFormatters: [
+                                      FilteringTextInputFormatter.allow(
+                                          RegExp(r'^\d*\.?\d{0,2}$')),
+                                      LengthLimitingTextInputFormatter(9),
+                                    ],
                                     decoration: const InputDecoration(
                                       labelText: 'Nuevo precio',
                                     ),
@@ -74,7 +84,7 @@ class QuotationEditItem extends StatelessWidget {
                                       onPriceUpdate(
                                         productIndex,
                                         sizeIndex,
-                                        double.parse(value),
+                                        double.tryParse(value) ?? 0,
                                         copiedProducts
                                             .cast<model_quotation.Product>(),
                                       );
@@ -108,14 +118,17 @@ class QuotationEditItem extends StatelessWidget {
             if (product.size.isEmpty)
               Row(
                 children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text('Precio: ${product.quotationPrice}'),
-                      const SizedBox(width: 8),
-                      Text('Cantidad: ${product.quantity}'),
-                      const SizedBox(width: 8),
-                    ],
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                            'Precio: ${CurrencyFormatter.format(product.quotationPrice as double)}'),
+                        const SizedBox(width: 8),
+                        Text('Cantidad: ${product.quantity}'),
+                        const SizedBox(width: 8),
+                      ],
+                    ),
                   ),
                   TextButton(
                     onPressed: () {
@@ -125,7 +138,14 @@ class QuotationEditItem extends StatelessWidget {
                           return AlertDialog(
                             title: const Text('Modificar precio'),
                             content: TextField(
-                              keyboardType: TextInputType.number,
+                              keyboardType:
+                                  const TextInputType.numberWithOptions(
+                                      decimal: true),
+                              inputFormatters: [
+                                FilteringTextInputFormatter.allow(
+                                    RegExp(r'^\d*\.?\d{0,2}$')),
+                                LengthLimitingTextInputFormatter(9),
+                              ],
                               decoration: const InputDecoration(
                                 labelText: 'Nuevo precio',
                               ),
@@ -133,7 +153,7 @@ class QuotationEditItem extends StatelessWidget {
                                 onPriceUpdate(
                                   productIndex,
                                   -1,
-                                  double.parse(value),
+                                  double.tryParse(value) ?? 0,
                                   copiedProducts
                                       .cast<model_quotation.Product>(),
                                 );

@@ -95,7 +95,7 @@ class _EditProductScreenState extends State<EditProductScreen> {
               keyboardType: TextInputType.number,
               inputFormatters: [
                 FilteringTextInputFormatter.allow(
-                  RegExp(r'^\d{1,6}(\.\d{0,2})?$'),
+                  RegExp(r'^\d{1,9}(\.\d{0,2})?$'),
                 ),
               ],
             ),
