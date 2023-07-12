@@ -6,7 +6,12 @@ class QuotationEditItem extends StatelessWidget {
   final model_quotation.Product product;
   final int productIndex;
   final List<model_quotation.Product> products;
-  final void Function(int, int, double) onPriceUpdate;
+  final void Function(
+    int productIndex,
+    int sizeIndex,
+    double newPrice,
+    List<model_quotation.Product> updatedProducts,
+  ) onPriceUpdate;
 
   const QuotationEditItem({
     Key? key,
@@ -18,6 +23,8 @@ class QuotationEditItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final copiedProducts = List<dynamic>.from(products);
+
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(10.0),
@@ -68,6 +75,8 @@ class QuotationEditItem extends StatelessWidget {
                                         productIndex,
                                         sizeIndex,
                                         double.parse(value),
+                                        copiedProducts
+                                            .cast<model_quotation.Product>(),
                                       );
                                     },
                                   ),
@@ -125,6 +134,8 @@ class QuotationEditItem extends StatelessWidget {
                                   productIndex,
                                   -1,
                                   double.parse(value),
+                                  copiedProducts
+                                      .cast<model_quotation.Product>(),
                                 );
                               },
                             ),

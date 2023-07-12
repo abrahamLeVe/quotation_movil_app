@@ -78,12 +78,12 @@ void performDeleteAction(BuildContext context, int quotationId) async {
   }
 }
 
-void archiveQuotation1(BuildContext context, int quotationId) {
+void archiveQuotation1(BuildContext context, int quotationId , String codeQuotation) {
   showDialog(
     context: context,
     builder: (BuildContext context) {
       return AlertDialog(
-        title: Text('Archivar cotización $quotationId'),
+        title: Text('Archivar cotización $codeQuotation'),
         content: const Text('¿Estás seguro de archivar esta cotización?'),
         actions: <Widget>[
           TextButton(

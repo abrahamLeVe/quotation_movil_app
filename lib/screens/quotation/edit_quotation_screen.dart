@@ -3,7 +3,6 @@ import 'package:pract_01/models/quotation/get_all_quotation_model.dart'
     as model_quotation;
 import 'package:pract_01/models/quotation/update_quotation_model.dart';
 import 'package:pract_01/providers/quotation_state.dart';
-
 import 'package:pract_01/screens/home_screen.dart';
 import 'package:pract_01/screens/quotation/quotation_actions.dart';
 import 'package:pract_01/services/quotation_service.dart';
@@ -43,14 +42,47 @@ class _EditQuotationScreenState extends State<EditQuotationScreen> {
     quotationState = Provider.of<QuotationState>(context, listen: false);
   }
 
-  void updateProductPrice(int productIndex, int sizeIndex, double newPrice) {
+  void updateProductPrice(
+    int productIndex,
+    int sizeIndex,
+    double newPrice,
+    List<model_quotation.Product> updatedProducts,
+  ) {
     setState(() {
-      final product = products[productIndex];
+      final copiedProducts =
+          List<model_quotation.Product>.from(updatedProducts);
+
+      final product = copiedProducts[productIndex];
       if (product.size.isNotEmpty) {
-        product.size[sizeIndex].quotationPrice = newPrice;
+        final copiedSizes = List<model_quotation.Size>.from(product.size);
+        final size = copiedSizes[sizeIndex];
+        final updatedSize = model_quotation.Size(
+          id: size.id,
+          val: size.val,
+          quantity: size.quantity,
+          quotationPrice: newPrice,
+        );
+        copiedSizes[sizeIndex] = updatedSize;
+        final updatedProduct = model_quotation.Product(
+          id: product.id,
+          name: product.name,
+          size: copiedSizes.toList(),
+          quantity: product.quantity,
+          quotationPrice: product.quotationPrice,
+        );
+        copiedProducts[productIndex] = updatedProduct;
       } else {
-        product.quotationPrice = newPrice;
+        final updatedProduct = model_quotation.Product(
+          id: product.id,
+          name: product.name,
+          size: product.size,
+          quantity: product.quantity,
+          quotationPrice: newPrice,
+        );
+        copiedProducts[productIndex] = updatedProduct;
       }
+
+      products = copiedProducts;
     });
   }
 
@@ -95,13 +127,11 @@ class _EditQuotationScreenState extends State<EditQuotationScreen> {
       response = await QuotationService()
           .updateQuotation(widget.quotation.id, updatedData);
 
-      // Simulación de carga de datos
       await Future.delayed(const Duration(seconds: 2));
 
       if (mounted) {
         widget.onQuotationUpdated(widget.quotation);
-        quotationState.updateQuotationProvider(
-            widget.quotation); // Actualizar la cotización en QuotationState
+        quotationState.updateQuotationProvider(widget.quotation);
         Navigator.pop(context);
 
         showDialog(
@@ -114,7 +144,7 @@ class _EditQuotationScreenState extends State<EditQuotationScreen> {
               actions: [
                 TextButton(
                   onPressed: () {
-                    Navigator.pop(context, true); // Confirmar
+                    Navigator.pop(context, true);
                   },
                   child: const Text('Aceptar'),
                 ),
@@ -123,23 +153,18 @@ class _EditQuotationScreenState extends State<EditQuotationScreen> {
           },
         ).then((confirm) {
           if (confirm == true) {
-            // Obtener la cotización actualizada del QuotationState
             final index = quotationState.quotations
                 .indexWhere((q) => q.id == widget.quotation.id);
 
-            // Verificar si se encontró un índice válido
             if (index != -1) {
               model_quotation.Quotation updatedQuotation =
                   quotationState.quotations[index];
 
-              // Actualizar los datos de la cotización en los botones de descarga y envío
               String pdfUrl = updatedQuotation
                   .attributes.pdfVoucher.data![0].attributes.url;
 
-              // Descargar el PDF
               _openPdf(pdfUrl);
 
-              // Enviar el PDF por WhatsApp
               SendPdfToWhatsAppButton(
                 customerName: updatedQuotation.attributes.name,
                 code: updatedQuotation.attributes.codeQuotation,
@@ -147,7 +172,6 @@ class _EditQuotationScreenState extends State<EditQuotationScreen> {
                 phoneNumber: updatedQuotation.attributes.phone,
               );
 
-              // Enviar el PDF por email
               SendEmailButton(
                 customerName: updatedQuotation.attributes.name,
                 code: updatedQuotation.attributes.codeQuotation,
@@ -188,25 +212,86 @@ class _EditQuotationScreenState extends State<EditQuotationScreen> {
   }
 
   archiveQuotation() {
-    archiveQuotation1(context, widget.quotation.id);
+    archiveQuotation1(context, widget.quotation.id,
+        widget.quotation.attributes.codeQuotation);
+  }
+
+  Future<bool> _confirmDiscardChanges(BuildContext context) async {
+    if (_changesNotSaved()) {
+      final confirmed = await showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: const Text('Descartar cambios'),
+            content: const Text(
+                '¿Estás seguro de que quieres descartar los cambios sin guardar?'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, true),
+                child: const Text('Descartar'),
+              ),
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: const Text('Cancelar'),
+              ),
+            ],
+          );
+        },
+      );
+
+      return confirmed ?? false;
+    }
+
+    return true;
+  }
+
+  bool _changesNotSaved() {
+    return products.any((product) {
+      final originalProduct = widget.quotation.attributes.products
+          .firstWhere((p) => p.id == product.id);
+
+      print('Product ID: ${product.id}');
+      print(
+          'Product Original Quotation Price: ${originalProduct.quotationPrice}');
+      print('Product Current Quotation Price: ${product.quotationPrice}');
+
+      if (product.size.isNotEmpty) {
+        return product.size.any((size) {
+          final originalSize =
+              originalProduct.size.firstWhere((s) => s.id == size.id);
+
+          print('Size ID: ${size.id}');
+          print(
+              'Size Original Quotation Price: ${originalSize.quotationPrice}');
+          print('Size Current Quotation Price: ${size.quotationPrice}');
+
+          return size.quotationPrice != originalSize.quotationPrice;
+        });
+      } else {
+        return product.quotationPrice != originalProduct.quotationPrice;
+      }
+    });
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: buildAppBar(),
-      body: _isLoading
-          ? const Center(
-              child: CircularProgressIndicator(),
-            )
-          : Padding(
-              padding: const EdgeInsets.all(10.0),
-              child: Consumer<QuotationState>(
-                builder: (context, quotationState, _) {
-                  return quotationDetailsColumn(quotationState.quotations);
-                },
+    return WillPopScope(
+      onWillPop: () => _confirmDiscardChanges(context),
+      child: Scaffold(
+        appBar: buildAppBar(),
+        body: _isLoading
+            ? const Center(
+                child: CircularProgressIndicator(),
+              )
+            : Padding(
+                padding: const EdgeInsets.all(10.0),
+                child: Consumer<QuotationState>(
+                  builder: (context, quotationState, _) {
+                    return quotationDetailsColumn(quotationState.quotations);
+                  },
+                ),
               ),
-            ),
+      ),
     );
   }
 
@@ -245,18 +330,14 @@ class _EditQuotationScreenState extends State<EditQuotationScreen> {
                 const Text('Descargar'),
               ]),
               onTap: () {
-                // Obtener la cotización actualizada del QuotationState
                 QuotationState quotationState =
                     Provider.of<QuotationState>(context, listen: false);
                 final index = quotationState.quotations
                     .indexWhere((q) => q.id == widget.quotation.id);
 
                 if (index != -1) {
-                  // Obtener la URL actualizada del PDF
                   String pdfUrl = quotationState.quotations[index].attributes
                       .pdfVoucher.data![0].attributes.url;
-
-                  // Descargar el PDF
                   _openPdf(pdfUrl);
                 }
               },
@@ -280,18 +361,15 @@ class _EditQuotationScreenState extends State<EditQuotationScreen> {
                 ],
               ),
               onTap: () {
-                // Obtener la cotización actualizada del QuotationState
                 QuotationState quotationState =
                     Provider.of<QuotationState>(context, listen: false);
                 final index = quotationState.quotations
                     .indexWhere((q) => q.id == widget.quotation.id);
 
                 if (index != -1) {
-                  // Obtener la URL actualizada del PDF
                   String pdfUrl = quotationState.quotations[index].attributes
                       .pdfVoucher.data![0].attributes.url;
 
-                  // Enviar el PDF por WhatsApp
                   SendPdfToWhatsAppButton(
                     customerName: widget.quotation.attributes.name,
                     code: widget.quotation.attributes.codeQuotation,
@@ -310,18 +388,15 @@ class _EditQuotationScreenState extends State<EditQuotationScreen> {
                 ],
               ),
               onTap: () {
-                // Obtener la cotización actualizada del QuotationState
                 QuotationState quotationState =
                     Provider.of<QuotationState>(context, listen: false);
                 final index = quotationState.quotations
                     .indexWhere((q) => q.id == widget.quotation.id);
 
                 if (index != -1) {
-                  // Obtener la URL actualizada del PDF
                   String pdfUrl = quotationState.quotations[index].attributes
                       .pdfVoucher.data![0].attributes.url;
 
-                  // Enviar el PDF por email
                   SendEmailButton(
                     customerName: widget.quotation.attributes.name,
                     code: widget.quotation.attributes.codeQuotation,
@@ -377,8 +452,10 @@ class _EditQuotationScreenState extends State<EditQuotationScreen> {
                 product: product,
                 productIndex: productIndex,
                 products: products,
-                onPriceUpdate: (productIndex, sizeIndex, newPrice) {
-                  updateProductPrice(productIndex, sizeIndex, newPrice);
+                onPriceUpdate:
+                    (productIndex, sizeIndex, newPrice, updatedProducts) {
+                  updateProductPrice(
+                      productIndex, sizeIndex, newPrice, updatedProducts);
                   quotationState.updateQuotationProvider(widget.quotation);
                 },
               );
