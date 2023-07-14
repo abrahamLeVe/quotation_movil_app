@@ -21,6 +21,7 @@ class EditProductScreen extends StatefulWidget {
 class _EditProductScreenState extends State<EditProductScreen> {
   final TextEditingController _priceController = TextEditingController();
   bool _isLoading = false;
+  bool _changesSaved = true;
 
   @override
   void initState() {
@@ -35,76 +36,123 @@ class _EditProductScreenState extends State<EditProductScreen> {
   }
 
   void updateProduct() async {
-    setState(() {
-      _isLoading = true;
-    });
-
-    double newPrice = double.tryParse(_priceController.text) ?? 0.0;
-
-    showLoadingDialog(context);
-
-    try {
-      await ProductService().updateProduct(widget.product.id, newPrice);
-
-      if (context.mounted) {
-        widget.onProductUpdated(widget.product);
-        Navigator.pop(context);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Producto actualizado')),
-        );
-      }
-    } catch (error) {
-      if (context.mounted) {
-        Navigator.pop(context);
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Error al actualizar el producto')),
-        );
-      }
-    } finally {
+    if (!_changesSaved) {
       setState(() {
-        _isLoading = false;
+        _isLoading = true;
       });
+
+      double newPrice = double.tryParse(_priceController.text) ?? 0.0;
+
+      showLoadingDialog(context);
+
+      try {
+        await ProductService().updateProduct(widget.product.id, newPrice);
+
+        if (context.mounted) {
+          widget.onProductUpdated(widget.product);
+          Navigator.pop(context);
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Producto actualizado')),
+          );
+          setState(() {
+            _changesSaved = true;
+          });
+        }
+      } catch (error) {
+        if (context.mounted) {
+          Navigator.pop(context);
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Error al actualizar el producto')),
+          );
+        }
+      } finally {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Sin cambios que guardar')),
+      );
     }
+  }
+
+  Future<bool> _showDiscardConfirmationDialog() async {
+    return await showDialog<bool>(
+          context: context,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              title: const Text('Descartar cambios'),
+              content: const Text('¿Estás seguro de descartar los cambios?'),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context, false),
+                  child: const Text('Cancelar'),
+                ),
+                TextButton(
+                  onPressed: () => Navigator.pop(context, true),
+                  child: const Text('Descartar'),
+                ),
+              ],
+            );
+          },
+        ) ??
+        false;
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(),
-      body: Padding(
-        padding: const EdgeInsets.all(10.0),
-        child: Column(
-          children: [
-            Text(
-              widget.product.attributes.name,
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 16),
-            Image.network(
-              widget.product.attributes.thumbnail.data.attributes.formats
-                  .thumbnail.url,
-              width: 156,
-              height: 156,
-            ),
-            const SizedBox(height: 16),
-            const Text('Precio de cotización'),
-            TextFormField(
-              textAlign: TextAlign.center,
-              controller: _priceController,
-              keyboardType: TextInputType.number,
-              inputFormatters: [
-                FilteringTextInputFormatter.allow(
-                  RegExp(r'^\d{1,9}(\.\d{0,2})?$'),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: _isLoading ? null : updateProduct,
-              child: const Text('Guardar'),
-            ),
-          ],
+    return WillPopScope(
+      onWillPop: () async {
+        if (!_changesSaved) {
+          final confirmDiscard = await _showDiscardConfirmationDialog();
+          return confirmDiscard;
+        }
+
+        return true;
+      },
+      child: Scaffold(
+        appBar: AppBar(),
+        body: Padding(
+          padding: const EdgeInsets.all(10.0),
+          child: Column(
+            children: [
+              Text(
+                widget.product.attributes.name,
+                style:
+                    const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 16),
+              Image.network(
+                widget.product.attributes.thumbnail.data.attributes.formats
+                    .thumbnail.url,
+                width: 156,
+                height: 156,
+              ),
+              const SizedBox(height: 16),
+              const Text('Precio de cotización'),
+              TextFormField(
+                textAlign: TextAlign.center,
+                controller: _priceController,
+                keyboardType: TextInputType.number,
+                inputFormatters: [
+                  FilteringTextInputFormatter.allow(
+                    RegExp(r'^\d{1,9}(\.\d{0,2})?$'),
+                  ),
+                ],
+                onChanged: (value) {
+                  setState(() {
+                    _changesSaved = false;
+                  });
+                },
+              ),
+              const SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: _isLoading || _changesSaved ? null : updateProduct,
+                child: const Text('Guardar'),
+              ),
+            ],
+          ),
         ),
       ),
     );

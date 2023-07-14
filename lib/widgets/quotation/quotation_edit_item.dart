@@ -25,7 +25,7 @@ class QuotationEditItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final copiedProducts = List<dynamic>.from(products);
+    final copiedProducts = List<model_quotation.Product>.from(products);
 
     return Card(
       child: Padding(
@@ -42,6 +42,10 @@ class QuotationEditItem extends StatelessWidget {
               ...product.size.asMap().entries.map((entry) {
                 final sizeIndex = entry.key;
                 final size = entry.value;
+                final TextEditingController priceController =
+                    TextEditingController();
+                priceController.text = size.quotationPrice.toString();
+
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -56,7 +60,8 @@ class QuotationEditItem extends StatelessWidget {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                  'Precio: ${CurrencyFormatter.format(size.quotationPrice as double)}'),
+                                'Precio: ${CurrencyFormatter.format(size.quotationPrice as double)}',
+                              ),
                               const SizedBox(width: 8),
                               Text('Cantidad: ${size.quantity}'),
                               const SizedBox(width: 8),
@@ -64,13 +69,15 @@ class QuotationEditItem extends StatelessWidget {
                           ),
                         ),
                         TextButton(
-                          onPressed: () {
-                            showDialog(
+                          onPressed: () async {
+                            final newPrice = await showDialog<double>(
                               context: context,
+                              barrierDismissible: false,
                               builder: (BuildContext context) {
                                 return AlertDialog(
                                   title: const Text('Modificar precio'),
                                   content: TextField(
+                                    controller: priceController,
                                     keyboardType: TextInputType.number,
                                     inputFormatters: [
                                       FilteringTextInputFormatter.allow(
@@ -80,15 +87,6 @@ class QuotationEditItem extends StatelessWidget {
                                     decoration: const InputDecoration(
                                       labelText: 'Nuevo precio',
                                     ),
-                                    onChanged: (value) {
-                                      onPriceUpdate(
-                                        productIndex,
-                                        sizeIndex,
-                                        double.tryParse(value) ?? 0,
-                                        copiedProducts
-                                            .cast<model_quotation.Product>(),
-                                      );
-                                    },
                                   ),
                                   actions: [
                                     TextButton(
@@ -99,7 +97,10 @@ class QuotationEditItem extends StatelessWidget {
                                     ),
                                     TextButton(
                                       onPressed: () {
-                                        Navigator.pop(context);
+                                        final newPrice = double.tryParse(
+                                                priceController.text) ??
+                                            0;
+                                        Navigator.pop(context, newPrice);
                                       },
                                       child: const Text('Aceptar'),
                                     ),
@@ -107,6 +108,15 @@ class QuotationEditItem extends StatelessWidget {
                                 );
                               },
                             );
+
+                            if (newPrice != null) {
+                              onPriceUpdate(
+                                productIndex,
+                                sizeIndex,
+                                newPrice,
+                                copiedProducts,
+                              );
+                            }
                           },
                           child: const Text('Modificar precio'),
                         ),
@@ -123,7 +133,8 @@ class QuotationEditItem extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                            'Precio: ${CurrencyFormatter.format(product.quotationPrice as double)}'),
+                          'Precio: ${CurrencyFormatter.format(product.quotationPrice as double)}',
+                        ),
                         const SizedBox(width: 8),
                         Text('Cantidad: ${product.quantity}'),
                         const SizedBox(width: 8),
@@ -131,16 +142,20 @@ class QuotationEditItem extends StatelessWidget {
                     ),
                   ),
                   TextButton(
-                    onPressed: () {
-                      showDialog(
+                    onPressed: () async {
+                      final TextEditingController priceController0 =
+                          TextEditingController();
+                      priceController0.text = product.quotationPrice.toString();
+
+                      final newPrice = await showDialog<double>(
                         context: context,
+                        barrierDismissible: false,
                         builder: (BuildContext context) {
                           return AlertDialog(
                             title: const Text('Modificar precio'),
                             content: TextField(
-                              keyboardType:
-                                  const TextInputType.numberWithOptions(
-                                      decimal: true),
+                              controller: priceController0,
+                              keyboardType: TextInputType.number,
                               inputFormatters: [
                                 FilteringTextInputFormatter.allow(
                                     RegExp(r'^\d*\.?\d{0,2}$')),
@@ -149,15 +164,6 @@ class QuotationEditItem extends StatelessWidget {
                               decoration: const InputDecoration(
                                 labelText: 'Nuevo precio',
                               ),
-                              onChanged: (value) {
-                                onPriceUpdate(
-                                  productIndex,
-                                  -1,
-                                  double.tryParse(value) ?? 0,
-                                  copiedProducts
-                                      .cast<model_quotation.Product>(),
-                                );
-                              },
                             ),
                             actions: [
                               TextButton(
@@ -168,7 +174,10 @@ class QuotationEditItem extends StatelessWidget {
                               ),
                               TextButton(
                                 onPressed: () {
-                                  Navigator.pop(context);
+                                  final newPrice =
+                                      double.tryParse(priceController0.text) ??
+                                          0;
+                                  Navigator.pop(context, newPrice);
                                 },
                                 child: const Text('Aceptar'),
                               ),
@@ -176,6 +185,15 @@ class QuotationEditItem extends StatelessWidget {
                           );
                         },
                       );
+
+                      if (newPrice != null) {
+                        onPriceUpdate(
+                          productIndex,
+                          -1,
+                          newPrice,
+                          copiedProducts,
+                        );
+                      }
                     },
                     child: const Text('Modificar precio'),
                   ),

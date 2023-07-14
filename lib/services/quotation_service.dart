@@ -8,6 +8,7 @@ import 'package:pract_01/models/quotation/update_quotation_model.dart';
 
 class QuotationService {
   late Dio _dio;
+
   QuotationService() {
     _dio = Dio();
   }
@@ -25,6 +26,7 @@ class QuotationService {
       );
       return QuotationModel.fromJson(response.data);
     } catch (error) {
+      print('Error in getAllQuotation: $error');
       rethrow;
     }
   }
@@ -37,10 +39,9 @@ class QuotationService {
         data: data,
         options: Options(headers: headers),
       );
-      // print('updateQuotationService response $response');
       return UpdateQuotationModel.fromJson(response.data);
     } catch (error) {
-      print('updateQuotation error $error');
+      print('Error in updateQuotation: $error');
       rethrow;
     }
   }
@@ -53,6 +54,7 @@ class QuotationService {
       );
       return GetDetailsQuotation.fromJson(response.data);
     } catch (error) {
+      print('Error in getDetailsQuotation: $error');
       rethrow;
     }
   }
@@ -65,6 +67,7 @@ class QuotationService {
       );
       return DeleteQuotation.fromJson(response.data);
     } catch (error) {
+      print('Error in deleteQuotation: $error');
       rethrow;
     }
   }
@@ -82,6 +85,7 @@ class QuotationService {
       );
       return ArchiveQuotation.fromJson(response.data);
     } catch (error) {
+      print('Error in archiveQuotation: $error');
       rethrow;
     }
   }

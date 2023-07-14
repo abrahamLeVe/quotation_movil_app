@@ -30,6 +30,7 @@ class EditQuotationScreen extends StatefulWidget {
 class _EditQuotationScreenState extends State<EditQuotationScreen> {
   List<model_quotation.Product> products = [];
   late UpdateQuotationModel response;
+  late bool _changesSaved = false;
 
   final bool _isLoading = false;
   late QuotationState quotationState;
@@ -90,120 +91,133 @@ class _EditQuotationScreenState extends State<EditQuotationScreen> {
     showLoadingDialog(context);
   }
 
-  void saveChanges() async {
-    final quotationState = Provider.of<QuotationState>(context, listen: false);
-    final updatedData = {
-      'data': {
-        'id': widget.quotation.id,
-        'name': widget.quotation.attributes.name,
-        'phone': widget.quotation.attributes.phone,
-        'message': widget.quotation.attributes.message,
-        'email': widget.quotation.attributes.email,
-        'products': products.map((product) {
-          return {
-            'id': product.id,
-            'name': product.name,
-            'size': product.size.map((size) {
-              return {
-                'id': size.id,
-                'val': size.val,
-                'quantity': size.quantity,
-                'quotation_price': size.quotationPrice ?? 0,
-              };
-            }).toList(),
-            'quantity': product.quantity,
-            'quotation_price': product.quotationPrice ?? 0,
-          };
-        }).toList(),
-        "code_quotation": widget.quotation.attributes.codeQuotation
-      },
-    };
-
-    try {
-      if (mounted) {
-        _handleButtonPress(context);
-      }
-
-      response = await QuotationService()
-          .updateQuotation(widget.quotation.id, updatedData);
-
-      await Future.delayed(const Duration(seconds: 2));
-
-      if (mounted) {
-        widget.onQuotationUpdated(widget.quotation);
-        quotationState.updateQuotationProvider(widget.quotation);
-        Navigator.pop(context);
-
-        showDialog(
-          context: context,
-          barrierDismissible: false,
-          builder: (BuildContext context) {
-            return AlertDialog(
-              title: const Text('Cotización actualizada'),
-              content: const Text('La cotización se actualizó exitosamente.'),
-              actions: [
-                TextButton(
-                  onPressed: () {
-                    Navigator.pop(context, true);
-                  },
-                  child: const Text('Aceptar'),
-                ),
-              ],
-            );
-          },
-        ).then((confirm) {
-          if (confirm == true) {
-            final index = quotationState.quotations
-                .indexWhere((q) => q.id == widget.quotation.id);
-
-            if (index != -1) {
-              model_quotation.Quotation updatedQuotation =
-                  quotationState.quotations[index];
-
-              String pdfUrl = updatedQuotation
-                  .attributes.pdfVoucher.data![0].attributes.url;
-
-              _openPdf(pdfUrl);
-
-              SendPdfToWhatsAppButton(
-                customerName: updatedQuotation.attributes.name,
-                code: updatedQuotation.attributes.codeQuotation,
-                pdfFilePath: pdfUrl,
-                phoneNumber: updatedQuotation.attributes.phone,
-              );
-
-              SendEmailButton(
-                customerName: updatedQuotation.attributes.name,
-                code: updatedQuotation.attributes.codeQuotation,
-                pdfFilePath: pdfUrl,
-                recipientEmail: updatedQuotation.attributes.email,
-              );
-            }
-          }
-        });
-      }
-    } catch (error) {
-      if (mounted) {
-        Navigator.pop(context);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Error al actualizar la cotización')),
-        );
-        Navigator.pop(context);
-        Navigator.pushAndRemoveUntil(
-          context,
-          MaterialPageRoute(
-            builder: (_) => const HomeScreen(selectedTabIndex: 1),
-          ),
-          (route) => false,
-        );
-      }
+  Future<void> _openPdf(String url) async {
+    final Uri url0 = Uri.parse(url);
+    if (!await launchUrl(
+      url0,
+      mode: LaunchMode.externalApplication,
+    )) {
+      throw Exception('Could not launch $url0');
     }
   }
 
-  Future<void> _openPdf(String url) async {
-    final Uri url0 = Uri.parse(url);
-    if (!await launchUrl(url0)) {
-      throw Exception('Could not launch $url0');
+  void saveChanges() async {
+    if (_changesNotSaved()) {
+      final quotationState =
+          Provider.of<QuotationState>(context, listen: false);
+      final updatedData = {
+        'data': {
+          'id': widget.quotation.id,
+          'name': widget.quotation.attributes.name,
+          'phone': widget.quotation.attributes.phone,
+          'message': widget.quotation.attributes.message,
+          'email': widget.quotation.attributes.email,
+          'products': products.map((product) {
+            return {
+              'id': product.id,
+              'name': product.name,
+              'size': product.size.map((size) {
+                return {
+                  'id': size.id,
+                  'val': size.val,
+                  'quantity': size.quantity,
+                  'quotation_price': size.quotationPrice ?? 0,
+                };
+              }).toList(),
+              'quantity': product.quantity,
+              'quotation_price': product.quotationPrice ?? 0,
+            };
+          }).toList(),
+          "code_quotation": widget.quotation.attributes.codeQuotation
+        },
+      };
+
+      try {
+        if (mounted) {
+          _handleButtonPress(context);
+        }
+        _changesSaved = true;
+
+        response = await QuotationService()
+            .updateQuotation(widget.quotation.id, updatedData);
+
+        await Future.delayed(const Duration(seconds: 2));
+
+        if (mounted) {
+          widget.onQuotationUpdated(widget.quotation);
+          quotationState.updateQuotationProvider(widget.quotation);
+          Navigator.pop(context);
+
+          showDialog(
+            context: context,
+            barrierDismissible: false,
+            builder: (BuildContext context) {
+              return AlertDialog(
+                title: const Text('Cotización actualizada'),
+                content: const Text('La cotización se actualizó exitosamente.'),
+                actions: [
+                  TextButton(
+                    onPressed: () {
+                      Navigator.pop(context, true);
+                    },
+                    child: const Text('Aceptar'),
+                  ),
+                ],
+              );
+            },
+          ).then((confirm) {
+            if (confirm == true) {
+              final index = quotationState.quotations
+                  .indexWhere((q) => q.id == widget.quotation.id);
+
+              if (index != -1) {
+                model_quotation.Quotation updatedQuotation =
+                    quotationState.quotations[index];
+
+                String pdfUrl = updatedQuotation
+                    .attributes.pdfVoucher.data![0].attributes.url;
+
+                _openPdf(pdfUrl);
+
+                SendPdfToWhatsAppButton(
+                  customerName: updatedQuotation.attributes.name,
+                  code: updatedQuotation.attributes.codeQuotation,
+                  pdfFilePath: pdfUrl,
+                  phoneNumber: updatedQuotation.attributes.phone,
+                );
+
+                SendEmailButton(
+                  customerName: updatedQuotation.attributes.name,
+                  code: updatedQuotation.attributes.codeQuotation,
+                  pdfFilePath: pdfUrl,
+                  recipientEmail: updatedQuotation.attributes.email,
+                );
+              }
+            }
+          });
+        }
+      } catch (error) {
+        _changesSaved = false;
+
+        if (mounted) {
+          Navigator.pop(context);
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Error al actualizar la cotización')),
+          );
+          Navigator.pop(context);
+          Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(
+              builder: (_) => const HomeScreen(selectedTabIndex: 1),
+            ),
+            (route) => false,
+          );
+        }
+      }
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No existen cambios')),
+      );
     }
   }
 
@@ -218,28 +232,31 @@ class _EditQuotationScreenState extends State<EditQuotationScreen> {
 
   Future<bool> _confirmDiscardChanges(BuildContext context) async {
     if (_changesNotSaved()) {
-      final confirmed = await showDialog(
-        context: context,
-        builder: (BuildContext context) {
-          return AlertDialog(
-            title: const Text('Descartar cambios'),
-            content: const Text(
-                '¿Estás seguro de que quieres descartar los cambios sin guardar?'),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context, true),
-                child: const Text('Descartar'),
-              ),
-              TextButton(
-                onPressed: () => Navigator.pop(context, false),
-                child: const Text('Cancelar'),
-              ),
-            ],
-          );
-        },
-      );
+      if (!_changesSaved) {
+        final confirmed = await showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              title: const Text('Descartar cambios'),
+              content: const Text(
+                  '¿Estás seguro de que quieres descartar los cambios sin guardar?'),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context, true),
+                  child: const Text('Descartar'),
+                ),
+                TextButton(
+                  onPressed: () => Navigator.pop(context, false),
+                  child: const Text('Cancelar'),
+                ),
+              ],
+            );
+          },
+        );
 
-      return confirmed ?? false;
+        return confirmed ?? false;
+      }
     }
 
     return true;
@@ -250,20 +267,18 @@ class _EditQuotationScreenState extends State<EditQuotationScreen> {
       final originalProduct = widget.quotation.attributes.products
           .firstWhere((p) => p.id == product.id);
 
-      print('Product ID: ${product.id}');
-      print(
-          'Product Original Quotation Price: ${originalProduct.quotationPrice}');
-      print('Product Current Quotation Price: ${product.quotationPrice}');
+      ('Product ID: ${product.id}');
+      ('Product Original Quotation Price: ${originalProduct.quotationPrice}');
+      ('Product Current Quotation Price: ${product.quotationPrice}');
 
       if (product.size.isNotEmpty) {
         return product.size.any((size) {
           final originalSize =
               originalProduct.size.firstWhere((s) => s.id == size.id);
 
-          print('Size ID: ${size.id}');
-          print(
-              'Size Original Quotation Price: ${originalSize.quotationPrice}');
-          print('Size Current Quotation Price: ${size.quotationPrice}');
+          ('Size ID: ${size.id}');
+          ('Size Original Quotation Price: ${originalSize.quotationPrice}');
+          ('Size Current Quotation Price: ${size.quotationPrice}');
 
           return size.quotationPrice != originalSize.quotationPrice;
         });

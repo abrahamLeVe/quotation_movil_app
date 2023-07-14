@@ -15,11 +15,17 @@ class ProductService {
       };
 
   Future<ProductModel> getAllProduct() async {
+    try{
     final response = await _dio.get(
       "${Environment.apiUrl}/products?populate=*&sort=createdAt:DESC",
       options: Options(headers: headers),
     );
     return ProductModel.fromJson(response.data);
+    }catch(error){
+      print('Error in getAllProduct: $error');
+
+      rethrow;
+    }
   }
 
   Future<ProductUpdateModel> updateProduct(int id, double price) async {
@@ -35,6 +41,8 @@ class ProductService {
       );
       return ProductUpdateModel.fromJson(response.data);
     } catch (error) {
+      print('Error in updateProduct: $error');
+
       rethrow;
     }
   }
@@ -47,6 +55,8 @@ class ProductService {
       );
       return ProductUpdateModel.fromJson(response.data);
     } catch (error) {
+      print('Error in deleteProduct: $error');
+
       rethrow;
     }
   }
@@ -64,6 +74,8 @@ class ProductService {
       );
       return SizeUpdateModel.fromJson(response.data);
     } catch (error) {
+      print('Error in updateSize: $error');
+
       rethrow;
     }
   }

@@ -10,6 +10,7 @@ void _handleButtonPress(BuildContext context) {
 void deleteQuotation1(BuildContext context, int quotationId) {
   showDialog(
     context: context,
+    barrierDismissible: false,
     builder: (BuildContext context) {
       return AlertDialog(
         title: const Text('Eliminar cotización permanentemente'),
@@ -78,9 +79,11 @@ void performDeleteAction(BuildContext context, int quotationId) async {
   }
 }
 
-void archiveQuotation1(BuildContext context, int quotationId , String codeQuotation) {
+void archiveQuotation1(
+    BuildContext context, int quotationId, String codeQuotation) {
   showDialog(
     context: context,
+    barrierDismissible: false,
     builder: (BuildContext context) {
       return AlertDialog(
         title: Text('Archivar cotización $codeQuotation'),
@@ -148,4 +151,3 @@ void performanceUpdateAction(BuildContext context, int quotationId) async {
     }
   }
 }
-
