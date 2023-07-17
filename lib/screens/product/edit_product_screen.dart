@@ -112,49 +112,51 @@ class _EditProductScreenState extends State<EditProductScreen> {
         return true;
       },
       child: Scaffold(
-        appBar: AppBar(),
-        body: Padding(
-          padding: const EdgeInsets.all(10.0),
-          child: Column(
-            children: [
-              Text(
-                widget.product.attributes.name,
-                style:
-                    const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 16),
-              Image.network(
-                widget.product.attributes.thumbnail.data.attributes.formats
-                    .thumbnail.url,
-                width: 156,
-                height: 156,
-              ),
-              const SizedBox(height: 16),
-              const Text('Precio de cotización'),
-              TextFormField(
-                textAlign: TextAlign.center,
-                controller: _priceController,
-                keyboardType: TextInputType.number,
-                inputFormatters: [
-                  FilteringTextInputFormatter.allow(
-                    RegExp(r'^\d{1,9}(\.\d{0,2})?$'),
+          appBar: AppBar(),
+          body: SingleChildScrollView(
+            child: Padding(
+              padding: const EdgeInsets.all(10.0),
+              child: Column(
+                children: [
+                  Text(
+                    widget.product.attributes.name,
+                    style: const TextStyle(
+                        fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 16),
+                  Image.network(
+                    widget.product.attributes.thumbnail.data.attributes.formats
+                        .thumbnail.url,
+                    width: 156,
+                    height: 156,
+                  ),
+                  const SizedBox(height: 16),
+                  const Text('Precio de cotización'),
+                  TextFormField(
+                    textAlign: TextAlign.center,
+                    controller: _priceController,
+                    keyboardType: TextInputType.number,
+                    inputFormatters: [
+                      FilteringTextInputFormatter.allow(
+                        RegExp(r'^\d{1,9}(\.\d{0,2})?$'),
+                      ),
+                    ],
+                    onChanged: (value) {
+                      setState(() {
+                        _changesSaved = false;
+                      });
+                    },
+                  ),
+                  const SizedBox(height: 16),
+                  ElevatedButton(
+                    onPressed:
+                        (_isLoading || _changesSaved) ? null : updateProduct,
+                    child: const Text('Guardar'),
                   ),
                 ],
-                onChanged: (value) {
-                  setState(() {
-                    _changesSaved = false;
-                  });
-                },
               ),
-              const SizedBox(height: 16),
-              ElevatedButton(
-                onPressed: _isLoading || _changesSaved ? null : updateProduct,
-                child: const Text('Guardar'),
-              ),
-            ],
-          ),
-        ),
-      ),
+            ),
+          )),
     );
   }
 }
