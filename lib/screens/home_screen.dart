@@ -1,13 +1,15 @@
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:pract_01/models/product/product_model.dart';
 import 'package:pract_01/models/quotation/get_all_quotation_model.dart'
     as quotation_all_model;
-import 'package:pract_01/providers/quotation_state.dart';
 import 'package:pract_01/providers/product_state.dart';
+import 'package:pract_01/providers/quotation_state.dart';
 import 'package:pract_01/screens/product/edit_product_screen.dart';
 import 'package:pract_01/screens/product/list_product_screen.dart';
 import 'package:pract_01/screens/quotation/edit_quotation_screen.dart';
 import 'package:pract_01/screens/quotation/list_quotation_screen.dart';
+import 'package:pract_01/services/messaging_service.dart';
 import 'package:pract_01/services/product_service.dart';
 import 'package:pract_01/services/quotation_service.dart';
 import 'package:provider/provider.dart';
@@ -27,11 +29,14 @@ class _HomeScreenState extends State<HomeScreen>
   late TabController _tabController;
   Future<List<Product>>? _productsFuture;
   Future<List<quotation_all_model.Quotation>>? _quotationsFuture;
+  final _messagingService =
+      MessagingService(); // Instance of MessagingService for handling notifications
 
   late Tab _quotationTab;
   late QuotationState _quotationState;
   late ProductState _productState;
   late QuotationState quotationState;
+
   @override
   void initState() {
     super.initState();
@@ -41,6 +46,9 @@ class _HomeScreenState extends State<HomeScreen>
     _productState = Provider.of<ProductState>(context, listen: false);
     quotationState = Provider.of<QuotationState>(context, listen: false);
     _loadData();
+    _messagingService.init(context);
+    _messagingService.onMessageReceived =
+        _handleNotificationClick; // Asignar el manejador del evento
   }
 
   void _loadData() async {
@@ -56,6 +64,13 @@ class _HomeScreenState extends State<HomeScreen>
       _quotationTab = Tab(text: 'Cotizaciones (${result.data.length})');
     });
     _quotationState.setQuotations(result.data);
+  }
+
+  void _handleNotificationClick(RemoteMessage message) {
+    final quotationState = Provider.of<QuotationState>(context, listen: false);
+    quotationState.setQuotations(
+        []); // Vaciar las cotizaciones antes de cargarlas nuevamente
+    // _loadQuotations(); // Cargar las cotizaciones actualizadas
   }
 
   void _loadProducts() async {

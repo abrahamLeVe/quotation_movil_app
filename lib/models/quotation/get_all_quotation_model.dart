@@ -395,7 +395,7 @@ class DataAttributes {
 }
 
 class Meta {
-  Pagination? pagination;
+  Pagination pagination;
 
   Meta({
     required this.pagination,
@@ -406,7 +406,7 @@ class Meta {
       );
 
   Map<String, dynamic> toJson() => {
-        "pagination": pagination?.toJson(),
+        "pagination": pagination.toJson(),
       };
 }
 

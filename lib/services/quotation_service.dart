@@ -24,6 +24,8 @@ class QuotationService {
         "${Environment.apiUrl}/quotations?populate=*&sort=createdAt:DESC",
         options: Options(headers: headers),
       );
+      print('response in getAllQuotation: ${response.data}');
+
       return QuotationModel.fromJson(response.data);
     } catch (error) {
       print('Error in getAllQuotation: $error');

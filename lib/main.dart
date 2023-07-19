@@ -5,8 +5,14 @@ import 'package:pract_01/providers/product_state.dart';
 import 'package:pract_01/providers/quotation_state.dart';
 import 'package:pract_01/screens/home_screen.dart';
 import 'package:provider/provider.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
 
 Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
   await dotenv.load(fileName: Environment.fileName);
 
   runApp(const MyApp());

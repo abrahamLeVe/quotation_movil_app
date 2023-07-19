@@ -4,12 +4,18 @@ import 'package:pract_01/models/quotation/get_all_quotation_model.dart';
 
 class QuotationState with ChangeNotifier {
   List<Quotation> _quotations = [];
+  bool _areQuotationsLoaded = false;
 
   List<Quotation> get quotations => _quotations;
+  bool get areQuotationsLoaded => _areQuotationsLoaded;
 
   void setQuotations(List<Quotation> quotations) {
     _quotations = quotations;
     notifyListeners();
+  }
+
+  void setAreQuotationsLoaded(bool value) {
+    _areQuotationsLoaded = value;
   }
 
   void filterQuotations(String searchText) {
