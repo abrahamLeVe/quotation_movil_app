@@ -298,17 +298,89 @@ class _EditQuotationScreenState extends State<EditQuotationScreen> {
             ? const Center(
                 child: CircularProgressIndicator(),
               )
-            : Padding(
-                padding: const EdgeInsets.all(10.0),
-                child: Consumer<QuotationState>(
-                  builder: (context, quotationState, _) {
-                    return quotationDetailsColumn(quotationState.quotations);
-                  },
+            : SingleChildScrollView(
+                child: Padding(
+                  padding: const EdgeInsets.all(10.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Número: ${widget.quotation.attributes.codeQuotation}',
+                        style: const TextStyle(
+                            fontSize: 18, fontWeight: FontWeight.bold),
+                      ),
+                      Text(
+                        'Cliente: ${widget.quotation.attributes.name}',
+                        style: const TextStyle(fontSize: 16),
+                      ),
+                      Text(
+                        'Email: ${widget.quotation.attributes.email}',
+                        style: const TextStyle(fontSize: 16),
+                      ),
+                      Text(
+                        'Cel: ${widget.quotation.attributes.phone}',
+                        style: const TextStyle(fontSize: 16),
+                      ),
+                      Text(
+                        'Mensaje: ${widget.quotation.attributes.message}',
+                        style: const TextStyle(fontSize: 16),
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        'Productos: (${widget.quotation.attributes.products.length})',
+                        style: const TextStyle(
+                            fontSize: 18, fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(height: 8),
+                      ListView.builder(
+                        shrinkWrap: true,
+                        physics: ClampingScrollPhysics(),
+                        itemCount: products.length,
+                        itemBuilder: (BuildContext context, int productIndex) {
+                          final product = products[productIndex];
+                          return QuotationEditItem(
+                            product: product,
+                            productIndex: productIndex,
+                            products: products,
+                            onPriceUpdate: (productIndex, sizeIndex, newPrice,
+                                updatedProducts) {
+                              updateProductPrice(productIndex, sizeIndex,
+                                  newPrice, updatedProducts);
+                              quotationState
+                                  .updateQuotationProvider(widget.quotation);
+                            },
+                          );
+                        },
+                      ),
+                    ],
+                  ),
                 ),
               ),
       ),
     );
   }
+
+  // @override
+  // Widget build(BuildContext context) {
+  //   return WillPopScope(
+  //     onWillPop: () => _confirmDiscardChanges(context),
+  //     child: Scaffold(
+  //       appBar: buildAppBar(),
+  //       body: _isLoading
+  //           ? const Center(
+  //               child: CircularProgressIndicator(),
+  //             )
+  //           : Padding(
+  //               padding: const EdgeInsets.all(10.0),
+  //               child: Consumer<QuotationState>(
+  //                 builder: (context, quotationState, _) {
+  //                   return quotationDetailsColumn(quotationState.quotations);
+  //                 },
+  //               ),
+  //             ),
+  //     ),
+  //   );
+  // }
 
   AppBar buildAppBar() {
     return AppBar(
@@ -460,6 +532,8 @@ class _EditQuotationScreenState extends State<EditQuotationScreen> {
         const SizedBox(height: 8),
         Expanded(
           child: ListView.builder(
+            shrinkWrap: true,
+            physics: const ClampingScrollPhysics(),
             itemCount: products.length,
             itemBuilder: (BuildContext context, int productIndex) {
               final product = products[productIndex];

@@ -70,52 +70,11 @@ class QuotationEditItem extends StatelessWidget {
                         ),
                         TextButton(
                           onPressed: () async {
-                            final newPrice = await showDialog<double>(
-                              context: context,
-                              barrierDismissible: false,
-                              builder: (BuildContext context) {
-                                return AlertDialog(
-                                  title: const Text('Modificar precio'),
-                                  content: TextField(
-                                    controller: priceController,
-                                    keyboardType: TextInputType.number,
-                                    inputFormatters: [
-                                      FilteringTextInputFormatter.allow(
-                                          RegExp(r'^\d*\.?\d{0,2}$')),
-                                      LengthLimitingTextInputFormatter(9),
-                                    ],
-                                    decoration: const InputDecoration(
-                                      labelText: 'Nuevo precio',
-                                    ),
-                                  ),
-                                  actions: [
-                                    TextButton(
-                                      onPressed: () {
-                                        Navigator.pop(context);
-                                      },
-                                      child: const Text('Cancelar'),
-                                    ),
-                                    TextButton(
-                                      onPressed: () {
-                                        final newPrice = double.tryParse(
-                                                priceController.text) ??
-                                            0;
-                                        Navigator.pop(context, newPrice);
-                                      },
-                                      child: const Text('Aceptar'),
-                                    ),
-                                  ],
-                                );
-                              },
-                            );
-
+                            final newPrice = await showPriceAlertDialog(
+                                context, priceController);
                             if (newPrice != null) {
-                              onPriceUpdate(
-                                productIndex,
-                                sizeIndex,
-                                newPrice,
-                                copiedProducts,
-                              );
+                              onPriceUpdate(productIndex, sizeIndex, newPrice,
+                                  copiedProducts);
                             }
                           },
                           child: const Text('Modificar precio'),
@@ -146,45 +105,8 @@ class QuotationEditItem extends StatelessWidget {
                       final TextEditingController priceController0 =
                           TextEditingController();
                       priceController0.text = product.quotationPrice.toString();
-
-                      final newPrice = await showDialog<double>(
-                        context: context,
-                        barrierDismissible: false,
-                        builder: (BuildContext context) {
-                          return AlertDialog(
-                            title: const Text('Modificar precio'),
-                            content: TextField(
-                              controller: priceController0,
-                              keyboardType: TextInputType.number,
-                              inputFormatters: [
-                                FilteringTextInputFormatter.allow(
-                                    RegExp(r'^\d*\.?\d{0,2}$')),
-                                LengthLimitingTextInputFormatter(9),
-                              ],
-                              decoration: const InputDecoration(
-                                labelText: 'Nuevo precio',
-                              ),
-                            ),
-                            actions: [
-                              TextButton(
-                                onPressed: () {
-                                  Navigator.pop(context);
-                                },
-                                child: const Text('Cancelar'),
-                              ),
-                              TextButton(
-                                onPressed: () {
-                                  final newPrice =
-                                      double.tryParse(priceController0.text) ??
-                                          0;
-                                  Navigator.pop(context, newPrice);
-                                },
-                                child: const Text('Aceptar'),
-                              ),
-                            ],
-                          );
-                        },
-                      );
+                      final newPrice =
+                          await showPriceAlertDialog(context, priceController0);
 
                       if (newPrice != null) {
                         onPriceUpdate(
@@ -204,4 +126,68 @@ class QuotationEditItem extends StatelessWidget {
       ),
     );
   }
+}
+
+Future<double?> showPriceAlertDialog(
+    BuildContext context, TextEditingController priceController) async {
+  return showDialog<double?>(
+    context: context,
+    barrierDismissible: false,
+    builder: (BuildContext context) {
+      return SingleChildScrollView(
+        child: AlertDialog(
+          title: const Text('Modificar precio'),
+          content: Container(
+            padding: const EdgeInsets.all(8.0), // Ajusta el espaciado aquí
+            child: TextField(
+              controller: priceController,
+              keyboardType: TextInputType.number,
+              inputFormatters: [
+                FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d{0,2}$')),
+                LengthLimitingTextInputFormatter(9),
+              ],
+              decoration: const InputDecoration(
+                labelText: 'Nuevo precio',
+              ),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: const Text('Cancelar'),
+            ),
+            TextButton(
+              onPressed: () {
+                final newPrice = double.tryParse(priceController.text);
+                if (newPrice != null) {
+                  Navigator.pop(context, newPrice);
+                } else {
+                  showDialog(
+                    context: context,
+                    builder: (BuildContext context) {
+                      return AlertDialog(
+                        title: const Text('Error'),
+                        content: const Text('El valor ingresado no es válido.'),
+                        actions: [
+                          TextButton(
+                            onPressed: () {
+                              Navigator.pop(context);
+                            },
+                            child: const Text('Aceptar'),
+                          ),
+                        ],
+                      );
+                    },
+                  );
+                }
+              },
+              child: const Text('Aceptar'),
+            ),
+          ],
+        ),
+      );
+    },
+  );
 }
