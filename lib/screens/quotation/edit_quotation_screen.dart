@@ -31,7 +31,7 @@ class _EditQuotationScreenState extends State<EditQuotationScreen> {
   List<model_quotation.Product> products = [];
   late UpdateQuotationModel response;
   late bool _changesSaved = false;
-
+  bool _pdfAvailable = false;
   final bool _isLoading = false;
   late QuotationState quotationState;
 
@@ -41,6 +41,12 @@ class _EditQuotationScreenState extends State<EditQuotationScreen> {
     products =
         widget.quotation.attributes.products.cast<model_quotation.Product>();
     quotationState = Provider.of<QuotationState>(context, listen: false);
+    if (widget.quotation.attributes.pdfVoucher.data == null ||
+        widget.quotation.attributes.pdfVoucher.data!.isEmpty) {
+      _pdfAvailable = false;
+    } else {
+      _pdfAvailable = true;
+    }
   }
 
   void updateProductPrice(
@@ -102,132 +108,148 @@ class _EditQuotationScreenState extends State<EditQuotationScreen> {
   }
 
   void saveChanges() async {
-    if (_changesNotSaved() ) {
-      final quotationState =
-          Provider.of<QuotationState>(context, listen: false);
-      final updatedData = {
-        'data': {
-          'id': widget.quotation.id,
-          'name': widget.quotation.attributes.name,
-          'phone': widget.quotation.attributes.phone,
-          'message': widget.quotation.attributes.message,
-          'email': widget.quotation.attributes.email,
-          'products': products.map((product) {
-            return {
-              'id': product.id,
-              'name': product.name,
-              'size': product.size.map((size) {
-                return {
-                  'id': size.id,
-                  'val': size.val,
-                  'quantity': size.quantity,
-                  'quotation_price': size.quotationPrice ?? 0,
-                };
-              }).toList(),
-              'quantity': product.quantity,
-              'quotation_price': product.quotationPrice ?? 0,
-            };
-          }).toList(),
-          "code_quotation": widget.quotation.attributes.codeQuotation
-        },
-      };
+    final quotationState = Provider.of<QuotationState>(context, listen: false);
+    final updatedData = {
+      'data': {
+        'id': widget.quotation.id,
+        'name': widget.quotation.attributes.name,
+        'phone': widget.quotation.attributes.phone,
+        'message': widget.quotation.attributes.message,
+        'email': widget.quotation.attributes.email,
+        'products': products.map((product) {
+          return {
+            'id': product.id,
+            'name': product.name,
+            'size': product.size.map((size) {
+              return {
+                'id': size.id,
+                'val': size.val,
+                'quantity': size.quantity,
+                'quotation_price': size.quotationPrice ?? 0,
+              };
+            }).toList(),
+            'quantity': product.quantity,
+            'quotation_price': product.quotationPrice ?? 0,
+          };
+        }).toList(),
+        "code_quotation": widget.quotation.attributes.codeQuotation
+      },
+    };
 
-      try {
-        if (mounted) {
-          _handleButtonPress(context);
-        }
-        _changesSaved = true;
-
-        response = await QuotationService()
-            .updateQuotation(widget.quotation.id, updatedData);
-
-        await Future.delayed(const Duration(seconds: 2));
-
-        if (mounted) {
-          widget.onQuotationUpdated(widget.quotation);
-          quotationState.updateQuotationProvider(widget.quotation);
-          Navigator.pop(context);
-
-          showDialog(
-            context: context,
-            barrierDismissible: false,
-            builder: (BuildContext context) {
-              return AlertDialog(
-                title: const Text('Cotización actualizada'),
-                content: const Text('La cotización se actualizó exitosamente.'),
-                actions: [
-                  TextButton(
-                    onPressed: () {
-                      Navigator.pop(context, true);
-                    },
-                    child: const Text('Aceptar'),
-                  ),
-                ],
-              );
-            },
-          ).then((confirm) {
-            if (confirm == true) {
-              final index = quotationState.quotations
-                  .indexWhere((q) => q.id == widget.quotation.id);
-
-              if (index != -1) {
-                model_quotation.Quotation updatedQuotation =
-                    quotationState.quotations[index];
-
-                String pdfUrl = updatedQuotation
-                    .attributes.pdfVoucher.data![0].attributes.url;
-
-                _openPdf(pdfUrl);
-
-                SendPdfToWhatsAppButton(
-                  customerName: updatedQuotation.attributes.name,
-                  code: updatedQuotation.attributes.codeQuotation,
-                  pdfFilePath: pdfUrl,
-                  phoneNumber: updatedQuotation.attributes.phone,
-                );
-
-                SendEmailButton(
-                  customerName: updatedQuotation.attributes.name,
-                  code: updatedQuotation.attributes.codeQuotation,
-                  pdfFilePath: pdfUrl,
-                  recipientEmail: updatedQuotation.attributes.email,
-                );
-              }
-            }
-          });
-        }
-      } catch (error) {
-        _changesSaved = false;
-
-        if (mounted) {
-          Navigator.pop(context);
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Error al actualizar la cotización')),
-          );
-          Navigator.pop(context);
-          Navigator.pushAndRemoveUntil(
-            context,
-            MaterialPageRoute(
-              builder: (_) => const HomeScreen(selectedTabIndex: 1),
-            ),
-            (route) => false,
-          );
-        }
+    try {
+      if (mounted) {
+        _handleButtonPress(context);
       }
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No existen cambios')),
-      );
+      _changesSaved = true;
+
+      response = await QuotationService()
+          .updateQuotation(widget.quotation.id, updatedData);
+
+      await Future.delayed(const Duration(seconds: 2));
+
+      if (mounted) {
+        widget.onQuotationUpdated(widget.quotation);
+        quotationState.updateQuotationProvider(widget.quotation);
+        Navigator.pop(context);
+
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              title: const Text('Cotización actualizada'),
+              content: const Text('La cotización se actualizó exitosamente.'),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.pop(context, true);
+                  },
+                  child: const Text('Aceptar'),
+                ),
+              ],
+            );
+          },
+        ).then((confirm) {
+          if (confirm == true) {
+            final index = quotationState.quotations
+                .indexWhere((q) => q.id == widget.quotation.id);
+
+            if (index != -1) {
+              model_quotation.Quotation updatedQuotation =
+                  quotationState.quotations[index];
+
+              String pdfUrl = updatedQuotation
+                  .attributes.pdfVoucher.data![0].attributes.url;
+
+              _openPdf(pdfUrl);
+
+              SendPdfToWhatsAppButton(
+                customerName: updatedQuotation.attributes.name,
+                code: updatedQuotation.attributes.codeQuotation,
+                pdfFilePath: pdfUrl,
+                phoneNumber: updatedQuotation.attributes.phone,
+              );
+
+              SendEmailButton(
+                customerName: updatedQuotation.attributes.name,
+                code: updatedQuotation.attributes.codeQuotation,
+                pdfFilePath: pdfUrl,
+                recipientEmail: updatedQuotation.attributes.email,
+              );
+            }
+          }
+        });
+      }
+      _pdfAvailable = true;
+
+    } catch (error) {
+      _changesSaved = false;
+
+      if (mounted) {
+        Navigator.pop(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Error al actualizar la cotización')),
+        );
+        Navigator.pop(context);
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(
+            builder: (_) => const HomeScreen(selectedTabIndex: 1),
+          ),
+          (route) => false,
+        );
+      }
     }
+     
   }
 
-  deleteQuotation() {
-    deleteQuotation1(context, widget.quotation.id);
-  }
+  bool _changesNotSaved() {
+     if (_changesSaved) {
+      return true; // Los cambios fueron guardados, no hay cambios sin guardar
+    }
+    return products.any((product) {
+      final originalProduct = widget.quotation.attributes.products
+          .firstWhere((p) => p.id == product.id);
 
-  archiveQuotation() {
-    archiveQuotation1(context, widget.quotation.id,
-        widget.quotation.attributes.codeQuotation);
+      ('Product ID: ${product.id}');
+      ('Product Original Quotation Price: ${originalProduct.quotationPrice}');
+      ('Product Current Quotation Price: ${product.quotationPrice}');
+
+      if (product.size.isNotEmpty) {
+        return product.size.any((size) {
+          final originalSize =
+              originalProduct.size.firstWhere((s) => s.id == size.id);
+
+          ('Size ID: ${size.id}');
+          ('Size Original Quotation Price: ${originalSize.quotationPrice}');
+          ('Size Current Quotation Price: ${size.quotationPrice}');
+
+          return size.quotationPrice != originalSize.quotationPrice;
+        });
+      } else {
+        return product.quotationPrice != originalProduct.quotationPrice;
+      }
+    });
   }
 
   Future<bool> _confirmDiscardChanges(BuildContext context) async {
@@ -262,30 +284,13 @@ class _EditQuotationScreenState extends State<EditQuotationScreen> {
     return true;
   }
 
-  bool _changesNotSaved() {
-    return products.any((product) {
-      final originalProduct = widget.quotation.attributes.products
-          .firstWhere((p) => p.id == product.id);
+  deleteQuotation() {
+    deleteQuotation1(context, widget.quotation.id);
+  }
 
-      ('Product ID: ${product.id}');
-      ('Product Original Quotation Price: ${originalProduct.quotationPrice}');
-      ('Product Current Quotation Price: ${product.quotationPrice}');
-
-      if (product.size.isNotEmpty) {
-        return product.size.any((size) {
-          final originalSize =
-              originalProduct.size.firstWhere((s) => s.id == size.id);
-
-          ('Size ID: ${size.id}');
-          ('Size Original Quotation Price: ${originalSize.quotationPrice}');
-          ('Size Current Quotation Price: ${size.quotationPrice}');
-
-          return size.quotationPrice != originalSize.quotationPrice;
-        });
-      } else {
-        return product.quotationPrice != originalProduct.quotationPrice;
-      }
-    });
+  archiveQuotation() {
+    archiveQuotation1(context, widget.quotation.id,
+        widget.quotation.attributes.codeQuotation);
   }
 
   @override
@@ -334,7 +339,7 @@ class _EditQuotationScreenState extends State<EditQuotationScreen> {
                       const SizedBox(height: 8),
                       ListView.builder(
                         shrinkWrap: true,
-                        physics: const ClampingScrollPhysics(),
+                        physics: ClampingScrollPhysics(),
                         itemCount: products.length,
                         itemBuilder: (BuildContext context, int productIndex) {
                           final product = products[productIndex];
@@ -376,57 +381,115 @@ class _EditQuotationScreenState extends State<EditQuotationScreen> {
                 ],
               ),
             ),
-            PopupMenuItem(
-              onTap: archiveQuotation,
-              child: const Row(
-                children: [
-                  Icon(Icons.archive),
-                  SizedBox(width: 8),
-                  Text('Archivar'),
-                ],
+            if (_pdfAvailable)
+              PopupMenuItem(
+                onTap: archiveQuotation,
+                child: const Row(
+                  children: [
+                    Icon(Icons.archive),
+                    SizedBox(width: 8),
+                    Text('Archivar'),
+                  ],
+                ),
               ),
-            ),
-            PopupMenuItem(
-              child: const Row(children: [
-                Icon(Icons.save),
-                SizedBox(width: 8),
-                Text('Guardar cambios'),
-              ]),
-              onTap: () {
-                _isLoading ? null : saveChanges();
-              },
-            ),
-            PopupMenuItem(
-              child: Row(children: [
-                widget.quotation.attributes.pdfVoucher.data != null &&
-                        widget.quotation.attributes.pdfVoucher.data!.isNotEmpty
-                    ? const Icon(Icons.picture_as_pdf)
-                    : const Icon(Icons.hourglass_empty_outlined),
-                const SizedBox(width: 8),
-                const Text('Descargar'),
-              ]),
-              onTap: () => _handleButtonTap(context, 'download'),
-            ),
-            PopupMenuItem(
-              child: const Row(
-                children: [
-                  Icon(Icons.send),
+            if (!_pdfAvailable)
+              PopupMenuItem(
+                child: const Row(children: [
+                  Icon(Icons.save),
                   SizedBox(width: 8),
-                  Text('Enviar PDF por WhatsApp'),
-                ],
+                  Text('Generar pdf'),
+                ]),
+                onTap: () {
+                  _isLoading ? null : saveChanges();
+                },
               ),
-              onTap: () => _handleButtonTap(context, 'whatsapp'),
-            ),
-            PopupMenuItem(
-              child: const Row(
-                children: [
-                  Icon(Icons.email),
+            if (_changesNotSaved() || _changesSaved)
+              PopupMenuItem(
+                child: const Row(children: [
+                  Icon(Icons.save),
                   SizedBox(width: 8),
-                  Text('Enviar PDF por email'),
-                ],
+                  Text('Guardar cambios'),
+                ]),
+                onTap: () {
+                  _isLoading ? null : saveChanges();
+                },
               ),
-              onTap: () => _handleButtonTap(context, 'email'),
-            ),
+            if (_pdfAvailable)
+              PopupMenuItem(
+                child: const Row(children: [
+                  Icon(Icons.picture_as_pdf),
+                  SizedBox(width: 8),
+                  Text('Descargar'),
+                ]),
+                onTap: () {
+                  QuotationState quotationState =
+                      Provider.of<QuotationState>(context, listen: false);
+                  final index = quotationState.quotations
+                      .indexWhere((q) => q.id == widget.quotation.id);
+
+                  if (index != -1) {
+                    String pdfUrl = quotationState.quotations[index].attributes
+                        .pdfVoucher.data![0].attributes.url;
+                    _openPdf(pdfUrl);
+                  }
+                },
+              ),
+            if (_pdfAvailable)
+              PopupMenuItem(
+                child: const Row(
+                  children: [
+                    Icon(Icons.send),
+                    SizedBox(width: 8),
+                    Text('Enviar PDF por WhatsApp'),
+                  ],
+                ),
+                onTap: () {
+                  QuotationState quotationState =
+                      Provider.of<QuotationState>(context, listen: false);
+                  final index = quotationState.quotations
+                      .indexWhere((q) => q.id == widget.quotation.id);
+
+                  if (index != -1) {
+                    String pdfUrl = quotationState.quotations[index].attributes
+                        .pdfVoucher.data![0].attributes.url;
+
+                    SendPdfToWhatsAppButton(
+                      customerName: widget.quotation.attributes.name,
+                      code: widget.quotation.attributes.codeQuotation,
+                      pdfFilePath: pdfUrl,
+                      phoneNumber: widget.quotation.attributes.phone,
+                    );
+                  }
+                },
+              ),
+            if (_pdfAvailable)
+              PopupMenuItem(
+                child: const Row(
+                  children: [
+                    Icon(Icons.email),
+                    SizedBox(width: 8),
+                    Text('Enviar PDF por email'),
+                  ],
+                ),
+                onTap: () {
+                  QuotationState quotationState =
+                      Provider.of<QuotationState>(context, listen: false);
+                  final index = quotationState.quotations
+                      .indexWhere((q) => q.id == widget.quotation.id);
+
+                  if (index != -1) {
+                    String pdfUrl = quotationState.quotations[index].attributes
+                        .pdfVoucher.data![0].attributes.url;
+
+                    SendEmailButton(
+                      customerName: widget.quotation.attributes.name,
+                      code: widget.quotation.attributes.codeQuotation,
+                      pdfFilePath: pdfUrl,
+                      recipientEmail: widget.quotation.attributes.email,
+                    );
+                  }
+                },
+              ),
           ],
           icon: const Icon(Icons.more_vert),
         ),
@@ -487,59 +550,5 @@ class _EditQuotationScreenState extends State<EditQuotationScreen> {
         ),
       ],
     );
-  }
-
-  void _handleButtonTap(BuildContext context, String actionType) {
-    QuotationState quotationState =
-        Provider.of<QuotationState>(context, listen: false);
-    final index = quotationState.quotations
-        .indexWhere((q) => q.id == widget.quotation.id);
-
-    if (index != -1) {
-      var pdfData = widget.quotation.attributes.pdfVoucher;
-      if (pdfData.data != null && pdfData.data!.isNotEmpty) {
-        String pdfUrl = pdfData.data![0].attributes.url;
-
-        switch (actionType) {
-          case 'download':
-            _openPdf(pdfUrl);
-            break;
-          case 'whatsapp':
-            SendPdfToWhatsAppButton(
-              customerName: widget.quotation.attributes.name,
-              code: widget.quotation.attributes.codeQuotation,
-              pdfFilePath: pdfUrl,
-              phoneNumber: widget.quotation.attributes.phone,
-            );
-            break;
-          case 'email':
-            SendEmailButton(
-              customerName: widget.quotation.attributes.name,
-              code: widget.quotation.attributes.codeQuotation,
-              pdfFilePath: pdfUrl,
-              recipientEmail: widget.quotation.attributes.email,
-            );
-            break;
-        }
-      } else {
-        // Mostrar una alerta o mensaje indicando que no hay PDF disponible
-        showDialog(
-          context: context,
-          builder: (BuildContext context) {
-            return AlertDialog(
-              title: const Text('No existe PDF'),
-              content:
-                  const Text('No hay PDF disponible para esta cotización.'),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.of(context).pop(),
-                  child: const Text('Aceptar'),
-                ),
-              ],
-            );
-          },
-        );
-      }
-    }
   }
 }
