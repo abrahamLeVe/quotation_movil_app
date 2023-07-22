@@ -66,7 +66,6 @@ class PurpleAttributes {
   DateTime updatedAt;
   DateTime publishedAt;
   PdfVoucher pdfVoucher;
-  StatusQuotation? statusQuotation;
   String codeQuotation;
 
   PurpleAttributes({
@@ -79,7 +78,6 @@ class PurpleAttributes {
     required this.updatedAt,
     required this.publishedAt,
     required this.pdfVoucher,
-    this.statusQuotation,
     required this.codeQuotation,
   });
 
@@ -95,7 +93,6 @@ class PurpleAttributes {
         updatedAt: DateTime.parse(json["updatedAt"]),
         publishedAt: DateTime.parse(json["publishedAt"]),
         pdfVoucher: PdfVoucher.fromJson(json["pdfVoucher"]),
-        statusQuotation: StatusQuotation.fromJson(json["status_quotation"]),
         codeQuotation: json["code_quotation"],
       );
 
@@ -109,7 +106,6 @@ class PurpleAttributes {
         "updatedAt": updatedAt.toIso8601String(),
         "publishedAt": publishedAt.toIso8601String(),
         "pdfVoucher": pdfVoucher.toJson(),
-        "status_quotation": statusQuotation?.toJson(),
       };
 }
 
@@ -329,22 +325,7 @@ class Size {
       };
 }
 
-class StatusQuotation {
-  Data? data;
 
-  StatusQuotation({
-    this.data,
-  });
-
-  factory StatusQuotation.fromJson(Map<String, dynamic> json) =>
-      StatusQuotation(
-        data: json["data"] == null ? null : Data.fromJson(json["data"]),
-      );
-
-  Map<String, dynamic> toJson() => {
-        "data": data?.toJson(),
-      };
-}
 
 class Data {
   int id;

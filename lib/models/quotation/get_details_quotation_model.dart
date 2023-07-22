@@ -51,7 +51,6 @@ class DataAttributes {
   DateTime publishedAt;
   String codeQuotation;
   PdfVoucher pdfVoucher;
-  PdfVoucher statusQuotation;
 
   DataAttributes({
     required this.name,
@@ -64,7 +63,6 @@ class DataAttributes {
     required this.publishedAt,
     required this.codeQuotation,
     required this.pdfVoucher,
-    required this.statusQuotation,
   });
 
   factory DataAttributes.fromJson(Map<String, dynamic> json) => DataAttributes(
@@ -79,7 +77,6 @@ class DataAttributes {
         publishedAt: DateTime.parse(json["publishedAt"]),
         codeQuotation: json["code_quotation"],
         pdfVoucher: PdfVoucher.fromJson(json["pdfVoucher"]),
-        statusQuotation: PdfVoucher.fromJson(json["status_quotation"]),
       );
 
   Map<String, dynamic> toJson() => {
@@ -93,7 +90,6 @@ class DataAttributes {
         "publishedAt": publishedAt.toIso8601String(),
         "code_quotation": codeQuotation,
         "pdfVoucher": pdfVoucher.toJson(),
-        "status_quotation": statusQuotation.toJson(),
       };
 }
 

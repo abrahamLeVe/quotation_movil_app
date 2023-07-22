@@ -102,7 +102,7 @@ class _EditQuotationScreenState extends State<EditQuotationScreen> {
   }
 
   void saveChanges() async {
-    if (_changesNotSaved()) {
+    if (_changesNotSaved() ) {
       final quotationState =
           Provider.of<QuotationState>(context, listen: false);
       final updatedData = {
@@ -334,7 +334,7 @@ class _EditQuotationScreenState extends State<EditQuotationScreen> {
                       const SizedBox(height: 8),
                       ListView.builder(
                         shrinkWrap: true,
-                        physics: ClampingScrollPhysics(),
+                        physics: const ClampingScrollPhysics(),
                         itemCount: products.length,
                         itemBuilder: (BuildContext context, int productIndex) {
                           final product = products[productIndex];
@@ -359,28 +359,6 @@ class _EditQuotationScreenState extends State<EditQuotationScreen> {
       ),
     );
   }
-
-  // @override
-  // Widget build(BuildContext context) {
-  //   return WillPopScope(
-  //     onWillPop: () => _confirmDiscardChanges(context),
-  //     child: Scaffold(
-  //       appBar: buildAppBar(),
-  //       body: _isLoading
-  //           ? const Center(
-  //               child: CircularProgressIndicator(),
-  //             )
-  //           : Padding(
-  //               padding: const EdgeInsets.all(10.0),
-  //               child: Consumer<QuotationState>(
-  //                 builder: (context, quotationState, _) {
-  //                   return quotationDetailsColumn(quotationState.quotations);
-  //                 },
-  //               ),
-  //             ),
-  //     ),
-  //   );
-  // }
 
   AppBar buildAppBar() {
     return AppBar(
@@ -409,27 +387,6 @@ class _EditQuotationScreenState extends State<EditQuotationScreen> {
               ),
             ),
             PopupMenuItem(
-              child: Row(children: [
-                widget.quotation.attributes.pdfVoucher.data!.isNotEmpty
-                    ? const Icon(Icons.picture_as_pdf)
-                    : const Icon(Icons.hourglass_empty_outlined),
-                const SizedBox(width: 8),
-                const Text('Descargar'),
-              ]),
-              onTap: () {
-                QuotationState quotationState =
-                    Provider.of<QuotationState>(context, listen: false);
-                final index = quotationState.quotations
-                    .indexWhere((q) => q.id == widget.quotation.id);
-
-                if (index != -1) {
-                  String pdfUrl = quotationState.quotations[index].attributes
-                      .pdfVoucher.data![0].attributes.url;
-                  _openPdf(pdfUrl);
-                }
-              },
-            ),
-            PopupMenuItem(
               child: const Row(children: [
                 Icon(Icons.save),
                 SizedBox(width: 8),
@@ -440,6 +397,17 @@ class _EditQuotationScreenState extends State<EditQuotationScreen> {
               },
             ),
             PopupMenuItem(
+              child: Row(children: [
+                widget.quotation.attributes.pdfVoucher.data != null &&
+                        widget.quotation.attributes.pdfVoucher.data!.isNotEmpty
+                    ? const Icon(Icons.picture_as_pdf)
+                    : const Icon(Icons.hourglass_empty_outlined),
+                const SizedBox(width: 8),
+                const Text('Descargar'),
+              ]),
+              onTap: () => _handleButtonTap(context, 'download'),
+            ),
+            PopupMenuItem(
               child: const Row(
                 children: [
                   Icon(Icons.send),
@@ -447,24 +415,7 @@ class _EditQuotationScreenState extends State<EditQuotationScreen> {
                   Text('Enviar PDF por WhatsApp'),
                 ],
               ),
-              onTap: () {
-                QuotationState quotationState =
-                    Provider.of<QuotationState>(context, listen: false);
-                final index = quotationState.quotations
-                    .indexWhere((q) => q.id == widget.quotation.id);
-
-                if (index != -1) {
-                  String pdfUrl = quotationState.quotations[index].attributes
-                      .pdfVoucher.data![0].attributes.url;
-
-                  SendPdfToWhatsAppButton(
-                    customerName: widget.quotation.attributes.name,
-                    code: widget.quotation.attributes.codeQuotation,
-                    pdfFilePath: pdfUrl,
-                    phoneNumber: widget.quotation.attributes.phone,
-                  );
-                }
-              },
+              onTap: () => _handleButtonTap(context, 'whatsapp'),
             ),
             PopupMenuItem(
               child: const Row(
@@ -474,24 +425,7 @@ class _EditQuotationScreenState extends State<EditQuotationScreen> {
                   Text('Enviar PDF por email'),
                 ],
               ),
-              onTap: () {
-                QuotationState quotationState =
-                    Provider.of<QuotationState>(context, listen: false);
-                final index = quotationState.quotations
-                    .indexWhere((q) => q.id == widget.quotation.id);
-
-                if (index != -1) {
-                  String pdfUrl = quotationState.quotations[index].attributes
-                      .pdfVoucher.data![0].attributes.url;
-
-                  SendEmailButton(
-                    customerName: widget.quotation.attributes.name,
-                    code: widget.quotation.attributes.codeQuotation,
-                    pdfFilePath: pdfUrl,
-                    recipientEmail: widget.quotation.attributes.email,
-                  );
-                }
-              },
+              onTap: () => _handleButtonTap(context, 'email'),
             ),
           ],
           icon: const Icon(Icons.more_vert),
@@ -553,5 +487,59 @@ class _EditQuotationScreenState extends State<EditQuotationScreen> {
         ),
       ],
     );
+  }
+
+  void _handleButtonTap(BuildContext context, String actionType) {
+    QuotationState quotationState =
+        Provider.of<QuotationState>(context, listen: false);
+    final index = quotationState.quotations
+        .indexWhere((q) => q.id == widget.quotation.id);
+
+    if (index != -1) {
+      var pdfData = widget.quotation.attributes.pdfVoucher;
+      if (pdfData.data != null && pdfData.data!.isNotEmpty) {
+        String pdfUrl = pdfData.data![0].attributes.url;
+
+        switch (actionType) {
+          case 'download':
+            _openPdf(pdfUrl);
+            break;
+          case 'whatsapp':
+            SendPdfToWhatsAppButton(
+              customerName: widget.quotation.attributes.name,
+              code: widget.quotation.attributes.codeQuotation,
+              pdfFilePath: pdfUrl,
+              phoneNumber: widget.quotation.attributes.phone,
+            );
+            break;
+          case 'email':
+            SendEmailButton(
+              customerName: widget.quotation.attributes.name,
+              code: widget.quotation.attributes.codeQuotation,
+              pdfFilePath: pdfUrl,
+              recipientEmail: widget.quotation.attributes.email,
+            );
+            break;
+        }
+      } else {
+        // Mostrar una alerta o mensaje indicando que no hay PDF disponible
+        showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              title: const Text('No existe PDF'),
+              content:
+                  const Text('No hay PDF disponible para esta cotización.'),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: const Text('Aceptar'),
+                ),
+              ],
+            );
+          },
+        );
+      }
+    }
   }
 }

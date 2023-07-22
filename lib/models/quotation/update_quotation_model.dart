@@ -26,7 +26,6 @@ class DataQuotation {
   DateTime updatedAt;
   DateTime publishedAt;
   List<PdfVoucher> pdfVoucher;
-  dynamic statusQuotation;
   dynamic createdBy;
   dynamic updatedBy;
   String codeQuotation;
@@ -42,7 +41,6 @@ class DataQuotation {
     required this.updatedAt,
     required this.publishedAt,
     required this.pdfVoucher,
-    this.statusQuotation,
     this.createdBy,
     this.updatedBy,
     required this.codeQuotation,
@@ -61,7 +59,6 @@ class DataQuotation {
         publishedAt: DateTime.parse(json["publishedAt"]),
         pdfVoucher: List<PdfVoucher>.from(
             json["pdfVoucher"].map((x) => PdfVoucher.fromJson(x))),
-        statusQuotation: json["status_quotation"],
         createdBy: json["createdBy"],
         updatedBy: json["updatedBy"],
         codeQuotation: json["code_quotation"],
@@ -78,7 +75,6 @@ class DataQuotation {
         "updatedAt": updatedAt.toIso8601String(),
         "publishedAt": publishedAt.toIso8601String(),
         "pdfVoucher": List<dynamic>.from(pdfVoucher.map((x) => x.toJson())),
-        "status_quotation": statusQuotation,
         "createdBy": createdBy,
         "updatedBy": updatedBy,
         "code_quotation": codeQuotation,

@@ -19,6 +19,9 @@ class MessagingService {
   MessagingService._internal();
 
   final FirebaseMessaging _fcm = FirebaseMessaging.instance;
+  final GlobalKey<NavigatorState> _navigatorKey = GlobalKey<NavigatorState>();
+  bool _isDialogOpen = false;
+  final List<RemoteMessage> _queuedMessages = [];
 
   Future<void> init(BuildContext context) async {
     // Requesting permission for notifications
@@ -50,47 +53,23 @@ class MessagingService {
       if (message.notification != null) {
         if (message.notification!.title != null &&
             message.notification!.body != null) {
-          final notificationData = message.data;
-
-          // Showing an alert dialog when a notification is received (Foreground state)
-          showDialog(
-            context: context,
-            barrierDismissible: false,
-            builder: (BuildContext context) {
-              return WillPopScope(
-                onWillPop: () async => false,
-                child: AlertDialog(
-                  title: Text(message.notification!.title!),
-                  content: Text(message.notification!.body!),
-                  actions: [
-                    if (notificationData.containsKey('screen'))
-                      TextButton(
-                        onPressed: () {
-                          Navigator.pop(context);
-                          _handleNotificationClick(
-                              context, message); // Llamar al método aquí
-                        },
-                        child: const Text('Ver cotización'),
-                      ),
-                    TextButton(
-                      onPressed: () => Navigator.of(context).pop(),
-                      child: const Text('Dismiss'),
-                    ),
-                  ],
-                ),
-              );
-            },
-          );
+          if (!_isDialogOpen) {
+            _isDialogOpen = true;
+            _showNotificationDialog(context, message);
+          } else {
+            // If a dialog is already open, queue the message
+            _queuedMessages.add(message);
+          }
         }
       }
     });
 
     // Handling the initial message received when the app is launched from dead (killed state)
-    // When the app is killed and a new notification arrives when user clicks on it
+    // When the app is killed and a new notification arrives when the user clicks on it
     // It gets the data to which screen to open
     FirebaseMessaging.instance.getInitialMessage().then((message) {
       if (message != null) {
-        _handleNotificationClick(context, message); // Llamar al método aquí
+        _handleNotificationClick(context, message); // Call the method here
       }
     });
 
@@ -98,15 +77,57 @@ class MessagingService {
     FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
       debugPrint(
           'onMessageOpenedApp: ${message.notification!.title.toString()}');
-      _handleNotificationClick(context, message); // Llamar al método aquí
+      _handleNotificationClick(context, message); // Call the method here
     });
   }
 
   void _handleNotificationClick(BuildContext context, RemoteMessage message) {
     final quotationState = Provider.of<QuotationState>(context, listen: false);
-    quotationState.setQuotations(
-        []); // Vaciar las cotizaciones antes de cargarlas nuevamente
-    _loadQuotations(context, message); // Pasar el mensaje como argumento
+    quotationState
+        .setQuotations([]); // Empty the quotations before loading them again
+    _loadQuotations(context, message); // Pass the message as an argument
+
+    if (_isDialogOpen) {
+      _navigatorKey.currentState?.pop();
+      _isDialogOpen = false;
+    }
+  }
+
+  void _showNotificationDialog(BuildContext context, RemoteMessage message) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return WillPopScope(
+          onWillPop: () async => false,
+          child: AlertDialog(
+            title: Text(message.notification!.title!),
+            content: Text(message.notification!.body!),
+            actions: [
+              if (message.data.containsKey('screen'))
+                TextButton(
+                  onPressed: () {
+                    Navigator.pop(context);
+                    _handleNotificationClick(context, message);
+                  },
+                  child: const Text('Ver cotización'),
+                ),
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                  _isDialogOpen = false;
+                  if (_queuedMessages.isNotEmpty) {
+                    final nextMessage = _queuedMessages.removeAt(0);
+                    _showNotificationDialog(context, nextMessage);
+                  }
+                },
+                child: const Text('Dismiss'),
+              ),
+            ],
+          ),
+        );
+      },
+    );
   }
 
   Future<void> _loadQuotations(
