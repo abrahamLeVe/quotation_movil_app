@@ -66,7 +66,7 @@ class Size {
 }
 
 class SizeAttributes {
-  double? quotationPrice;
+  double quotationPrice;
   String val;
   DateTime createdAt;
   DateTime updatedAt;
@@ -74,7 +74,7 @@ class SizeAttributes {
   Product product;
 
   SizeAttributes({
-    this.quotationPrice,
+    required this.quotationPrice,
     required this.val,
     required this.createdAt,
     required this.updatedAt,
@@ -82,9 +82,8 @@ class SizeAttributes {
     required this.product,
   });
 
-  factory SizeAttributes.fromJson(Map<String, dynamic> json) =>
-      SizeAttributes(
-        quotationPrice: json["quotation_price"]?.toDouble(),
+  factory SizeAttributes.fromJson(Map<String, dynamic> json) => SizeAttributes(
+        quotationPrice: json["quotation_price"].toDouble(),
         val: json["val"],
         createdAt: DateTime.parse(json["createdAt"]),
         updatedAt: DateTime.parse(json["updatedAt"]),
@@ -141,7 +140,7 @@ class Data {
 class DataAttributes {
   String name;
   dynamic subtitle;
-  String description;
+  String? description;
   String slug;
   dynamic quotationPrice;
   DateTime createdAt;
@@ -151,7 +150,7 @@ class DataAttributes {
   DataAttributes({
     required this.name,
     this.subtitle,
-    required this.description,
+    this.description,
     required this.slug,
     this.quotationPrice,
     required this.createdAt,

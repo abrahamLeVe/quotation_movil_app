@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:pract_01/models/product/product_model.dart' as product_model;
+import 'package:pract_01/models/product/get_all_product_model.dart'
+    as product_model;
 import 'package:pract_01/services/product_service.dart';
 import 'package:pract_01/utils/dialog_utils.dart';
 
@@ -37,11 +38,35 @@ class _EditProductScreenState extends State<EditProductScreen> {
 
   void updateProduct() async {
     if (!_changesSaved) {
+      final String priceText = _priceController.text;
+      if (priceText.isEmpty || double.tryParse(priceText) == null) {
+        // Mostrar advertencia si el precio es nulo o no es un número válido
+        showDialog(
+          context: context,
+          builder: (context) {
+            return AlertDialog(
+              title: const Text('Advertencia'),
+              content: const Text(
+                  'Ingrese un precio válido antes de guardar los cambios.'),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.pop(context);
+                  },
+                  child: const Text('OK'),
+                ),
+              ],
+            );
+          },
+        );
+        return; // Detener el proceso de guardar los cambios
+      }
+
       setState(() {
         _isLoading = true;
       });
 
-      double newPrice = double.tryParse(_priceController.text) ?? 0.0;
+      double newPrice = double.parse(priceText);
 
       showLoadingDialog(context);
 
@@ -102,6 +127,8 @@ class _EditProductScreenState extends State<EditProductScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final thumbnailUrl = widget
+        .product.attributes.thumbnail.data?.attributes.formats.thumbnail.url;
     return WillPopScope(
       onWillPop: () async {
         if (!_changesSaved) {
@@ -119,17 +146,18 @@ class _EditProductScreenState extends State<EditProductScreen> {
               child: Column(
                 children: [
                   Text(
-                    widget.product.attributes.name,
+                    widget.product.attributes.name.toUpperCase(),
                     style: const TextStyle(
                         fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 16),
-                  Image.network(
-                    widget.product.attributes.thumbnail.data.attributes.formats
-                        .thumbnail.url,
-                    width: 156,
-                    height: 156,
-                  ),
+                  thumbnailUrl != null
+                      ? Image.network(
+                          thumbnailUrl,
+                          width: 156,
+                          height: 156,
+                        )
+                      : Image.asset('assets/sin_image.png'),
                   const SizedBox(height: 16),
                   const Text('Precio de cotización'),
                   TextFormField(

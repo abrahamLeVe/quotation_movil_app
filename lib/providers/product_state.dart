@@ -1,6 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:pract_01/models/product/product_model.dart';
+import 'package:pract_01/models/product/get_all_product_model.dart';
 
 class ProductState with ChangeNotifier {
   List<Product> _products = [];

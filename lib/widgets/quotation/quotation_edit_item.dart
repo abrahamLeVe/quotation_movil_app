@@ -60,7 +60,7 @@ class QuotationEditItem extends StatelessWidget {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                'Precio: ${CurrencyFormatter.format(size.quotationPrice as double)}',
+                                'Precio: ${CurrencyFormatter.format(size.quotationPrice)}',
                               ),
                               const SizedBox(width: 8),
                               Text('Cantidad: ${size.quantity}'),
@@ -92,7 +92,7 @@ class QuotationEditItem extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Precio: ${CurrencyFormatter.format(product.quotationPrice as double)}',
+                          'Precio: ${CurrencyFormatter.format(product.quotationPrice)}',
                         ),
                         const SizedBox(width: 8),
                         Text('Cantidad: ${product.quantity}'),

@@ -1,25 +1,15 @@
-// To parse this JSON data, do
-//
-//     final productModel = productModelFromJson(jsonString);
-
-// import 'dart:convert';
-
-// ProductModel productModelFromJson(String str) =>
-//     ProductModel.fromJson(json.decode(str));
-
-// String productModelToJson(ProductModel data) => json.encode(data.toJson());
-
-class ProductModel {
+class GetAllProductsModel {
   List<Product> data;
   Meta meta;
 
-  ProductModel({
+  GetAllProductsModel({
     required this.data,
     required this.meta,
   });
 
-  factory ProductModel.fromJson(Map<String, dynamic> json) => ProductModel(
-        data: List<Product>.from(json["data"].map((x) => Product.fromJson(x))),
+  factory GetAllProductsModel.fromJson(Map<String, dynamic> json) => GetAllProductsModel(
+        data: List<Product>.from(
+            json["data"].map((x) => Product.fromJson(x))),
         meta: Meta.fromJson(json["meta"]),
       );
 
@@ -29,35 +19,19 @@ class ProductModel {
       };
 }
 
-class ProductUpdateModel {
-  Product data;
-
-  ProductUpdateModel({
-    required this.data,
-  });
-
-  factory ProductUpdateModel.fromJson(Map<String, dynamic> json) =>
-      ProductUpdateModel(
-        data: Product.fromJson(json["data"]),
-      );
-
-  Map<String, dynamic> toJson() => {
-        "data": data.toJson(),
-      };
-}
-
 class Product {
   int id;
-  PurpleAttributes attributes;
+  ProductAttributes attributes;
 
   Product({
     required this.id,
     required this.attributes,
   });
 
-  factory Product.fromJson(Map<String, dynamic> json) => Product(
+  factory Product.fromJson(Map<String, dynamic> json) =>
+      Product(
         id: json["id"],
-        attributes: PurpleAttributes.fromJson(json["attributes"]),
+        attributes: ProductAttributes.fromJson(json["attributes"]),
       );
 
   Map<String, dynamic> toJson() => {
@@ -66,13 +40,12 @@ class Product {
       };
 }
 
-class PurpleAttributes {
+class ProductAttributes {
   String name;
   dynamic subtitle;
-  String description;
+  String? description;
   String slug;
-  double? quotationPrice;
-  int? quantity;
+  double quotationPrice;
   DateTime createdAt;
   DateTime updatedAt;
   DateTime publishedAt;
@@ -81,14 +54,12 @@ class PurpleAttributes {
   Categories categories;
   ProductSizes productSizes;
 
-  PurpleAttributes({
+  ProductAttributes({
     required this.name,
     this.subtitle,
-    required this.description,
+    this.description,
     required this.slug,
-    this.quotationPrice,
-    this.quantity,
-
+    required this.quotationPrice,
     required this.createdAt,
     required this.updatedAt,
     required this.publishedAt,
@@ -98,15 +69,13 @@ class PurpleAttributes {
     required this.productSizes,
   });
 
-  factory PurpleAttributes.fromJson(Map<String, dynamic> json) =>
-      PurpleAttributes(
+  factory ProductAttributes.fromJson(Map<String, dynamic> json) =>
+      ProductAttributes(
         name: json["name"],
         subtitle: json["subtitle"],
         description: json["description"],
         slug: json["slug"],
         quotationPrice: json["quotation_price"]?.toDouble(),
-        quantity: json["quantity"],
-
         createdAt: DateTime.parse(json["createdAt"]),
         updatedAt: DateTime.parse(json["updatedAt"]),
         publishedAt: DateTime.parse(json["publishedAt"]),
@@ -122,8 +91,6 @@ class PurpleAttributes {
         "description": description,
         "slug": slug,
         "quotation_price": quotationPrice,
-        "quantity": quantity,
-
         "createdAt": createdAt.toIso8601String(),
         "updatedAt": updatedAt.toIso8601String(),
         "publishedAt": publishedAt.toIso8601String(),
@@ -206,19 +173,23 @@ class FluffyAttributes {
 }
 
 class Image {
-  List<ImageDatum> data;
+  List<ImageDatum>? data;
 
   Image({
-    required this.data,
+    this.data,
   });
 
   factory Image.fromJson(Map<String, dynamic> json) => Image(
-        data: List<ImageDatum>.from(
-            json["data"].map((x) => ImageDatum.fromJson(x))),
+        data: json["data"] == null
+            ? []
+            : List<ImageDatum>.from(
+                json["data"]!.map((x) => ImageDatum.fromJson(x))),
       );
 
   Map<String, dynamic> toJson() => {
-        "data": List<dynamic>.from(data.map((x) => x.toJson())),
+        "data": data == null
+            ? []
+            : List<dynamic>.from(data!.map((x) => x.toJson())),
       };
 }
 
@@ -471,16 +442,14 @@ class ProductSizesDatum {
 }
 
 class StickyAttributes {
-  double? quotationPrice;
-  int? quantity;
+  double quotationPrice;
   String val;
   DateTime createdAt;
   DateTime updatedAt;
   DateTime publishedAt;
 
   StickyAttributes({
-    this.quotationPrice,
-    this.quantity,
+    required this.quotationPrice,
     required this.val,
     required this.createdAt,
     required this.updatedAt,
@@ -490,7 +459,6 @@ class StickyAttributes {
   factory StickyAttributes.fromJson(Map<String, dynamic> json) =>
       StickyAttributes(
         quotationPrice: json["quotation_price"]?.toDouble(),
-        quantity: json["quantity"],
         val: json["val"],
         createdAt: DateTime.parse(json["createdAt"]),
         updatedAt: DateTime.parse(json["updatedAt"]),
@@ -499,7 +467,6 @@ class StickyAttributes {
 
   Map<String, dynamic> toJson() => {
         "quotation_price": quotationPrice,
-        "quotation": quantity,
         "val": val,
         "createdAt": createdAt.toIso8601String(),
         "updatedAt": updatedAt.toIso8601String(),
@@ -508,18 +475,18 @@ class StickyAttributes {
 }
 
 class Thumbnail {
-  Data data;
+  Data? data;
 
   Thumbnail({
-    required this.data,
+    this.data,
   });
 
   factory Thumbnail.fromJson(Map<String, dynamic> json) => Thumbnail(
-        data: Data.fromJson(json["data"]),
+        data: json["data"] == null ? null : Data.fromJson(json["data"]),
       );
 
   Map<String, dynamic> toJson() => {
-        "data": data.toJson(),
+        "data": data?.toJson(),
       };
 }
 
@@ -640,7 +607,7 @@ class FluffyFormats {
 }
 
 class Meta {
-  Pagination? pagination;
+  Pagination pagination;
 
   Meta({
     required this.pagination,
@@ -651,7 +618,7 @@ class Meta {
       );
 
   Map<String, dynamic> toJson() => {
-        "pagination": pagination?.toJson(),
+        "pagination": pagination.toJson(),
       };
 }
 
@@ -693,4 +660,21 @@ class EnumValues<T> {
     reverseMap = map.map((k, v) => MapEntry(v, k));
     return reverseMap;
   }
+}
+
+class ProductUpdateModel {
+  Product data;
+
+  ProductUpdateModel({
+    required this.data,
+  });
+
+  factory ProductUpdateModel.fromJson(Map<String, dynamic> json) =>
+      ProductUpdateModel(
+        data: Product.fromJson(json["data"]),
+      );
+
+  Map<String, dynamic> toJson() => {
+        "data": data.toJson(),
+      };
 }

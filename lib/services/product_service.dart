@@ -1,6 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:pract_01/models/enviroment_model.dart';
-import 'package:pract_01/models/product/product_model.dart';
+import 'package:pract_01/models/product/get_all_product_model.dart';
 import 'package:pract_01/models/product/size_model.dart';
 
 class ProductService {
@@ -14,14 +14,14 @@ class ProductService {
         "Content-Type": "application/json",
       };
 
-  Future<ProductModel> getAllProduct() async {
-    try{
-    final response = await _dio.get(
-      "${Environment.apiUrl}/products?populate=*&sort=createdAt:DESC",
-      options: Options(headers: headers),
-    );
-    return ProductModel.fromJson(response.data);
-    }catch(error){
+  Future<GetAllProductsModel> getAllProduct() async {
+    try {
+      final response = await _dio.get(
+        "${Environment.apiUrl}/products?populate=*&sort=createdAt:DESC",
+        options: Options(headers: headers),
+      );
+      return GetAllProductsModel.fromJson(response.data);
+    } catch (error) {
       print('Error in getAllProduct: $error');
 
       rethrow;
@@ -72,6 +72,8 @@ class ProductService {
         },
         options: Options(headers: headers),
       );
+      print('response in updateSize: $response');
+
       return SizeUpdateModel.fromJson(response.data);
     } catch (error) {
       print('Error in updateSize: $error');

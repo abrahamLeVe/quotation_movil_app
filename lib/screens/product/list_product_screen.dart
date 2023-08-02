@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:pract_01/models/product/product_model.dart';
+import 'package:pract_01/models/product/get_all_product_model.dart' as product_model;
+
 import 'package:pract_01/screens/product/edit_product_size_screen.dart';
 import 'package:pract_01/utils/currency_formatter.dart';
 
 class ProductListScreen extends StatefulWidget {
-  final List<Product> productList;
-  final void Function(Product) openEditProductScreen;
+  final List<product_model.Product> productList;
+  final void Function(product_model.Product) openEditProductScreen;
 
   const ProductListScreen({
     Key? key,
@@ -18,7 +19,7 @@ class ProductListScreen extends StatefulWidget {
 }
 
 class _ProductListScreenState extends State<ProductListScreen> {
-  late List<Product> filteredProducts;
+  late List<product_model.Product> filteredProducts;
   bool showProductsWithoutSizes = true;
   late TextEditingController _searchController;
 
@@ -85,46 +86,51 @@ class _ProductListScreenState extends State<ProductListScreen> {
               child: CircularProgressIndicator(),
             )
           : ListView.builder(
-              itemCount: filteredProducts.length,
-              physics: const ScrollPhysics(),
-              itemBuilder: (BuildContext context, int index) {
-                final product = filteredProducts[index];
-                final productSizes = product.attributes.productSizes.data;
-                final thumbnailUrl = product
-                    .attributes.thumbnail.data.attributes.formats.thumbnail.url;
+                itemCount: filteredProducts.length,
+                physics: const ScrollPhysics(),
+                itemBuilder: (BuildContext context, int index) {
+                  final product = filteredProducts[index];
+                  final productSizes = product.attributes.productSizes.data;
+                  final thumbnailUrl = product.attributes.thumbnail.data
+                      ?.attributes.formats.thumbnail.url;
+                  final imageWidget =
+                      thumbnailUrl != null && thumbnailUrl.isNotEmpty
+                          ? Image.network(thumbnailUrl)
+                          : Image.asset('assets/sin_image.png');
 
-                return Card(
-                  child: ListTile(
-                    leading: CircleAvatar(
-                      backgroundColor: Colors.grey[200],
-                      backgroundImage: NetworkImage(thumbnailUrl),
-                    ),
-                    title: Text(product.attributes.name.toUpperCase()),
-                    subtitle: Text(productSizes.isNotEmpty
-                        ? 'Medidas: ${productSizes.length}'
-                        : 'Precio: ${CurrencyFormatter.format(product.attributes.quotationPrice as double)}'),
-                    trailing: GestureDetector(
-                      onTap: () {
-                        if (productSizes.isEmpty) {
-                          widget.openEditProductScreen(product);
-                        } else {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => EditProductSizesScreen(
-                                product: product,
-                                sizes: productSizes,
+                  return Card(
+                    child: ListTile(
+                      leading: CircleAvatar(
+                        backgroundColor: Colors.grey[200],
+                        backgroundImage: imageWidget.image,
+                      ),
+                      title: Text(product.attributes.name.toUpperCase()),
+                      subtitle: Text(productSizes.isNotEmpty
+                          ? 'Medidas: ${productSizes.length}'
+                          : 'Precio: ${CurrencyFormatter.format(product.attributes.quotationPrice)}'),
+                      trailing: GestureDetector(
+                        onTap: () {
+                          if (productSizes.isEmpty) {
+                            widget.openEditProductScreen(product);
+                          } else {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => EditProductSizesScreen(
+                                  product: product,
+                                  sizes: productSizes,
+                                ),
                               ),
-                            ),
-                          );
-                        }
-                      },
-                      child: const Icon(Icons.edit),
+                            );
+                          }
+                        },
+                        child: const Icon(Icons.edit),
+                      ),
                     ),
-                  ),
-                );
-              },
-            ),
+                  );
+                },
+              )
+
     );
   }
 }

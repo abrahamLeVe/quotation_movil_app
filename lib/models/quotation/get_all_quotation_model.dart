@@ -1,3 +1,20 @@
+class QuotationUpdateModel {
+  Quotation data;
+
+  QuotationUpdateModel({
+    required this.data,
+  });
+
+  factory QuotationUpdateModel.fromJson(Map<String, dynamic> json) =>
+      QuotationUpdateModel(
+        data: Quotation.fromJson(json["data"]),
+      );
+
+  Map<String, dynamic> toJson() => {
+        "data": data.toJson(),
+      };
+}
+
 class QuotationModel {
   List<Quotation> data;
   Meta meta;
@@ -16,23 +33,6 @@ class QuotationModel {
   Map<String, dynamic> toJson() => {
         "data": List<dynamic>.from(data.map((x) => x.toJson())),
         "meta": meta.toJson(),
-      };
-}
-
-class QuotationUpdateModel {
-  Quotation data;
-
-  QuotationUpdateModel({
-    required this.data,
-  });
-
-  factory QuotationUpdateModel.fromJson(Map<String, dynamic> json) =>
-      QuotationUpdateModel(
-        data: Quotation.fromJson(json["data"]),
-      );
-
-  Map<String, dynamic> toJson() => {
-        "data": data.toJson(),
       };
 }
 
@@ -59,26 +59,26 @@ class Quotation {
 class PurpleAttributes {
   String name;
   String phone;
-  String message;
+  String? message;
   String email;
   List<Product> products;
+  String codeQuotation;
   DateTime createdAt;
   DateTime updatedAt;
   DateTime publishedAt;
   PdfVoucher pdfVoucher;
-  String codeQuotation;
 
   PurpleAttributes({
     required this.name,
     required this.phone,
-    required this.message,
+    this.message,
     required this.email,
     required this.products,
+    required this.codeQuotation,
     required this.createdAt,
     required this.updatedAt,
     required this.publishedAt,
     required this.pdfVoucher,
-    required this.codeQuotation,
   });
 
   factory PurpleAttributes.fromJson(Map<String, dynamic> json) =>
@@ -89,11 +89,11 @@ class PurpleAttributes {
         email: json["email"],
         products: List<Product>.from(
             json["products"].map((x) => Product.fromJson(x))),
+        codeQuotation: json["code_quotation"],
         createdAt: DateTime.parse(json["createdAt"]),
         updatedAt: DateTime.parse(json["updatedAt"]),
         publishedAt: DateTime.parse(json["publishedAt"]),
         pdfVoucher: PdfVoucher.fromJson(json["pdfVoucher"]),
-        codeQuotation: json["code_quotation"],
       );
 
   Map<String, dynamic> toJson() => {
@@ -102,6 +102,7 @@ class PurpleAttributes {
         "message": message,
         "email": email,
         "products": List<dynamic>.from(products.map((x) => x.toJson())),
+        "code_quotation": codeQuotation,
         "createdAt": createdAt.toIso8601String(),
         "updatedAt": updatedAt.toIso8601String(),
         "publishedAt": publishedAt.toIso8601String(),
@@ -159,12 +160,12 @@ class FluffyAttributes {
   dynamic height;
   dynamic formats;
   String hash;
-  Ext ext;
-  Mime mime;
+  String ext;
+  String mime;
   double size;
   String url;
   dynamic previewUrl;
-  Provider provider;
+  String provider;
   ProviderMetadata providerMetadata;
   DateTime createdAt;
   DateTime updatedAt;
@@ -197,12 +198,12 @@ class FluffyAttributes {
         height: json["height"],
         formats: json["formats"],
         hash: json["hash"],
-        ext: extValues.map[json["ext"]]!,
-        mime: mimeValues.map[json["mime"]]!,
+        ext: json["ext"],
+        mime: json["mime"],
         size: json["size"]?.toDouble(),
         url: json["url"],
         previewUrl: json["previewUrl"],
-        provider: providerValues.map[json["provider"]]!,
+        provider: json["provider"],
         providerMetadata: ProviderMetadata.fromJson(json["provider_metadata"]),
         createdAt: DateTime.parse(json["createdAt"]),
         updatedAt: DateTime.parse(json["updatedAt"]),
@@ -216,33 +217,21 @@ class FluffyAttributes {
         "height": height,
         "formats": formats,
         "hash": hash,
-        "ext": extValues.reverse[ext],
-        "mime": mimeValues.reverse[mime],
+        "ext": ext,
+        "mime": mime,
         "size": size,
         "url": url,
         "previewUrl": previewUrl,
-        "provider": providerValues.reverse[provider],
+        "provider": provider,
         "provider_metadata": providerMetadata.toJson(),
         "createdAt": createdAt.toIso8601String(),
         "updatedAt": updatedAt.toIso8601String(),
       };
 }
 
-enum Ext { PDF }
-
-final extValues = EnumValues({".pdf": Ext.PDF});
-
-enum Mime { APPLICATION_PDF }
-
-final mimeValues = EnumValues({"application/pdf": Mime.APPLICATION_PDF});
-
-enum Provider { CLOUDINARY }
-
-final providerValues = EnumValues({"cloudinary": Provider.CLOUDINARY});
-
 class ProviderMetadata {
   String publicId;
-  ResourceType resourceType;
+  String resourceType;
 
   ProviderMetadata({
     required this.publicId,
@@ -252,32 +241,28 @@ class ProviderMetadata {
   factory ProviderMetadata.fromJson(Map<String, dynamic> json) =>
       ProviderMetadata(
         publicId: json["public_id"],
-        resourceType: resourceTypeValues.map[json["resource_type"]]!,
+        resourceType: json["resource_type"],
       );
 
   Map<String, dynamic> toJson() => {
         "public_id": publicId,
-        "resource_type": resourceTypeValues.reverse[resourceType],
+        "resource_type": resourceType,
       };
 }
-
-enum ResourceType { IMAGE }
-
-final resourceTypeValues = EnumValues({"image": ResourceType.IMAGE});
 
 class Product {
   int id;
   String name;
   List<Size> size;
   int quantity;
-  double? quotationPrice;
+  double quotationPrice;
 
   Product({
     required this.id,
     required this.name,
     required this.size,
     required this.quantity,
-    this.quotationPrice,
+    required this.quotationPrice,
   });
 
   factory Product.fromJson(Map<String, dynamic> json) => Product(
@@ -298,16 +283,16 @@ class Product {
 }
 
 class Size {
-  int? id;
+  int id;
   String val;
   int quantity;
-  double? quotationPrice;
+  double quotationPrice;
 
   Size({
-    this.id,
+    required this.id,
     required this.val,
     required this.quantity,
-    this.quotationPrice,
+    required this.quotationPrice,
   });
 
   factory Size.fromJson(Map<String, dynamic> json) => Size(
@@ -322,56 +307,6 @@ class Size {
         "val": val,
         "quantity": quantity,
         "quotation_price": quotationPrice,
-      };
-}
-
-
-
-class Data {
-  int id;
-  DataAttributes attributes;
-
-  Data({
-    required this.id,
-    required this.attributes,
-  });
-
-  factory Data.fromJson(Map<String, dynamic> json) => Data(
-        id: json["id"],
-        attributes: DataAttributes.fromJson(json["attributes"]),
-      );
-
-  Map<String, dynamic> toJson() => {
-        "id": id,
-        "attributes": attributes.toJson(),
-      };
-}
-
-class DataAttributes {
-  String status;
-  DateTime createdAt;
-  DateTime updatedAt;
-  DateTime publishedAt;
-
-  DataAttributes({
-    required this.status,
-    required this.createdAt,
-    required this.updatedAt,
-    required this.publishedAt,
-  });
-
-  factory DataAttributes.fromJson(Map<String, dynamic> json) => DataAttributes(
-        status: json["status"],
-        createdAt: DateTime.parse(json["createdAt"]),
-        updatedAt: DateTime.parse(json["updatedAt"]),
-        publishedAt: DateTime.parse(json["publishedAt"]),
-      );
-
-  Map<String, dynamic> toJson() => {
-        "status": status,
-        "createdAt": createdAt.toIso8601String(),
-        "updatedAt": updatedAt.toIso8601String(),
-        "publishedAt": publishedAt.toIso8601String(),
       };
 }
 
@@ -417,16 +352,4 @@ class Pagination {
         "pageCount": pageCount,
         "total": total,
       };
-}
-
-class EnumValues<T> {
-  Map<String, T> map;
-  late Map<T, String> reverseMap;
-
-  EnumValues(this.map);
-
-  Map<T, String> get reverse {
-    reverseMap = map.map((k, v) => MapEntry(v, k));
-    return reverseMap;
-  }
 }

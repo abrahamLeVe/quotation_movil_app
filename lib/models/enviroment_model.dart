@@ -16,4 +16,8 @@ class Environment {
   static String get apiToken {
     return dotenv.env['API_TOKEN'] ?? 'API_TOKEN not found';
   }
+
+  static String get apiMessageToken {
+    return dotenv.env['MESSAGE_API_TOKEN'] ?? 'MESSAGE_API_TOKEN not found';
+  }
 }

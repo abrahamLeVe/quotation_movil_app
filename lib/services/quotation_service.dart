@@ -27,7 +27,7 @@ class QuotationService {
 
       return QuotationModel.fromJson(response.data);
     } catch (error) {
-      print('Error in updateQuotation: $error');
+      print('Error in getAllQuotation: $error');
       rethrow;
     }
   }

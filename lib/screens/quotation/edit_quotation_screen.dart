@@ -125,11 +125,11 @@ class _EditQuotationScreenState extends State<EditQuotationScreen> {
                 'id': size.id,
                 'val': size.val,
                 'quantity': size.quantity,
-                'quotation_price': size.quotationPrice ?? 0,
+                'quotation_price': size.quotationPrice,
               };
             }).toList(),
             'quantity': product.quantity,
-            'quotation_price': product.quotationPrice ?? 0,
+            'quotation_price': product.quotationPrice,
           };
         }).toList(),
         "code_quotation": widget.quotation.attributes.codeQuotation
@@ -339,7 +339,7 @@ class _EditQuotationScreenState extends State<EditQuotationScreen> {
                       const SizedBox(height: 8),
                       ListView.builder(
                         shrinkWrap: true,
-                        physics: ClampingScrollPhysics(),
+                        physics: const ClampingScrollPhysics(),
                         itemCount: products.length,
                         itemBuilder: (BuildContext context, int productIndex) {
                           final product = products[productIndex];

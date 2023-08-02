@@ -21,6 +21,7 @@ class MessagingService {
   final FirebaseMessaging _fcm = FirebaseMessaging.instance;
   final GlobalKey<NavigatorState> _navigatorKey = GlobalKey<NavigatorState>();
   bool _isDialogOpen = false;
+
   final List<RemoteMessage> _queuedMessages = [];
 
   Future<void> init(BuildContext context) async {
@@ -42,12 +43,12 @@ class MessagingService {
     fcmToken = await _fcm.getToken();
     log('fcmToken: $fcmToken');
 
-    // Handling background messages using the specified handler
+    // // Manejo de mensajes en segundo plano usando el controlador especificado
     FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
 
-    // Listening for incoming messages while the app is in the foreground
+    //Manejo de mensajes en Primer plano
     FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-      debugPrint('Got a message whilst in the foreground!');
+      debugPrint('Got a message whilst in the Primer plano!');
       debugPrint('Message data: ${message.notification!.title.toString()}');
 
       if (message.notification != null) {
@@ -64,9 +65,9 @@ class MessagingService {
       }
     });
 
-    // Handling the initial message received when the app is launched from dead (killed state)
-    // When the app is killed and a new notification arrives when the user clicks on it
-    // It gets the data to which screen to open
+    // Manejo del mensaje inicial recibido cuando la aplicación se inicia desde el estado muerto (estado eliminado)
+    // Cuando se elimina la aplicación y llega una nueva notificación cuando el usuario hace clic en ella
+    // Obtiene los datos a que pantalla abrir
     FirebaseMessaging.instance.getInitialMessage().then((message) {
       if (message != null) {
         _handleNotificationClick(context, message); // Call the method here
@@ -130,28 +131,48 @@ class MessagingService {
     );
   }
 
+  bool _isLoadingQuotations = false;
+  final List<RemoteMessage> _queuedNotifications = [];
+
   Future<void> _loadQuotations(
       BuildContext context, RemoteMessage message) async {
     final quotationState = Provider.of<QuotationState>(context, listen: false);
 
     // Verificar si las cotizaciones ya se están cargando
-    if (quotationState.areQuotationsLoaded) {
+    if (_isLoadingQuotations || quotationState.areQuotationsLoaded) {
+      _queuedNotifications.add(message);
       return;
     }
 
-    quotationState.setAreQuotationsLoaded(true); // Marcar como cargando
+    _isLoadingQuotations = true; // Marcar que la carga está en progreso
 
-    final result = await QuotationService().getAllQuotation();
-    quotationState.setQuotations(result.data);
+    try {
+      final result = await QuotationService().getAllQuotation();
+      quotationState.setQuotations(result.data);
+    } catch (error) {
+      // Manejar errores en caso de que ocurra algún problema con la API
+      // Puedes mostrar un mensaje de error o manejar la situación según tus necesidades
+      debugPrint('Error al cargar las cotizaciones: $error');
+    } finally {
+      _isLoadingQuotations = false; // Marcar que la carga ha finalizado
 
-    quotationState.setAreQuotationsLoaded(false); // Marcar como no cargando
+      // Procesar las notificaciones en cola si existen
+      if (_queuedNotifications.isNotEmpty) {
+        final nextMessage = _queuedNotifications.removeAt(0);
+        // ignore: use_build_context_synchronously
+        _loadQuotations(context, nextMessage);
+      }
+    }
   }
+
 }
 
-// Handler for background messages
+// // Segundo plano
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
-  // If you're going to use other Firebase services in the background, such as Firestore,
-  // make sure you call `initializeApp` before using other Firebase services.
-  debugPrint('Handling a background message: ${message.notification!.title}');
+  // Si va a utilizar otros servicios de Firebase en segundo plano, como Firestore,
+  // asegúrese de llamar a `initializeApp` antes de usar otros servicios de Firebase.
+  debugPrint(
+      'Handling a Segundo plano message: ${message.notification!.title}  ${message.notification!.body}');
 }
+//v1 sin doble carga el iniciar

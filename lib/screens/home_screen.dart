@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:pract_01/models/product/product_model.dart';
+import 'package:pract_01/models/product/get_all_product_model.dart'
+    as product_all_model;
 import 'package:pract_01/models/quotation/get_all_quotation_model.dart'
     as quotation_all_model;
-import 'package:pract_01/providers/quotation_state.dart';
 import 'package:pract_01/providers/product_state.dart';
+import 'package:pract_01/providers/quotation_state.dart';
 import 'package:pract_01/screens/product/edit_product_screen.dart';
 import 'package:pract_01/screens/product/list_product_screen.dart';
 import 'package:pract_01/screens/quotation/edit_quotation_screen.dart';
@@ -26,39 +27,52 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
-  Future<List<Product>>? _productsFuture;
+  Future<List<product_all_model.Product>>? _productsFuture;
   Future<List<quotation_all_model.Quotation>>? _quotationsFuture;
   final _messagingService =
       MessagingService(); // Instance of MessagingService for handling notifications
 
-  late Tab _quotationTab;
   late QuotationState _quotationState;
   late ProductState _productState;
-  late QuotationState quotationState;
+
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
-    _quotationTab = const Tab(text: 'Cotizaciones (Cargando...)');
     _quotationState = Provider.of<QuotationState>(context, listen: false);
     _productState = Provider.of<ProductState>(context, listen: false);
-    quotationState = Provider.of<QuotationState>(context, listen: false);
+
     _loadData();
-    _messagingService
-        .init(context); // Initialize MessagingService to handle notifications
+
+    _messagingService.init(context);
+  }
+
+  Tab _getQuotationTab(int quotationCount) {
+    return Tab(text: 'Cotizaciones ($quotationCount)');
   }
 
   void _loadData() async {
-    _loadQuotations();
-    _loadProducts();
+    final quotationState = Provider.of<QuotationState>(context, listen: false);
+
+    final quotationsFuture = QuotationService().getAllQuotation();
+    final productsFuture = ProductService().getAllProduct();
+
+    final quotationsResult = await quotationsFuture;
+    final productsResult = await productsFuture;
+
+    setState(() {
+      _quotationsFuture = Future.value(quotationsResult.data);
+      _productsFuture = Future.value(productsResult.data);
+    });
+
+    quotationState.setQuotations(quotationsResult.data);
   }
 
-  void _loadQuotations() async {
+  void _loadQuotationsOnNotification() async {
     final result = await QuotationService().getAllQuotation();
 
     setState(() {
       _quotationsFuture = Future.value(result.data);
-      _quotationTab = Tab(text: 'Cotizaciones (${result.data.length})');
     });
     _quotationState.setQuotations(result.data);
   }
@@ -71,7 +85,7 @@ class _HomeScreenState extends State<HomeScreen>
     _productState.setProducts(result.data);
   }
 
-  void openEditProductScreen(Product product) async {
+  void openEditProductScreen(product_all_model.Product product) async {
     final result = await Navigator.push(
       context,
       MaterialPageRoute(
@@ -96,15 +110,15 @@ class _HomeScreenState extends State<HomeScreen>
         builder: (context) => EditQuotationScreen(
           quotation: quotation,
           onQuotationUpdated: (updatedQuotation) {
-            _loadQuotations();
-            quotationState.updateQuotationProvider(updatedQuotation);
+            _loadQuotationsOnNotification();
+            _quotationState.updateQuotationProvider(updatedQuotation);
           },
         ),
       ),
     );
 
     if (result == true) {
-      _loadQuotations();
+      _loadQuotationsOnNotification();
     }
   }
 
@@ -116,73 +130,74 @@ class _HomeScreenState extends State<HomeScreen>
 
   @override
   Widget build(BuildContext context) {
+    _quotationState = Provider.of<QuotationState>(context, listen: true);
+
+    final tabs = [
+      // Cambiar el getter a quotationsCount en lugar de quotations.length
+      _getQuotationTab(_quotationState.quotationsCount),
+      Tab(text: 'Productos (${_productState.products.length})'),
+    ];
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Pantalla Principal'),
         bottom: TabBar(
           controller: _tabController,
-          tabs: [
-            _quotationTab,
-            Consumer<ProductState>(
-              builder: (context, productState, _) {
-                final productCount = productState.products.length;
-                return Tab(text: 'Productos ($productCount)');
-              },
-            ),
-          ],
+          tabs: tabs,
         ),
       ),
       body: TabBarView(
         controller: _tabController,
         children: [
-          FutureBuilder<List<quotation_all_model.Quotation>>(
-            future: _quotationsFuture,
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return const Center(
-                  child: CircularProgressIndicator(),
-                );
-              } else if (snapshot.hasError) {
-                return const Center(
-                  child: Text('Error al cargar las cotizaciones'),
-                );
-              } else {
-                final quotationList = snapshot.data ?? [];
-                return ChangeNotifierProvider.value(
-                  value: _quotationState,
-                  child: QuotationListScreen(
-                    quotationList: quotationList,
-                    openEditQuotationScreen: openEditQuotationScreen,
-                  ),
-                );
-              }
-            },
-          ),
-          FutureBuilder<List<Product>>(
-            future: _productsFuture,
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return const Center(
-                  child: CircularProgressIndicator(),
-                );
-              } else if (snapshot.hasError) {
-                return const Center(
-                  child: Text('Error al cargar los productos'),
-                );
-              } else {
-                final productList = snapshot.data ?? [];
-                return ChangeNotifierProvider.value(
-                  value: _productState,
-                  child: ProductListScreen(
-                    productList: productList,
-                    openEditProductScreen: openEditProductScreen,
-                  ),
-                );
-              }
-            },
-          ),
+          _buildQuotationList(),
+          _buildProductList(),
         ],
       ),
     );
   }
+
+  Widget _buildQuotationList() {
+    return FutureBuilder<List<quotation_all_model.Quotation>>(
+      future: _quotationsFuture,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        } else if (snapshot.hasError) {
+          return const Center(child: Text('Error al cargar las cotizaciones'));
+        } else {
+          final quotationList = snapshot.data ?? [];
+          return ChangeNotifierProvider.value(
+            value: _quotationState,
+            child: QuotationListScreen(
+              quotationList: quotationList,
+              openEditQuotationScreen: openEditQuotationScreen,
+            ),
+          );
+        }
+      },
+    );
+  }
+
+  Widget _buildProductList() {
+    return FutureBuilder<List<product_all_model.Product>>(
+      future: _productsFuture,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        } else if (snapshot.hasError) {
+          return const Center(child: Text('Error al cargar los productos'));
+        } else {
+          final productList = snapshot.data ?? [];
+          return ChangeNotifierProvider.value(
+            value: _productState,
+            child: ProductListScreen(
+              productList: productList,
+              openEditProductScreen: openEditProductScreen,
+            ),
+          );
+        }
+      },
+    );
+  }
 }
+//v3

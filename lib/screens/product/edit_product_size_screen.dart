@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:pract_01/models/product/product_model.dart' as product_model;
+import 'package:pract_01/models/product/get_all_product_model.dart'
+    as product_model;
 import 'package:pract_01/services/product_service.dart';
 
 class EditProductSizesScreen extends StatefulWidget {
@@ -24,6 +25,8 @@ class _EditProductSizesScreenState extends State<EditProductSizesScreen> {
     RegExp(r'^\d{1,9}(\.\d{0,2})?$'),
   );
 
+  bool _isSaving = false; // Variable para rastrear si se está guardando
+
   @override
   void initState() {
     super.initState();
@@ -33,11 +36,7 @@ class _EditProductSizesScreenState extends State<EditProductSizesScreen> {
   void _initializeSizePrices() {
     for (var size in widget.sizes) {
       final quotationPrice = size.attributes.quotationPrice;
-      if (quotationPrice != null) {
-        _sizePrices.add(quotationPrice.toDouble());
-      } else {
-        _sizePrices.add(null);
-      }
+      _sizePrices.add(quotationPrice.toDouble());
     }
   }
 
@@ -54,58 +53,76 @@ class _EditProductSizesScreenState extends State<EditProductSizesScreen> {
     }
   }
 
-  void _handleButtonPress(BuildContext context) {
-    showDialog(
+  // Función para mostrar el diálogo de advertencia
+  Future<void> _showWarningDialog() async {
+    return await showDialog(
       context: context,
-      barrierDismissible: false,
-      builder: (BuildContext context) {
-        return const Dialog(
-          child: Padding(
-            padding: EdgeInsets.all(16.0),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                CircularProgressIndicator(),
-                SizedBox(height: 16.0),
-                Text('Guardando cambios...'),
-              ],
-            ),
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Advertencia'),
+          content: const Text(
+            'Complete todos los campos de precio antes de guardar los cambios.',
           ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: const Text('OK'),
+            ),
+          ],
         );
       },
     );
   }
 
   Future<void> _saveChanges() async {
-    _handleButtonPress(context);
+    if (_isSaving) return; // Evitar múltiples clics mientras se está guardando
+
+    setState(() {
+      _isSaving = true;
+    });
+
     try {
+      bool hasNullPrice =
+          false; // Variable para rastrear si hay precios nulos o vacíos
+
       for (final size in _modifiedSizes) {
         final index = widget.sizes.indexOf(size);
         final newPrice = _sizePrices[index];
-        if (newPrice != null) {
+
+        if (newPrice == null || newPrice <= 0.0) {
+          // Si el precio es nulo o menor o igual a cero
+          hasNullPrice = true;
+          break;
+        } else {
           size.attributes.quotationPrice = newPrice;
         }
       }
 
-      for (final size in _modifiedSizes) {
-        if (size.attributes.quotationPrice != null) {
+      if (hasNullPrice) {
+        // Mostrar el diálogo de advertencia si hay precios nulos o vacíos
+        await _showWarningDialog();
+      } else {
+        // Realizar el proceso de guardar cambios
+        for (final size in _modifiedSizes) {
           await ProductService().updateSize(
             size.id,
             size.attributes.quotationPrice,
           );
         }
-      }
 
-      if (context.mounted) {
-        Navigator.pop(context);
+        if (context.mounted) {
+          // Navigator.pop(context);
 
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Precios de medidas actualizados')),
-        );
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Precios de medidas actualizados')),
+          );
 
-        setState(() {
-          _modifiedSizes.clear();
-        });
+          setState(() {
+            _modifiedSizes.clear();
+          });
+        }
       }
     } catch (error) {
       if (context.mounted) {
@@ -114,6 +131,12 @@ class _EditProductSizesScreenState extends State<EditProductSizesScreen> {
             content: Text('Error al actualizar los precios de medidas'),
           ),
         );
+      }
+    } finally {
+      if (context.mounted) {
+        setState(() {
+          _isSaving = false;
+        });
       }
     }
   }
@@ -146,6 +169,11 @@ class _EditProductSizesScreenState extends State<EditProductSizesScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final thumbnailUrl = widget
+        .product.attributes.thumbnail.data?.attributes.formats.thumbnail.url;
+    final imageWidget = thumbnailUrl != null && thumbnailUrl.isNotEmpty
+        ? Image.network(thumbnailUrl)
+        : Image.asset('assets/sin_image.png');
     return WillPopScope(
       onWillPop: () async {
         if (_modifiedSizes.isNotEmpty) {
@@ -173,10 +201,7 @@ class _EditProductSizesScreenState extends State<EditProductSizesScreen> {
               key: Key(size.id.toString()),
               leading: CircleAvatar(
                 backgroundColor: Colors.grey[200],
-                backgroundImage: NetworkImage(
-                  product.attributes.thumbnail.data.attributes.formats.thumbnail
-                      .url,
-                ),
+                backgroundImage: imageWidget.image,
               ),
               title: Text(product.attributes.name.toUpperCase()),
               subtitle: Column(
@@ -184,8 +209,7 @@ class _EditProductSizesScreenState extends State<EditProductSizesScreen> {
                 children: [
                   Text(size.attributes.val),
                   TextFormField(
-                    initialValue:
-                        size.attributes.quotationPrice?.toString() ?? '',
+                    initialValue: size.attributes.quotationPrice.toString(),
                     keyboardType: TextInputType.number,
                     inputFormatters: [priceFormatter],
                     onChanged: (value) {
@@ -198,8 +222,12 @@ class _EditProductSizesScreenState extends State<EditProductSizesScreen> {
           },
         ),
         floatingActionButton: FloatingActionButton(
-          onPressed: _saveChanges,
-          child: const Icon(Icons.save),
+          onPressed: _isSaving ? null : _saveChanges,
+          child: _isSaving
+              ? const CircularProgressIndicator(
+                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                )
+              : const Icon(Icons.save),
         ),
       ),
     );
