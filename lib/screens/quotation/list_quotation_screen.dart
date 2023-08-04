@@ -1,10 +1,14 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:pract_01/models/quotation/get_all_quotation_model.dart';
 import 'package:pract_01/providers/quotation_state.dart';
+import 'package:pract_01/screens/quotation/edit_quotation_screen.dart';
 import 'package:pract_01/utils/quotation_utils.dart' as utils;
 import 'package:pract_01/widgets/quotation/quotation_list_item.dart';
 import 'package:provider/provider.dart' as provider;
+import 'package:pract_01/services/messaging/messaging_service.dart';
 
 class QuotationListScreen extends StatefulWidget {
   final List<Quotation> quotationList;
@@ -25,6 +29,9 @@ class _QuotationListScreenState extends State<QuotationListScreen> {
   String filter = 'Todos';
   String selectedFilter = 'Todos';
   TextEditingController searchController = TextEditingController();
+  final MessagingService _messagingService = MessagingService();
+  StreamSubscription<void>? _subscription;
+  late QuotationState quotationState;
 
   void filterQuotations(List<Quotation> quotations) {
     filteredQuotations = utils.filterQuotations(quotations, selectedFilter);
@@ -32,9 +39,25 @@ class _QuotationListScreenState extends State<QuotationListScreen> {
 
     if (searchText.isNotEmpty) {
       filteredQuotations = filteredQuotations.where((quotation) {
-        final String code = quotation.attributes.codeQuotation.toUpperCase();
+        final String code = quotation.attributes.codeQuotation!.toUpperCase();
         return code.contains(searchText.toUpperCase());
       }).toList();
+    }
+  }
+
+  void openEditQuotationScreen(Quotation quotation) async {
+    final updatedQuotation = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => EditQuotationScreen(
+          quotation: quotation,
+          onQuotationUpdated: (updatedQuotation) {},
+        ),
+      ),
+    );
+
+    if (updatedQuotation != null) {
+      // --
     }
   }
 
@@ -42,6 +65,19 @@ class _QuotationListScreenState extends State<QuotationListScreen> {
   void initState() {
     super.initState();
     initializeDateFormatting();
+    final quotationState =
+        provider.Provider.of<QuotationState>(context, listen: false);
+    _subscription = _messagingService.onQuotationsUpdated.listen((_) {
+      setState(() {
+        filteredQuotations = quotationState.quotations;
+      });
+    });
+  }
+
+  @override
+  void dispose() {
+    _subscription?.cancel();
+    super.dispose();
   }
 
   @override
@@ -105,6 +141,10 @@ class _QuotationListScreenState extends State<QuotationListScreen> {
           final quotations = quotationState.quotations;
           filterQuotations(quotations);
 
+          if (quotationState.isNewNotificationAvailable()) {
+            filterQuotations(quotationState.quotations);
+          }
+
           return SingleChildScrollView(
             child: Column(
               children: [
@@ -127,5 +167,4 @@ class _QuotationListScreenState extends State<QuotationListScreen> {
       ),
     );
   }
-  //v1
 }

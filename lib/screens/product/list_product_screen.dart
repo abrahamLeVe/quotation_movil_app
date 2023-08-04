@@ -1,8 +1,12 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
-import 'package:pract_01/models/product/get_all_product_model.dart' as product_model;
+import 'package:pract_01/models/product/get_all_product_model.dart'
+    as product_model;
 
 import 'package:pract_01/screens/product/edit_product_size_screen.dart';
 import 'package:pract_01/utils/currency_formatter.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 class ProductListScreen extends StatefulWidget {
   final List<product_model.Product> productList;
@@ -63,29 +67,29 @@ class _ProductListScreenState extends State<ProductListScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: TextField(
-          controller: _searchController,
-          onChanged: (_) => _filterProducts(),
-          decoration: const InputDecoration(
-            hintText: 'Buscar por nombre',
+        appBar: AppBar(
+          title: TextField(
+            controller: _searchController,
+            onChanged: (_) => _filterProducts(),
+            decoration: const InputDecoration(
+              hintText: 'Buscar por nombre',
+            ),
           ),
+          actions: [
+            Switch(
+              value: showProductsWithoutSizes,
+              onChanged: _toggleShowProductsWithoutSizes,
+            ),
+            const SizedBox(width: 8),
+            const Text('Mostrar sin medidas'),
+            const SizedBox(width: 16),
+          ],
         ),
-        actions: [
-          Switch(
-            value: showProductsWithoutSizes,
-            onChanged: _toggleShowProductsWithoutSizes,
-          ),
-          const SizedBox(width: 8),
-          const Text('Mostrar sin medidas'),
-          const SizedBox(width: 16),
-        ],
-      ),
-      body: filteredProducts.isEmpty
-          ? const Center(
-              child: CircularProgressIndicator(),
-            )
-          : ListView.builder(
+        body: filteredProducts.isEmpty
+            ? const Center(
+                child: CircularProgressIndicator(),
+              )
+            : ListView.builder(
                 itemCount: filteredProducts.length,
                 physics: const ScrollPhysics(),
                 itemBuilder: (BuildContext context, int index) {
@@ -93,16 +97,46 @@ class _ProductListScreenState extends State<ProductListScreen> {
                   final productSizes = product.attributes.productSizes.data;
                   final thumbnailUrl = product.attributes.thumbnail.data
                       ?.attributes.formats.thumbnail.url;
-                  final imageWidget =
-                      thumbnailUrl != null && thumbnailUrl.isNotEmpty
-                          ? Image.network(thumbnailUrl)
-                          : Image.asset('assets/sin_image.png');
 
                   return Card(
                     child: ListTile(
-                      leading: CircleAvatar(
-                        backgroundColor: Colors.grey[200],
-                        backgroundImage: imageWidget.image,
+                      leading: SizedBox(
+                        // Envuelve en un Container para establecer un tamaño
+                        width:
+                            35, // Establece el ancho del container (ajústalo según tus necesidades)
+                        height:
+                            35, // Establece el alto del container (ajústalo según tus necesidades)
+                        child: ClipOval(
+                          child: CachedNetworkImage(
+                            imageUrl: thumbnailUrl ?? '',
+                            placeholder: (context, url) =>
+                                const CircularProgressIndicator(),
+                            errorWidget: (context, url, error) {
+                              if (thumbnailUrl == null) {
+                                // Si la URL es nula, muestra una imagen de error personalizada
+                                return Column(
+                                  children: [
+                                    Image.asset('assets/error_image.png'),
+                                  ],
+                                );
+                              } else if (error is HttpException) {
+                                // Si el error es HttpException (404), muestra una imagen alternativa
+                                return Column(
+                                  children: [
+                                    Image.asset('assets/error_image.png'),
+                                  ],
+                                );
+                              } else {
+                                // Otros errores, muestra un mensaje genérico
+                                return Column(
+                                  children: [
+                                    Image.asset('assets/error_image.png'),
+                                  ],
+                                );
+                              }
+                            },
+                          ),
+                        ),
                       ),
                       title: Text(product.attributes.name.toUpperCase()),
                       subtitle: Text(productSizes.isNotEmpty
@@ -129,8 +163,6 @@ class _ProductListScreenState extends State<ProductListScreen> {
                     ),
                   );
                 },
-              )
-
-    );
+              ));
   }
 }

@@ -1,3 +1,6 @@
+import 'dart:io';
+
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:pract_01/models/product/get_all_product_model.dart'
@@ -25,7 +28,7 @@ class _EditProductSizesScreenState extends State<EditProductSizesScreen> {
     RegExp(r'^\d{1,9}(\.\d{0,2})?$'),
   );
 
-  bool _isSaving = false; // Variable para rastrear si se está guardando
+  bool _isSaving = false; 
 
   @override
   void initState() {
@@ -53,7 +56,6 @@ class _EditProductSizesScreenState extends State<EditProductSizesScreen> {
     }
   }
 
-  // Función para mostrar el diálogo de advertencia
   Future<void> _showWarningDialog() async {
     return await showDialog(
       context: context,
@@ -77,7 +79,7 @@ class _EditProductSizesScreenState extends State<EditProductSizesScreen> {
   }
 
   Future<void> _saveChanges() async {
-    if (_isSaving) return; // Evitar múltiples clics mientras se está guardando
+    if (_isSaving) return; 
 
     setState(() {
       _isSaving = true;
@@ -85,14 +87,13 @@ class _EditProductSizesScreenState extends State<EditProductSizesScreen> {
 
     try {
       bool hasNullPrice =
-          false; // Variable para rastrear si hay precios nulos o vacíos
+          false; 
 
       for (final size in _modifiedSizes) {
         final index = widget.sizes.indexOf(size);
         final newPrice = _sizePrices[index];
 
         if (newPrice == null || newPrice <= 0.0) {
-          // Si el precio es nulo o menor o igual a cero
           hasNullPrice = true;
           break;
         } else {
@@ -101,10 +102,8 @@ class _EditProductSizesScreenState extends State<EditProductSizesScreen> {
       }
 
       if (hasNullPrice) {
-        // Mostrar el diálogo de advertencia si hay precios nulos o vacíos
         await _showWarningDialog();
       } else {
-        // Realizar el proceso de guardar cambios
         for (final size in _modifiedSizes) {
           await ProductService().updateSize(
             size.id,
@@ -113,8 +112,6 @@ class _EditProductSizesScreenState extends State<EditProductSizesScreen> {
         }
 
         if (context.mounted) {
-          // Navigator.pop(context);
-
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Precios de medidas actualizados')),
           );
@@ -171,9 +168,6 @@ class _EditProductSizesScreenState extends State<EditProductSizesScreen> {
   Widget build(BuildContext context) {
     final thumbnailUrl = widget
         .product.attributes.thumbnail.data?.attributes.formats.thumbnail.url;
-    final imageWidget = thumbnailUrl != null && thumbnailUrl.isNotEmpty
-        ? Image.network(thumbnailUrl)
-        : Image.asset('assets/sin_image.png');
     return WillPopScope(
       onWillPop: () async {
         if (_modifiedSizes.isNotEmpty) {
@@ -199,9 +193,37 @@ class _EditProductSizesScreenState extends State<EditProductSizesScreen> {
 
             return ListTile(
               key: Key(size.id.toString()),
-              leading: CircleAvatar(
-                backgroundColor: Colors.grey[200],
-                backgroundImage: imageWidget.image,
+              leading: SizedBox(
+                width: 35,
+                height: 35,
+                child: ClipOval(
+                  child: CachedNetworkImage(
+                    imageUrl: thumbnailUrl ?? '',
+                    placeholder: (context, url) =>
+                        const CircularProgressIndicator(),
+                    errorWidget: (context, url, error) {
+                      if (thumbnailUrl == null) {
+                        return Column(
+                          children: [
+                            Image.asset('assets/error_image.png'),
+                          ],
+                        );
+                      } else if (error is HttpException) {
+                        return Column(
+                          children: [
+                            Image.asset('assets/error_image.png'),
+                          ],
+                        );
+                      } else {
+                        return Column(
+                          children: [
+                            Image.asset('assets/error_image.png'),
+                          ],
+                        );
+                      }
+                    },
+                  ),
+                ),
               ),
               title: Text(product.attributes.name.toUpperCase()),
               subtitle: Column(

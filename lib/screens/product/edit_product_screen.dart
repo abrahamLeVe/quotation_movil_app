@@ -1,3 +1,6 @@
+import 'dart:io';
+
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:pract_01/models/product/get_all_product_model.dart'
@@ -151,13 +154,35 @@ class _EditProductScreenState extends State<EditProductScreen> {
                         fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 16),
-                  thumbnailUrl != null
-                      ? Image.network(
-                          thumbnailUrl,
-                          width: 156,
-                          height: 156,
-                        )
-                      : Image.asset('assets/sin_image.png'),
+                   CachedNetworkImage(
+                    imageUrl: thumbnailUrl ?? '',
+                    placeholder: (context, url) =>
+                        const CircularProgressIndicator(),
+                    errorWidget: (context, url, error) {
+                      if (thumbnailUrl == null) {
+                        
+                        return Column(
+                          children: [
+                            Image.asset('assets/error_image.png'),
+                          ],
+                        );
+                      } else if (error is HttpException) {
+                        
+                        return Column(
+                          children: [
+                            Image.asset('assets/error_image.png'),
+                          ],
+                        );
+                      } else {
+                        return Column(
+                          children: [
+                            Image.asset('assets/error_image.png'),
+                          ],
+                        );
+                      }
+                    },
+                  ),
+              
                   const SizedBox(height: 16),
                   const Text('Precio de cotización'),
                   TextFormField(

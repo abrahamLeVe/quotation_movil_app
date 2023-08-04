@@ -19,7 +19,7 @@ class QuotationItem extends StatelessWidget {
         title: Row(
           children: [
             Text(
-              'Código: ${quotation.attributes.codeQuotation.toUpperCase()}',
+              'Código: ${quotation.attributes.codeQuotation?.toUpperCase()}',
               style: const TextStyle(fontWeight: FontWeight.bold),
             ),
           ],

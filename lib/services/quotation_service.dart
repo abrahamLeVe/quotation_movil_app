@@ -40,6 +40,8 @@ class QuotationService {
         data: data,
         options: Options(headers: headers),
       );
+      print('response in updateQuotation: $response');
+
       return UpdateQuotationModel.fromJson(response.data);
     } catch (error) {
       print('Error in updateQuotation: $error');

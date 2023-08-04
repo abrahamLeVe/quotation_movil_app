@@ -59,26 +59,26 @@ class Quotation {
 class PurpleAttributes {
   String name;
   String phone;
-  String? message;
+  String message;
   String email;
   List<Product> products;
-  String codeQuotation;
-  DateTime createdAt;
-  DateTime updatedAt;
-  DateTime publishedAt;
-  PdfVoucher pdfVoucher;
+  String? codeQuotation;
+  DateTime? createdAt;
+  DateTime? updatedAt;
+  DateTime? publishedAt;
+  PdfVoucher? pdfVoucher;
 
   PurpleAttributes({
     required this.name,
     required this.phone,
-    this.message,
+    required this.message,
     required this.email,
     required this.products,
-    required this.codeQuotation,
-    required this.createdAt,
-    required this.updatedAt,
-    required this.publishedAt,
-    required this.pdfVoucher,
+    this.codeQuotation,
+    this.createdAt,
+    this.updatedAt,
+    this.publishedAt,
+    this.pdfVoucher,
   });
 
   factory PurpleAttributes.fromJson(Map<String, dynamic> json) =>
@@ -103,10 +103,10 @@ class PurpleAttributes {
         "email": email,
         "products": List<dynamic>.from(products.map((x) => x.toJson())),
         "code_quotation": codeQuotation,
-        "createdAt": createdAt.toIso8601String(),
-        "updatedAt": updatedAt.toIso8601String(),
-        "publishedAt": publishedAt.toIso8601String(),
-        "pdfVoucher": pdfVoucher.toJson(),
+        "createdAt": createdAt?.toIso8601String(),
+        "updatedAt": updatedAt?.toIso8601String(),
+        "publishedAt": publishedAt?.toIso8601String(),
+        "pdfVoucher": pdfVoucher?.toJson(),
       };
 }
 

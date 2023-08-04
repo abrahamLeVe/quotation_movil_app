@@ -9,7 +9,7 @@ import 'package:pract_01/screens/product/edit_product_screen.dart';
 import 'package:pract_01/screens/product/list_product_screen.dart';
 import 'package:pract_01/screens/quotation/edit_quotation_screen.dart';
 import 'package:pract_01/screens/quotation/list_quotation_screen.dart';
-import 'package:pract_01/services/messaging_service.dart';
+import 'package:pract_01/services/messaging/messaging_service.dart';
 import 'package:pract_01/services/product_service.dart';
 import 'package:pract_01/services/quotation_service.dart';
 import 'package:provider/provider.dart';
@@ -30,7 +30,7 @@ class _HomeScreenState extends State<HomeScreen>
   Future<List<product_all_model.Product>>? _productsFuture;
   Future<List<quotation_all_model.Quotation>>? _quotationsFuture;
   final _messagingService =
-      MessagingService(); // Instance of MessagingService for handling notifications
+      MessagingService(); 
 
   late QuotationState _quotationState;
   late ProductState _productState;
@@ -45,10 +45,18 @@ class _HomeScreenState extends State<HomeScreen>
     _loadData();
 
     _messagingService.init(context);
+
+    _messagingService.onQuotationsUpdated.listen((_) {
+      _loadQuotationsOnNotification();
+    });
   }
 
   Tab _getQuotationTab(int quotationCount) {
     return Tab(text: 'Cotizaciones ($quotationCount)');
+  }
+
+  Tab _getProductTab(int productCount) {
+    return Tab(text: 'Productos ($productCount)');
   }
 
   void _loadData() async {
@@ -66,6 +74,7 @@ class _HomeScreenState extends State<HomeScreen>
     });
 
     quotationState.setQuotations(quotationsResult.data);
+    _loadProducts();
   }
 
   void _loadQuotationsOnNotification() async {
@@ -74,7 +83,16 @@ class _HomeScreenState extends State<HomeScreen>
     setState(() {
       _quotationsFuture = Future.value(result.data);
     });
-    _quotationState.setQuotations(result.data);
+
+    for (final newQuotation in result.data) {
+      final exists = _quotationState.quotations.any(
+        (existingQuotation) => existingQuotation.id == newQuotation.id,
+      );
+
+      if (!exists) {
+        _quotationState.addQuotation(newQuotation);
+      }
+    }
   }
 
   void _loadProducts() async {
@@ -83,6 +101,7 @@ class _HomeScreenState extends State<HomeScreen>
       _productsFuture = Future.value(result.data);
     });
     _productState.setProducts(result.data);
+    _productState.setProductsCount(result.data.length);
   }
 
   void openEditProductScreen(product_all_model.Product product) async {
@@ -133,9 +152,8 @@ class _HomeScreenState extends State<HomeScreen>
     _quotationState = Provider.of<QuotationState>(context, listen: true);
 
     final tabs = [
-      // Cambiar el getter a quotationsCount en lugar de quotations.length
       _getQuotationTab(_quotationState.quotationsCount),
-      Tab(text: 'Productos (${_productState.products.length})'),
+      _getProductTab(_productState.productsCount),
     ];
 
     return Scaffold(
@@ -200,4 +218,3 @@ class _HomeScreenState extends State<HomeScreen>
     );
   }
 }
-//v3

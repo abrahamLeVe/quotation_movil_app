@@ -127,12 +127,12 @@ void performanceUpdateAction(BuildContext context, int quotationId) async {
         const SnackBar(content: Text('Cotización archivada')),
       );
 
-      // Navigator.pushAndRemoveUntil(
-      //   context,
-      //   MaterialPageRoute(
-      //       builder: (_) => const HomeScreen(selectedTabIndex: 1)),
-      //   (route) => false,
-      // );
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(
+            builder: (_) => const HomeScreen(selectedTabIndex: 1)),
+        (route) => false,
+      );
     }
   } catch (error) {
     if (context.mounted) {
@@ -142,12 +142,12 @@ void performanceUpdateAction(BuildContext context, int quotationId) async {
         const SnackBar(content: Text('Error al archivar cotización')),
       );
 
-      // Navigator.pushAndRemoveUntil(
-      //   context,
-      //   MaterialPageRoute(
-      //       builder: (_) => const HomeScreen(selectedTabIndex: 1)),
-      //   (route) => false,
-      // );
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(
+            builder: (_) => const HomeScreen(selectedTabIndex: 1)),
+        (route) => false,
+      );
     }
   }
 }
