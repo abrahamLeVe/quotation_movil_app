@@ -4,7 +4,7 @@ import 'package:url_launcher/url_launcher.dart';
 class SendPdfToWhatsAppButton extends StatelessWidget {
   final String phoneNumber;
   final String pdfFilePath;
-  final String code;
+  final int code;
   final String customerName;
 
   SendPdfToWhatsAppButton({

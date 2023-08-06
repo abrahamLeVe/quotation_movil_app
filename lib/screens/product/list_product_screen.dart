@@ -112,27 +112,24 @@ class _ProductListScreenState extends State<ProductListScreen> {
                             placeholder: (context, url) =>
                                 const CircularProgressIndicator(),
                             errorWidget: (context, url, error) {
-                              if (thumbnailUrl == null) {
-                                // Si la URL es nula, muestra una imagen de error personalizada
-                                return Column(
-                                  children: [
-                                    Image.asset('assets/error_image.png'),
-                                  ],
-                                );
-                              } else if (error is HttpException) {
-                                // Si el error es HttpException (404), muestra una imagen alternativa
-                                return Column(
-                                  children: [
-                                    Image.asset('assets/error_image.png'),
-                                  ],
-                                );
-                              } else {
-                                // Otros errores, muestra un mensaje genérico
-                                return Column(
-                                  children: [
-                                    Image.asset('assets/error_image.png'),
-                                  ],
-                                );
+                              try {
+                                throw error; // Lanzar el error para que pueda ser capturado por el bloque catch
+                              } catch (e) {
+                                if (e is HttpException) {
+                                  // Si el error es HttpException (404), muestra una imagen alternativa
+                                  return Column(
+                                    children: [
+                                      Image.asset('assets/error_image.png'),
+                                    ],
+                                  );
+                                } else {
+                                  // Otros errores, muestra un mensaje genérico
+                                  return Column(
+                                    children: [
+                                      Image.asset('assets/error_image.png'),
+                                    ],
+                                  );
+                                }
                               }
                             },
                           ),

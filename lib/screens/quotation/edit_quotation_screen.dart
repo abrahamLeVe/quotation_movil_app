@@ -4,7 +4,11 @@ import 'package:pract_01/models/quotation/get_all_quotation_model.dart'
     as model_quotation;
 import 'package:pract_01/models/quotation/post_quotation_model.dart'
     as post_quotation_model;
+import 'package:pract_01/screens/quotation/quotation_actions.dart';
 import 'package:pract_01/services/quotation_service.dart';
+import 'package:pract_01/widgets/send_pdf_to_mail.dart';
+import 'package:pract_01/widgets/send_pdf_to_whatsapp.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class EditQuotationScreen extends StatefulWidget {
   final model_quotation.Quotation quotation;
@@ -246,7 +250,7 @@ class _EditQuotationScreenState extends State<EditQuotationScreen> {
                   ),
                   TextButton(
                     onPressed: () {
-                      Navigator.pop(context, false); 
+                      Navigator.pop(context, false);
                     },
                     child: const Text('Cancelar'),
                   ),
@@ -263,44 +267,12 @@ class _EditQuotationScreenState extends State<EditQuotationScreen> {
       child: Scaffold(
         appBar: AppBar(
           title: Text('Editar Cotización N° ${widget.quotation.id}'),
+          actions: [_popupMenuItem(widget.quotation)],
         ),
         body: SingleChildScrollView(
           child: Column(
             children: [
-              _buildClientInfoAccordion(),
-              ListView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                itemCount: widget.quotation.attributes.products.length,
-                itemBuilder: (context, productIndex) {
-                  final product =
-                      widget.quotation.attributes.products[productIndex];
-                  return Card(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        ListTile(
-                          title: Text(product.name),
-                          subtitle: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              if (product.size.isNotEmpty)
-                                for (int sizeIndex = 0;
-                                    sizeIndex < product.size.length;
-                                    sizeIndex++)
-                                  _buildPriceRow(productIndex, sizeIndex,
-                                      product, context),
-                              if (product.size.isEmpty)
-                                _buildPriceRow(
-                                    productIndex, null, product, context),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
-                },
-              ),
+              _buildQuotationForm(widget.quotation),
             ],
           ),
         ),
@@ -401,19 +373,51 @@ class _EditQuotationScreenState extends State<EditQuotationScreen> {
         'data': updatedQuotation.toJson(),
       };
 
-      await QuotationService().updateQuotation(widget.quotation.id, updateData);
+      final response = await QuotationService()
+          .updateQuotation(widget.quotation.id, updateData);
+
+      final pdfUrl = response.data.pdfVoucher[0].url;
+
+// Actualizar el estado para reflejar los cambios
+      setState(() {
+        widget.quotation.attributes.pdfVoucher = model_quotation.PdfVoucher(
+          data: [
+            model_quotation.PdfVoucherDatum(
+              id: response.data.id, // Asigna el valor correcto aquí
+              attributes: model_quotation.FluffyAttributes(
+                url: pdfUrl,
+                name: response.data.pdfVoucher[0].name,
+                hash: response.data.pdfVoucher[0].hash,
+                ext: response.data.pdfVoucher[0].ext,
+                mime: response.data.pdfVoucher[0].mime,
+                size: response.data.pdfVoucher[0].size,
+                provider: response.data.pdfVoucher[0].provider,
+                providerMetadata: model_quotation.ProviderMetadata(
+                  publicId:
+                      response.data.pdfVoucher[0].providerMetadata.publicId,
+                  resourceType:
+                      response.data.pdfVoucher[0].providerMetadata.resourceType,
+                ),
+                createdAt: response.data.pdfVoucher[0].createdAt,
+                updatedAt: response.data.pdfVoucher[0].updatedAt,
+              ),
+            ),
+          ],
+        );
+
+        _isSaving = false;
+        _hasChanges = false;
+      });
       if (context.mounted) {
-        Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Cotización actualizada con éxito')),
         );
+        await _openPdf(pdfUrl);
       }
-      setState(() {
-        _isSaving = false;
-      });
     } catch (error) {
       setState(() {
         _isSaving = false;
+        _hasChanges = false;
       });
       if (context.mounted) {
         Navigator.pop(context);
@@ -422,5 +426,143 @@ class _EditQuotationScreenState extends State<EditQuotationScreen> {
         );
       }
     }
+  }
+
+  Future<void> _openPdf(String url) async {
+    final Uri pdfUrl = Uri.parse(url);
+    if (!await launchUrl(
+      pdfUrl,
+      mode: LaunchMode.externalApplication,
+    )) {
+      throw Exception('Could not launch $pdfUrl');
+    }
+  }
+
+  Widget _buildQuotationForm(model_quotation.Quotation quotation) {
+    return Column(
+      children: [
+        _buildClientInfoAccordion(),
+        const SizedBox(height: 16),
+        ListView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          itemCount: quotation.attributes.products.length,
+          itemBuilder: (context, productIndex) {
+            final product = quotation.attributes.products[productIndex];
+            return Card(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  ListTile(
+                    title: Text(product.name),
+                    subtitle: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        if (product.size.isNotEmpty)
+                          for (int sizeIndex = 0;
+                              sizeIndex < product.size.length;
+                              sizeIndex++)
+                            _buildPriceRow(
+                              productIndex,
+                              sizeIndex,
+                              product,
+                              context,
+                            ),
+                        if (product.size.isEmpty)
+                          _buildPriceRow(
+                            productIndex,
+                            null,
+                            product,
+                            context,
+                          ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        ),
+      ],
+    );
+  }
+
+  Widget _popupMenuItem(model_quotation.Quotation quotation) {
+    final pdfVoucher = quotation.attributes.pdfVoucher?.data;
+    return Column(
+      children: [
+        if (pdfVoucher!.isNotEmpty)
+          PopupMenuButton<String>(
+            icon: const Icon(Icons.more_vert), // Ícono del menú
+            itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
+              const PopupMenuItem<String>(
+                value: 'download',
+                child: Text('Descargar PDF'),
+              ),
+              const PopupMenuItem<String>(
+                value: 'whatsapp',
+                child: Text('Enviar por WhatsApp'),
+              ),
+              const PopupMenuItem<String>(
+                value: 'email',
+                child: Text('Enviar por Email'),
+              ),
+              const PopupMenuItem<String>(
+                value: 'eliminar',
+                child: Text('Eliminar'),
+              ),
+              const PopupMenuItem<String>(
+                value: 'archivar',
+                child: Text('Archivar'),
+              ),
+            ],
+            onSelected: (String value) {
+              final pdfUrl = pdfVoucher[0].attributes.url;
+              // Lógica para cada opción del menú seleccionada
+              if (value == 'download') {
+                _openPdf(pdfUrl);
+              } else if (value == 'whatsapp') {
+                SendPdfToWhatsAppButton(
+                  customerName: widget.quotation.attributes.name,
+                  code: widget.quotation.id,
+                  pdfFilePath: pdfUrl,
+                  phoneNumber: widget.quotation.attributes.phone,
+                );
+              } else if (value == 'email') {
+                SendEmailButton(
+                  customerName: widget.quotation.attributes.name,
+                  code: widget.quotation.id,
+                  pdfFilePath: pdfUrl,
+                  recipientEmail: widget.quotation.attributes.email,
+                );
+              } else if (value == 'eliminar') {
+                deleteQuotation(context, widget.quotation.id);
+              } else if (value == 'archivar') {
+                archiveQuotation(context, widget.quotation.id);
+              }
+            },
+          ),
+        if (pdfVoucher.isEmpty)
+          Container(
+            alignment: Alignment.bottomRight,
+            padding: const EdgeInsets.only(right: 16.0),
+            child: ElevatedButton(
+              onPressed: () {
+                deleteQuotation(context, widget.quotation.id);
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor:
+                    Colors.red, // Color de fondo rojo para indicar eliminar
+              ),
+              child: const Text(
+                "Eliminar",
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ),
+      ],
+    );
   }
 }

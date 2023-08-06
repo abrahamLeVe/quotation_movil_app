@@ -1,21 +1,23 @@
 import 'package:flutter/material.dart';
-import 'package:pract_01/screens/home_screen.dart';
+import 'package:pract_01/providers/quotation_state.dart';
 import 'package:pract_01/services/quotation_service.dart';
 import 'package:pract_01/utils/dialog_utils.dart';
+import 'package:provider/provider.dart';
+
 
 void _handleButtonPress(BuildContext context) {
   showLoadingDialog(context);
 }
 
-void deleteQuotation1(BuildContext context, int quotationId) {
+void _showConfirmationDialog(
+    BuildContext context, String title, String content, Function onConfirmed) {
   showDialog(
     context: context,
     barrierDismissible: false,
     builder: (BuildContext context) {
       return AlertDialog(
-        title: const Text('Eliminar cotización permanentemente'),
-        content: const Text(
-            '¿Estás seguro de eliminar esta Cotización de forma permanente?'),
+        title: Text(title),
+        content: Text(content),
         actions: <Widget>[
           TextButton(
             onPressed: () {
@@ -34,120 +36,65 @@ void deleteQuotation1(BuildContext context, int quotationId) {
     },
   ).then((confirmed) {
     if (confirmed != null && confirmed) {
-      performDeleteAction(context, quotationId);
+      onConfirmed();
     }
   });
 }
 
-void performDeleteAction(BuildContext context, int quotationId) async {
+Future<void> _performAction(BuildContext context, String loadingText,
+    Function action, int quotationId) async {
   _handleButtonPress(context);
 
   try {
-    await QuotationService().deleteQuotation(quotationId);
+    await action();
 
     if (context.mounted) {
-      Navigator.pop(context);
+      Navigator.pop(context); // Cerrar el cuadro de diálogo
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Cotización eliminada')),
+        const SnackBar(content: Text('Operación completada')),
       );
 
-      Navigator.pushAndRemoveUntil(
-        context,
-        MaterialPageRoute(
-          builder: (_) => const HomeScreen(selectedTabIndex: 1),
-        ),
-        (route) => false,
-      );
+      // Actualizar el estado para reflejar los cambios en todos los widgets
+      final quotationState =
+          Provider.of<QuotationState>(context, listen: false);
+      quotationState.removeQuotation(quotationId);
+
+      // Retroceder a la pantalla anterior (HomeScreen)
+      Navigator.pop(context);
     }
   } catch (error) {
     if (context.mounted) {
-      Navigator.pop(context);
+      Navigator.pop(context); // Cerrar el cuadro de diálogo
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Error al eliminar cotización')),
+        const SnackBar(content: Text('Error al realizar la operación')),
       );
 
-      Navigator.pushAndRemoveUntil(
-        context,
-        MaterialPageRoute(
-          builder: (_) => const HomeScreen(selectedTabIndex: 1),
-        ),
-        (route) => false,
-      );
+      // Retroceder a la pantalla anterior (HomeScreen)
+      Navigator.pop(context);
     }
   }
 }
 
-void archiveQuotation1(
-    BuildContext context, int quotationId, String codeQuotation) {
-  showDialog(
-    context: context,
-    barrierDismissible: false,
-    builder: (BuildContext context) {
-      return AlertDialog(
-        title: Text('Archivar cotización $codeQuotation'),
-        content: const Text('¿Estás seguro de archivar esta cotización?'),
-        actions: <Widget>[
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context, false);
-            },
-            child: const Text('No'),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context, true);
-            },
-            child: const Text('Sí'),
-          ),
-        ],
-      );
-    },
-  ).then((confirmed) {
-    if (confirmed != null && confirmed) {
-      performanceUpdateAction(
-        context,
-        quotationId,
-      );
-    }
-  });
+void deleteQuotation(BuildContext context, int quotationId) {
+  _showConfirmationDialog(
+    context,
+    'Eliminar cotización permanentemente',
+    '¿Estás seguro de eliminar esta Cotización de forma permanente?',
+    () => _performAction(context, 'Eliminando cotización...', () async {
+      await QuotationService().deleteQuotation(quotationId);
+    }, quotationId), // Pasar el quotationId aquí
+  );
 }
 
-void performanceUpdateAction(BuildContext context, int quotationId) async {
-  _handleButtonPress(context);
-
-  try {
-    await QuotationService().archiveQuotation(quotationId);
-
-    if (context.mounted) {
-      Navigator.pop(context);
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Cotización archivada')),
-      );
-
-      Navigator.pushAndRemoveUntil(
-        context,
-        MaterialPageRoute(
-            builder: (_) => const HomeScreen(selectedTabIndex: 1)),
-        (route) => false,
-      );
-    }
-  } catch (error) {
-    if (context.mounted) {
-      Navigator.pop(context);
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Error al archivar cotización')),
-      );
-
-      Navigator.pushAndRemoveUntil(
-        context,
-        MaterialPageRoute(
-            builder: (_) => const HomeScreen(selectedTabIndex: 1)),
-        (route) => false,
-      );
-    }
-  }
+void archiveQuotation(BuildContext context, int quotationId) {
+  _showConfirmationDialog(
+    context,
+    'Archivar cotización $quotationId',
+    '¿Estás seguro de archivar esta cotización?',
+    () => _performAction(context, 'Archivando cotización...', () async {
+      await QuotationService().archiveQuotation(quotationId);
+    }, quotationId), // Pasar el quotationId aquí
+  );
 }

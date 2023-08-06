@@ -8,7 +8,7 @@ class ProductState with ChangeNotifier {
 
   List<Product> get products => _products;
   int get productsCount =>
-      _productsCount; // Getter para el contador de productos
+      _productsCount;
 
   void setProducts(List<Product> products) {
     _products = products;

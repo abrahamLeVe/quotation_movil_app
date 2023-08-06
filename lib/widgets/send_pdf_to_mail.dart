@@ -4,7 +4,7 @@ import 'package:url_launcher/url_launcher.dart';
 class SendEmailButton extends StatefulWidget {
   final String recipientEmail;
   final String pdfFilePath;
-  final String code;
+  final int code;
   final String customerName;
 
   SendEmailButton({

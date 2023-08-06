@@ -4,16 +4,14 @@ import 'package:pract_01/models/quotation/get_all_quotation_model.dart';
 
 class QuotationState with ChangeNotifier {
   List<Quotation> _quotations = [];
-   List<Quotation> _originalQuotations = [];
+  List<Quotation> _originalQuotations = [];
   bool _areQuotationsLoaded = false;
-  int _quotationsCount = 0; // Nuevo campo para el contador de cotizaciones
+  int _quotationsCount = 0;
 
   List<Quotation> get quotations => _quotations;
   bool get areQuotationsLoaded => _areQuotationsLoaded;
-  int get quotationsCount =>
-      _quotationsCount; // Getter para el contador de cotizaciones
-  bool newNotificationAvailable =
-      false; // Variable para marcar notificación nueva
+  int get quotationsCount => _quotationsCount;
+  bool newNotificationAvailable = false;
   bool isNewNotificationAvailable() {
     if (newNotificationAvailable) {
       newNotificationAvailable = false;
@@ -22,9 +20,9 @@ class QuotationState with ChangeNotifier {
     return false;
   }
 
-   void setQuotations(List<Quotation> quotations) {
+  void setQuotations(List<Quotation> quotations) {
     _quotations = quotations;
-    _originalQuotations = List<Quotation>.from(quotations); // Copia de respaldo
+    _originalQuotations = List<Quotation>.from(quotations);
     setQuotationsCount(quotations.length);
     notifyListeners();
   }
@@ -36,8 +34,7 @@ class QuotationState with ChangeNotifier {
 
   void filterQuotations(String searchText) {
     if (searchText.isEmpty) {
-      _quotations =
-          List<Quotation>.from(_originalQuotations); // Restaurar lista original
+      _quotations = List<Quotation>.from(_originalQuotations);
     } else {
       final filteredQuotations = _originalQuotations.where((quotation) {
         final code = quotation.attributes.codeQuotation?.toUpperCase();
@@ -49,29 +46,20 @@ class QuotationState with ChangeNotifier {
     notifyListeners();
   }
 
-
   void updateQuotationProvider(Quotation updatedQuotation) {
     final index = _quotations.indexWhere((q) => q.id == updatedQuotation.id);
     if (index != -1) {
       _quotations[index] = updatedQuotation;
       updateQuotationsCount();
-
-      // Agrega la línea para imprimir las cotizaciones actualizadas en la consola
-      print('Cotización actualizada en el estado: ${_quotations}');
-
       notifyListeners();
     }
   }
 
-
-
-  // Nuevo método para actualizar el contador de cotizaciones
   void updateQuotationsCount() {
     _quotationsCount = _quotations.length;
     notifyListeners();
   }
 
-  // Nuevo método para establecer el contador de cotizaciones
   void setQuotationsCount(int count) {
     _quotationsCount = count;
     notifyListeners();
@@ -85,6 +73,12 @@ class QuotationState with ChangeNotifier {
 
   void markNewNotificationAvailable() {
     newNotificationAvailable = true;
+    notifyListeners();
+  }
+
+  void removeQuotation(int quotationId) {
+    _quotations.removeWhere((quotation) => quotation.id == quotationId);
+    updateQuotationsCount();
     notifyListeners();
   }
 }
