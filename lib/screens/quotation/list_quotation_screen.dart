@@ -82,88 +82,92 @@ class _QuotationListScreenState extends State<QuotationListScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Row(
-          children: [
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.only(right: 10.0),
-                child: TextField(
-                  controller: searchController,
-                  onChanged: (value) {
+    return PopScope(
+      canPop: false,
+      child: Scaffold(
+        appBar: AppBar(
+          title: Row(
+            children: [
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.only(right: 10.0),
+                  child: TextField(
+                    controller: searchController,
+                    onChanged: (value) {
+                      setState(() {
+                        final quotationState =
+                            provider.Provider.of<QuotationState>(context,
+                                listen: false);
+                        filterQuotations(quotationState.quotations);
+                      });
+                    },
+                    decoration: const InputDecoration(
+                      labelText: 'Filtrar por código',
+                      prefixIcon: Icon(Icons.search),
+                    ),
+                  ),
+                ),
+              ),
+              SizedBox(
+                width: 100,
+                child: DropdownButton<String>(
+                  value: selectedFilter,
+                  onChanged: (String? value) {
                     setState(() {
+                      selectedFilter = value!;
                       final quotationState =
                           provider.Provider.of<QuotationState>(context,
                               listen: false);
                       filterQuotations(quotationState.quotations);
                     });
                   },
-                  decoration: const InputDecoration(
-                    labelText: 'Filtrar por código',
-                    prefixIcon: Icon(Icons.search),
-                  ),
-                ),
-              ),
-            ),
-            SizedBox(
-              width: 100,
-              child: DropdownButton<String>(
-                value: selectedFilter,
-                onChanged: (String? value) {
-                  setState(() {
-                    selectedFilter = value!;
-                    final quotationState = provider.Provider.of<QuotationState>(
-                        context,
-                        listen: false);
-                    filterQuotations(quotationState.quotations);
-                  });
-                },
-                items: [
-                  'Todos',
-                  'Hoy',
-                  'Ayer',
-                  'Semana',
-                  'Mes',
-                ].map<DropdownMenuItem<String>>((String value) {
-                  return DropdownMenuItem<String>(
-                    value: value,
-                    child: Text(value),
-                  );
-                }).toList(),
-              ),
-            ),
-          ],
-        ),
-      ),
-      body: provider.Consumer<QuotationState>(
-        builder: (context, quotationState, _) {
-          final quotations = quotationState.quotations;
-          filterQuotations(quotations);
-
-          if (quotationState.isNewNotificationAvailable()) {
-            filterQuotations(quotationState.quotations);
-          }
-
-          return SingleChildScrollView(
-            child: Column(
-              children: [
-                ListView.builder(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  itemCount: filteredQuotations.length,
-                  itemBuilder: (BuildContext context, int index) {
-                    final quotation = filteredQuotations[index];
-                    return QuotationItem(
-                      openEditQuotationScreen: widget.openEditQuotationScreen,
-                      quotation: quotation,
+                  items: [
+                    'Todos',
+                    'Hoy',
+                    'Ayer',
+                    'Semana',
+                    'Mes',
+                  ].map<DropdownMenuItem<String>>((String value) {
+                    return DropdownMenuItem<String>(
+                      value: value,
+                      child: Text(value),
                     );
-                  },
+                  }).toList(),
                 ),
-              ],
-            ),
-          );
-        },
+              ),
+            ],
+          ),
+          automaticallyImplyLeading: false,
+        ),
+        body: provider.Consumer<QuotationState>(
+          builder: (context, quotationState, _) {
+            final quotations = quotationState.quotations;
+            filterQuotations(quotations);
+
+            if (quotationState.isNewNotificationAvailable()) {
+              filterQuotations(quotationState.quotations);
+            }
+
+            return SingleChildScrollView(
+              child: Column(
+                children: [
+                  ListView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount: filteredQuotations.length,
+                    itemBuilder: (BuildContext context, int index) {
+                      final quotation = filteredQuotations[index];
+                      return QuotationItem(
+                        openEditQuotationScreen: widget.openEditQuotationScreen,
+                        quotation: quotation,
+                      );
+                    },
+                  ),
+                ],
+              ),
+            );
+          },
+        ),
       ),
     );
   }

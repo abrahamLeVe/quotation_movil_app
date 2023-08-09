@@ -7,8 +7,16 @@ class ProductState with ChangeNotifier {
   int _productsCount = 0;
 
   List<Product> get products => _products;
-  int get productsCount =>
-      _productsCount;
+  int get productsCount => _productsCount;
+
+  void updateProduct(Product updatedProduct) {
+    final index =
+        _products.indexWhere((product) => product.id == updatedProduct.id);
+    if (index != -1) {
+      _products[index] = updatedProduct;
+      notifyListeners();
+    }
+  }
 
   void setProducts(List<Product> products) {
     _products = products;

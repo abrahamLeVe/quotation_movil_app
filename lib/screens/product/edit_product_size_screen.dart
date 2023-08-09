@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:pract_01/models/product/get_all_product_model.dart'
     as product_model;
 import 'package:pract_01/services/product_service.dart';
+import 'package:pract_01/utils/error_handlers.dart';
 
 class EditProductSizesScreen extends StatefulWidget {
   final product_model.Product product;
@@ -28,7 +29,7 @@ class _EditProductSizesScreenState extends State<EditProductSizesScreen> {
     RegExp(r'^\d{1,9}(\.\d{0,2})?$'),
   );
 
-  bool _isSaving = false; 
+  bool _isSaving = false;
 
   @override
   void initState() {
@@ -79,15 +80,14 @@ class _EditProductSizesScreenState extends State<EditProductSizesScreen> {
   }
 
   Future<void> _saveChanges() async {
-    if (_isSaving) return; 
+    if (_isSaving) return;
 
     setState(() {
       _isSaving = true;
     });
 
     try {
-      bool hasNullPrice =
-          false; 
+      bool hasNullPrice = false;
 
       for (final size in _modifiedSizes) {
         final index = widget.sizes.indexOf(size);
@@ -105,7 +105,7 @@ class _EditProductSizesScreenState extends State<EditProductSizesScreen> {
         await _showWarningDialog();
       } else {
         for (final size in _modifiedSizes) {
-          await ProductService().updateSize(
+          await ProductService(context: context).updateSize(
             size.id,
             size.attributes.quotationPrice,
           );
@@ -123,6 +123,7 @@ class _EditProductSizesScreenState extends State<EditProductSizesScreen> {
       }
     } catch (error) {
       if (context.mounted) {
+        showAuthenticationErrorDialog(context, error);
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Error al actualizar los precios de medidas'),

@@ -1,32 +1,48 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/material.dart';
 import 'package:pract_01/models/enviroment_model.dart';
 import 'package:pract_01/models/quotation/archive_quotation_model.dart';
 import 'package:pract_01/models/quotation/delete_quotation_model.dart';
 import 'package:pract_01/models/quotation/get_all_quotation_model.dart';
 import 'package:pract_01/models/quotation/get_details_quotation_model.dart';
 import 'package:pract_01/models/quotation/update_quotation_model.dart';
+import 'package:pract_01/utils/error_handlers.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class QuotationService {
   late Dio _dio;
 
-  QuotationService() {
+  QuotationService({required BuildContext context}) {
     _dio = Dio();
+
+    _dio.interceptors.add(InterceptorsWrapper(
+      onRequest: (options, handler) async {
+        final authToken = await _getAuthToken();
+        options.headers['Authorization'] = 'Bearer $authToken';
+        options.headers['Content-Type'] = 'application/json';
+        return handler.next(options);
+      },
+      onError: (DioException error, handler) async {
+        showAuthenticationErrorDialog(context, error);
+
+        return handler.next(error);
+      },
+    ));
   }
 
-  Map<String, String> get headers => {
-        'Authorization': 'Bearer ${Environment.apiToken}',
-        "Content-Type": "application/json",
-      };
+  Future<String> _getAuthToken() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getString('auth_token') ?? '';
+  }
 
   Future<QuotationModel> getAllQuotation() async {
     try {
       final response = await _dio.get(
         "${Environment.apiUrl}/quotations?populate=*&sort=createdAt:DESC",
-        options: Options(headers: headers),
       );
 
       return QuotationModel.fromJson(response.data);
-    } catch (error) {
+    } on DioException catch (error) {
       print('Error in getAllQuotation: $error');
       rethrow;
     }
@@ -38,12 +54,10 @@ class QuotationService {
       final response = await _dio.put(
         "${Environment.apiUrl}/quotations/$id?populate=*",
         data: data,
-        options: Options(headers: headers),
       );
-      print('response in updateQuotation: $response');
 
       return UpdateQuotationModel.fromJson(response.data);
-    } catch (error) {
+    } on DioException catch (error) {
       print('Error in updateQuotation: $error');
       rethrow;
     }
@@ -53,10 +67,9 @@ class QuotationService {
     try {
       final response = await _dio.get(
         "${Environment.apiUrl}/quotations/$id?populate=*",
-        options: Options(headers: headers),
       );
       return GetDetailsQuotation.fromJson(response.data);
-    } catch (error) {
+    } on DioException catch (error) {
       print('Error in getDetailsQuotation: $error');
       rethrow;
     }
@@ -66,10 +79,9 @@ class QuotationService {
     try {
       final response = await _dio.delete(
         "${Environment.apiUrl}/quotations/$id?populate=*",
-        options: Options(headers: headers),
       );
       return DeleteQuotation.fromJson(response.data);
-    } catch (error) {
+    } on DioException catch (error) {
       print('Error in deleteQuotation: $error');
       rethrow;
     }
@@ -84,10 +96,9 @@ class QuotationService {
             "publishedAt": null,
           }
         },
-        options: Options(headers: headers),
       );
       return ArchiveQuotation.fromJson(response.data);
-    } catch (error) {
+    } on DioException catch (error) {
       print('Error in archiveQuotation: $error');
       rethrow;
     }

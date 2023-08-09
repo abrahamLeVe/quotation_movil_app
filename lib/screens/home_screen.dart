@@ -9,6 +9,7 @@ import 'package:pract_01/screens/product/edit_product_screen.dart';
 import 'package:pract_01/screens/product/list_product_screen.dart';
 import 'package:pract_01/screens/quotation/edit_quotation_screen.dart';
 import 'package:pract_01/screens/quotation/list_quotation_screen.dart';
+import 'package:pract_01/services/authentication_service.dart';
 import 'package:pract_01/services/messaging/messaging_service.dart';
 import 'package:pract_01/services/product_service.dart';
 import 'package:pract_01/services/quotation_service.dart';
@@ -27,28 +28,44 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
-  Future<List<product_all_model.Product>>? _productsFuture;
   Future<List<quotation_all_model.Quotation>>? _quotationsFuture;
-  final _messagingService =
-      MessagingService(); 
+  final _messagingService = MessagingService();
 
   late QuotationState _quotationState;
   late ProductState _productState;
+  bool _isLoading = true;
 
   @override
   void initState() {
+    _loadData();
+
     super.initState();
+
     _tabController = TabController(length: 2, vsync: this);
     _quotationState = Provider.of<QuotationState>(context, listen: false);
     _productState = Provider.of<ProductState>(context, listen: false);
 
-    _loadData();
-
     _messagingService.init(context);
-
     _messagingService.onQuotationsUpdated.listen((_) {
       _loadQuotationsOnNotification();
     });
+  }
+
+  void _loadData() async {
+    final quotationState = Provider.of<QuotationState>(context, listen: false);
+
+    final quotationsFuture =
+        QuotationService(context: context).getAllQuotation();
+
+    final quotationsResult = await quotationsFuture;
+
+    setState(() {
+      _quotationsFuture = Future.value(quotationsResult.data);
+      _isLoading = false;
+    });
+
+    quotationState.setQuotations(quotationsResult.data);
+    _loadProducts();
   }
 
   Tab _getQuotationTab(int quotationCount) {
@@ -59,26 +76,8 @@ class _HomeScreenState extends State<HomeScreen>
     return Tab(text: 'Productos ($productCount)');
   }
 
-  void _loadData() async {
-    final quotationState = Provider.of<QuotationState>(context, listen: false);
-
-    final quotationsFuture = QuotationService().getAllQuotation();
-    final productsFuture = ProductService().getAllProduct();
-
-    final quotationsResult = await quotationsFuture;
-    final productsResult = await productsFuture;
-
-    setState(() {
-      _quotationsFuture = Future.value(quotationsResult.data);
-      _productsFuture = Future.value(productsResult.data);
-    });
-
-    quotationState.setQuotations(quotationsResult.data);
-    _loadProducts();
-  }
-
   void _loadQuotationsOnNotification() async {
-    final result = await QuotationService().getAllQuotation();
+    final result = await QuotationService(context: context).getAllQuotation();
 
     setState(() {
       _quotationsFuture = Future.value(result.data);
@@ -96,10 +95,8 @@ class _HomeScreenState extends State<HomeScreen>
   }
 
   void _loadProducts() async {
-    final result = await ProductService().getAllProduct();
-    setState(() {
-      _productsFuture = Future.value(result.data);
-    });
+    final result = await ProductService(context: context).getAllProduct();
+    setState(() {});
     _productState.setProducts(result.data);
     _productState.setProductsCount(result.data.length);
   }
@@ -147,6 +144,14 @@ class _HomeScreenState extends State<HomeScreen>
     super.dispose();
   }
 
+  void logout(BuildContext context) {
+    final authService = AuthenticationService(context: context);
+    authService.logout();
+
+    // Redirigir al inicio de sesión
+    Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
+  }
+
   @override
   Widget build(BuildContext context) {
     _quotationState = Provider.of<QuotationState>(context, listen: true);
@@ -156,34 +161,52 @@ class _HomeScreenState extends State<HomeScreen>
       _getProductTab(_productState.productsCount),
     ];
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Pantalla Principal'),
-        bottom: TabBar(
-          controller: _tabController,
-          tabs: tabs,
-        ),
-      ),
-      body: TabBarView(
-        controller: _tabController,
-        children: [
-          _buildQuotationList(),
-          _buildProductList(),
-        ],
-      ),
-    );
+    return PopScope(
+        canPop: false,
+        child: Scaffold(
+          appBar: AppBar(
+            title: const Text('Pantalla Principal'),
+            automaticallyImplyLeading: false,
+            actions: [
+              PopupMenuButton(
+                onSelected: (value) {
+                  if (value == 'logout') {
+                    logout(context);
+                  }
+                },
+                itemBuilder: (BuildContext context) => [
+                  const PopupMenuItem(
+                    value: 'logout',
+                    child: Text('Cerrar sesión'),
+                  ),
+                ],
+              ),
+            ],
+            bottom: TabBar(
+              controller: _tabController,
+              tabs: tabs,
+            ),
+          ),
+          body: _isLoading
+              ? const LinearProgressIndicator()
+              : TabBarView(
+                  controller: _tabController,
+                  children: [
+                    _buildQuotationList(),
+                    _buildProductList(),
+                  ],
+                ),
+        ));
   }
 
   Widget _buildQuotationList() {
     return FutureBuilder<List<quotation_all_model.Quotation>>(
       future: _quotationsFuture,
       builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
-        } else if (snapshot.hasError) {
-          return const Center(child: Text('Error al cargar las cotizaciones'));
+        final quotationList = snapshot.data ?? [];
+        if (quotationList.isEmpty) {
+          return const Center(child: Text('No hay cotizaciones disponibles'));
         } else {
-          final quotationList = snapshot.data ?? [];
           return ChangeNotifierProvider.value(
             value: _quotationState,
             child: QuotationListScreen(
@@ -197,24 +220,21 @@ class _HomeScreenState extends State<HomeScreen>
   }
 
   Widget _buildProductList() {
-    return FutureBuilder<List<product_all_model.Product>>(
-      future: _productsFuture,
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
-        } else if (snapshot.hasError) {
-          return const Center(child: Text('Error al cargar los productos'));
-        } else {
-          final productList = snapshot.data ?? [];
-          return ChangeNotifierProvider.value(
-            value: _productState,
-            child: ProductListScreen(
+    return ChangeNotifierProvider.value(
+      value: _productState,
+      child: Consumer<ProductState>(
+        builder: (context, productState, _) {
+          final productList = productState.products;
+          if (productList.isEmpty) {
+            return const Center(child: Text('No hay productos disponibles'));
+          } else {
+            return ProductListScreen(
               productList: productList,
               openEditProductScreen: openEditProductScreen,
-            ),
-          );
-        }
-      },
+            );
+          }
+        },
+      ),
     );
   }
 }

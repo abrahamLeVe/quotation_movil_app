@@ -5,8 +5,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:pract_01/models/product/get_all_product_model.dart'
     as product_model;
+import 'package:pract_01/providers/product_state.dart';
 import 'package:pract_01/services/product_service.dart';
 import 'package:pract_01/utils/dialog_utils.dart';
+import 'package:pract_01/utils/error_handlers.dart';
+import 'package:provider/provider.dart';
 
 class EditProductScreen extends StatefulWidget {
   final product_model.Product product;
@@ -43,7 +46,6 @@ class _EditProductScreenState extends State<EditProductScreen> {
     if (!_changesSaved) {
       final String priceText = _priceController.text;
       if (priceText.isEmpty || double.tryParse(priceText) == null) {
-        // Mostrar advertencia si el precio es nulo o no es un número válido
         showDialog(
           context: context,
           builder: (context) {
@@ -62,7 +64,7 @@ class _EditProductScreenState extends State<EditProductScreen> {
             );
           },
         );
-        return; // Detener el proceso de guardar los cambios
+        return;
       }
 
       setState(() {
@@ -74,10 +76,16 @@ class _EditProductScreenState extends State<EditProductScreen> {
       showLoadingDialog(context);
 
       try {
-        await ProductService().updateProduct(widget.product.id, newPrice);
+        await ProductService(context: context)
+            .updateProduct(widget.product.id, newPrice);
 
         if (context.mounted) {
+          widget.product.attributes.quotationPrice = newPrice;
           widget.onProductUpdated(widget.product);
+
+          Provider.of<ProductState>(context, listen: false)
+              .updateProduct(widget.product);
+
           Navigator.pop(context);
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Producto actualizado')),
@@ -89,6 +97,7 @@ class _EditProductScreenState extends State<EditProductScreen> {
       } catch (error) {
         if (context.mounted) {
           Navigator.pop(context);
+          showAuthenticationErrorDialog(context, error);
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Error al actualizar el producto')),
           );
@@ -154,20 +163,18 @@ class _EditProductScreenState extends State<EditProductScreen> {
                         fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 16),
-                   CachedNetworkImage(
+                  CachedNetworkImage(
                     imageUrl: thumbnailUrl ?? '',
                     placeholder: (context, url) =>
                         const CircularProgressIndicator(),
                     errorWidget: (context, url, error) {
                       if (thumbnailUrl == null) {
-                        
                         return Column(
                           children: [
                             Image.asset('assets/error_image.png'),
                           ],
                         );
                       } else if (error is HttpException) {
-                        
                         return Column(
                           children: [
                             Image.asset('assets/error_image.png'),
@@ -182,7 +189,6 @@ class _EditProductScreenState extends State<EditProductScreen> {
                       }
                     },
                   ),
-              
                   const SizedBox(height: 16),
                   const Text('Precio de cotización'),
                   TextFormField(

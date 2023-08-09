@@ -4,11 +4,12 @@ import 'package:pract_01/models/quotation/get_all_quotation_model.dart'
     as model_quotation;
 import 'package:pract_01/models/quotation/post_quotation_model.dart'
     as post_quotation_model;
+import 'package:pract_01/screens/product/pdf_view_screen.dart';
 import 'package:pract_01/screens/quotation/quotation_actions.dart';
 import 'package:pract_01/services/quotation_service.dart';
+import 'package:pract_01/utils/error_handlers.dart';
 import 'package:pract_01/widgets/send_pdf_to_mail.dart';
 import 'package:pract_01/widgets/send_pdf_to_whatsapp.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 class EditQuotationScreen extends StatefulWidget {
   final model_quotation.Quotation quotation;
@@ -264,24 +265,33 @@ class _EditQuotationScreenState extends State<EditQuotationScreen> {
           return true;
         }
       },
-      child: Scaffold(
-        appBar: AppBar(
-          title: Text('Editar Cotización N° ${widget.quotation.id}'),
-          actions: [_popupMenuItem(widget.quotation)],
-        ),
-        body: SingleChildScrollView(
-          child: Column(
-            children: [
-              _buildQuotationForm(widget.quotation),
-            ],
+      child: Stack(
+        children: [
+          Scaffold(
+            appBar: AppBar(
+              title: Text('Editar Cotización N° ${widget.quotation.id}'),
+              actions: [_popupMenuItem(widget.quotation)],
+            ),
+            body: SingleChildScrollView(
+              child: Column(
+                children: [
+                  _buildQuotationForm(widget.quotation),
+                ],
+              ),
+            ),
+            floatingActionButton: FloatingActionButton(
+              onPressed: _isSaving ? null : _saveQuotationChanges,
+              child: _isSaving
+                  ? const CircularProgressIndicator()
+                  : const Icon(Icons.save),
+            ),
           ),
-        ),
-        floatingActionButton: FloatingActionButton(
-          onPressed: _isSaving ? null : _saveQuotationChanges,
-          child: _isSaving
-              ? const CircularProgressIndicator()
-              : const Icon(Icons.save),
-        ),
+          if (_isSaving)
+            const ModalBarrier(
+              color: Colors.black54,
+              dismissible: false,
+            ),
+        ],
       ),
     );
   }
@@ -373,7 +383,7 @@ class _EditQuotationScreenState extends State<EditQuotationScreen> {
         'data': updatedQuotation.toJson(),
       };
 
-      final response = await QuotationService()
+      final response = await QuotationService(context: context)
           .updateQuotation(widget.quotation.id, updateData);
 
       final pdfUrl = response.data.pdfVoucher[0].url;
@@ -383,7 +393,7 @@ class _EditQuotationScreenState extends State<EditQuotationScreen> {
         widget.quotation.attributes.pdfVoucher = model_quotation.PdfVoucher(
           data: [
             model_quotation.PdfVoucherDatum(
-              id: response.data.id, // Asigna el valor correcto aquí
+              id: response.data.id,
               attributes: model_quotation.FluffyAttributes(
                 url: pdfUrl,
                 name: response.data.pdfVoucher[0].name,
@@ -404,37 +414,36 @@ class _EditQuotationScreenState extends State<EditQuotationScreen> {
             ),
           ],
         );
-
-        _isSaving = false;
-        _hasChanges = false;
       });
       if (context.mounted) {
+        setState(() {
+          _isSaving = false;
+          _hasChanges = false;
+        });
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Cotización actualizada con éxito')),
         );
-        await _openPdf(pdfUrl);
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (context) => PdfViewScreen(pdfUrl: pdfUrl),
+          ),
+        );
       }
     } catch (error) {
-      setState(() {
-        _isSaving = false;
-        _hasChanges = false;
-      });
+      
       if (context.mounted) {
+        showAuthenticationErrorDialog(context, error);
+
+        setState(() {
+          _isSaving = false;
+          _hasChanges = false;
+        });
         Navigator.pop(context);
+
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Error no se pudo actualizar')),
         );
       }
-    }
-  }
-
-  Future<void> _openPdf(String url) async {
-    final Uri pdfUrl = Uri.parse(url);
-    if (!await launchUrl(
-      pdfUrl,
-      mode: LaunchMode.externalApplication,
-    )) {
-      throw Exception('Could not launch $pdfUrl');
     }
   }
 
@@ -518,9 +527,14 @@ class _EditQuotationScreenState extends State<EditQuotationScreen> {
             ],
             onSelected: (String value) {
               final pdfUrl = pdfVoucher[0].attributes.url;
-              // Lógica para cada opción del menú seleccionada
               if (value == 'download') {
-                _openPdf(pdfUrl);
+                // _openPdf(pdfUrl);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => PdfViewScreen(pdfUrl: pdfUrl),
+                  ),
+                );
               } else if (value == 'whatsapp') {
                 SendPdfToWhatsAppButton(
                   customerName: widget.quotation.attributes.name,

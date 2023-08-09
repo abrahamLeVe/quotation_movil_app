@@ -106,11 +106,12 @@ class MessagingService {
         message.notification!.body != null &&
         !_isDialogOpen;
   }
-Future<void> _showLocalNotification(String title, String body) async {
+
+  Future<void> _showLocalNotification(String title, String body) async {
     const AndroidNotificationDetails androidNotificationDetails =
         AndroidNotificationDetails(
-      'channel_id', 
-      'channel_name', 
+      'channel_id',
+      'channel_name',
       importance: Importance.max,
       priority: Priority.high,
       playSound: true,
@@ -121,9 +122,9 @@ Future<void> _showLocalNotification(String title, String body) async {
         NotificationDetails(android: androidNotificationDetails);
 
     await flutterLocalNotificationsPlugin.show(
-      0, 
-      title, 
-      body, 
+      0,
+      title,
+      body,
       notificationDetails,
     );
   }
@@ -137,7 +138,7 @@ Future<void> _showLocalNotification(String title, String body) async {
         quotationState.areQuotationsLoaded &&
         !_isDialogOpen) {
       _queuedNotifications.add(message);
-      _isDialogOpen = true; 
+      _isDialogOpen = true;
       _showNotificationDialog(context, message);
     } else if (!_isLoadingQuotations &&
         quotationState.areQuotationsLoaded &&
@@ -151,8 +152,7 @@ Future<void> _showLocalNotification(String title, String body) async {
       final nextMessage = _queuedNotifications.removeAt(0);
       _loadQuotations(context, nextMessage);
     } else {
-      _isDialogOpen =
-          false; 
+      _isDialogOpen = false;
     }
   }
 
@@ -161,8 +161,8 @@ Future<void> _showLocalNotification(String title, String body) async {
       context: context,
       barrierDismissible: false,
       builder: (BuildContext context) {
-        return WillPopScope(
-          onWillPop: () async => false,
+        return PopScope(
+          canPop: false,
           child: AlertDialog(
             title: Text(message.notification!.title!),
             content: Text(message.notification!.body!),
@@ -201,16 +201,15 @@ Future<void> _showLocalNotification(String title, String body) async {
       BuildContext context, RemoteMessage message) async {
     final quotationState = Provider.of<QuotationState>(context, listen: false);
 
-    
     if (_isLoadingQuotations || quotationState.areQuotationsLoaded) {
       _queuedNotifications.add(message);
       return;
     }
 
-    _isLoadingQuotations = true; 
+    _isLoadingQuotations = true;
 
     try {
-      final result = await QuotationService().getAllQuotation();
+      final result = await QuotationService(context: context).getAllQuotation();
       quotationState.setQuotations(result.data);
     } catch (error) {
       debugPrint('Error al cargar las cotizaciones: $error');
@@ -221,10 +220,9 @@ Future<void> _showLocalNotification(String title, String body) async {
         final nextMessage = _queuedNotifications.removeAt(0);
         // ignore: use_build_context_synchronously
         _loadQuotations(context, nextMessage);
-      } 
+      }
     }
   }
-
 }
 
 @pragma('vm:entry-point')

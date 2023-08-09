@@ -1,25 +1,51 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/material.dart';
 import 'package:pract_01/models/enviroment_model.dart';
 import 'package:pract_01/models/product/get_all_product_model.dart';
 import 'package:pract_01/models/product/size_model.dart';
+import 'package:pract_01/utils/error_handlers.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class ProductService {
   late Dio _dio;
-  ProductService() {
+  ProductService({required BuildContext context}) {
     _dio = Dio();
+
+    _dio.interceptors.add(InterceptorsWrapper(
+      onRequest: (options, handler) async {
+        final authToken = await _getAuthToken();
+        options.headers['Authorization'] = 'Bearer $authToken';
+        options.headers['Content-Type'] = 'application/json';
+        return handler.next(options);
+      },
+      onError: (DioException error, handler) async {
+        showAuthenticationErrorDialog(context, error);
+
+        return handler.next(error);
+      },
+    ));
   }
 
-  Map<String, String> get headers => {
-        'Authorization': 'Bearer ${Environment.apiToken}',
-        "Content-Type": "application/json",
-      };
+  Future<String> _getAuthToken() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getString('auth_token') ?? '';
+  }
 
   Future<GetAllProductsModel> getAllProduct() async {
     try {
+      final authToken = await _getAuthToken();
+
       final response = await _dio.get(
         "${Environment.apiUrl}/products?populate=*&sort=createdAt:DESC",
-        options: Options(headers: headers),
+        options: Options(
+          headers: {
+            'Authorization': 'Bearer $authToken',
+            "Content-Type": "application/json",
+          },
+        ),
       );
+      print('headers in getAllProduct: ${response.requestOptions.headers}');
+
       return GetAllProductsModel.fromJson(response.data);
     } catch (error) {
       print('Error in getAllProduct: $error');
@@ -30,6 +56,7 @@ class ProductService {
 
   Future<ProductUpdateModel> updateProduct(int id, double price) async {
     try {
+      final authToken = await _getAuthToken();
       final response = await _dio.put(
         "${Environment.apiUrl}/products/$id?populate=*",
         data: {
@@ -37,21 +64,34 @@ class ProductService {
             "quotation_price": price,
           }
         },
-        options: Options(headers: headers),
+        options: Options(
+          headers: {
+            'Authorization': 'Bearer $authToken',
+            "Content-Type": "application/json",
+          },
+        ),
       );
-      return ProductUpdateModel.fromJson(response.data);
-    } catch (error) {
-      print('Error in updateProduct: $error');
+      print('response in updateProduct: $response');
 
+      return ProductUpdateModel.fromJson(response.data);
+    } on DioException catch (error) {
+      print('Error in updateProduct: $error');
       rethrow;
     }
   }
 
   Future<ProductUpdateModel> deleteProduct(int id) async {
     try {
+      final authToken = await _getAuthToken();
+
       final response = await _dio.delete(
         "${Environment.apiUrl}/products/$id?populate=*",
-        options: Options(headers: headers),
+        options: Options(
+          headers: {
+            'Authorization': 'Bearer $authToken',
+            "Content-Type": "application/json",
+          },
+        ),
       );
       return ProductUpdateModel.fromJson(response.data);
     } catch (error) {
@@ -63,6 +103,7 @@ class ProductService {
 
   Future<SizeUpdateModel> updateSize(int id, price) async {
     try {
+      final authToken = await _getAuthToken();
       final response = await _dio.put(
         "${Environment.apiUrl}/product-sizes/$id?populate=*",
         data: {
@@ -70,14 +111,18 @@ class ProductService {
             "quotation_price": price,
           }
         },
-        options: Options(headers: headers),
+        options: Options(
+          headers: {
+            'Authorization': 'Bearer $authToken',
+            "Content-Type": "application/json",
+          },
+        ),
       );
       print('response in updateSize: $response');
 
       return SizeUpdateModel.fromJson(response.data);
-    } catch (error) {
+    } on DioException catch (error) {
       print('Error in updateSize: $error');
-
       rethrow;
     }
   }

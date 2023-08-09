@@ -4,9 +4,12 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:pract_01/models/enviroment_model.dart';
 import 'package:pract_01/providers/product_state.dart';
 import 'package:pract_01/providers/quotation_state.dart';
+import 'package:pract_01/routes/app_routes.dart';
 import 'package:pract_01/screens/home_screen.dart';
+import 'package:pract_01/screens/login_screen.dart';
 import 'package:pract_01/services/messaging/firebase_options.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -15,11 +18,18 @@ Future<void> main() async {
   );
   await dotenv.load(fileName: Environment.fileName);
 
-  runApp(const MyApp());
+  SharedPreferences prefs = await SharedPreferences.getInstance();
+  final authToken = prefs.getString('auth_token');
+  runApp(MyApp(
+      initialRoute: authToken != null
+          ? AppRoutes.home
+          : AppRoutes.login)); 
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({Key? key}) : super(key: key);
+  final String initialRoute;
+
+  const MyApp({Key? key, required this.initialRoute}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -31,12 +41,15 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider<ProductState>(
           create: (_) => ProductState(),
         ),
-        // Otros proveedores aquí si los tienes
       ],
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
         title: 'Cotizaciones Eléctrica S.A.C',
-        home: const HomeScreen(selectedTabIndex: 2),
+        initialRoute: initialRoute,
+        routes: {
+          AppRoutes.login: (context) => const LoginScreen(),
+          AppRoutes.home: (context) => const HomeScreen(selectedTabIndex: 2),
+        },
         theme: ThemeData(
           colorScheme: ColorScheme.fromSeed(
             seedColor: const Color.fromARGB(255, 2, 0, 19),
