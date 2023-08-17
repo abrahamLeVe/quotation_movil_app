@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:pract_01/models/quotation/get_all_quotation_model.dart';
 import 'package:pract_01/providers/quotation_state.dart';
 import 'package:pract_01/services/quotation_service.dart';
 import 'package:pract_01/utils/dialog_utils.dart';
@@ -58,7 +59,7 @@ Future<void> _performAction(BuildContext context, String loadingText,
       final quotationState =
           Provider.of<QuotationState>(context, listen: false);
       quotationState.removeQuotation(quotationId);
-
+      QuotationService(context: context).removeCachedQuotation(quotationId);
       Navigator.pop(context);
     }
   } catch (error) {
@@ -94,4 +95,26 @@ void archiveQuotation(BuildContext context, int quotationId) {
       await QuotationService(context: context).archiveQuotation(quotationId);
     }, quotationId),
   );
+}
+
+Future<void> updateQuotationsInBackground(BuildContext context) async {
+  List<Quotation> updatedQuotations = [];
+ print('empezo el segundo plano');
+
+  await Future.delayed(Duration.zero, () async {
+    final response = await QuotationService(context: context).getAllQuotation();
+    updatedQuotations = response.data;
+  });
+  // Actualizar la caché en segundo plano
+  await Future(() async {
+    await QuotationService(context: context).cacheQuotations(updatedQuotations);
+  });
+
+  // Actualizar el estado global en segundo plano
+  await Future(() async {
+    final quotationState = Provider.of<QuotationState>(context, listen: false);
+    quotationState.setQuotations(updatedQuotations);
+  });
+ print('terminó el segundo plano');
+
 }

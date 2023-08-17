@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:pract_01/models/enviroment_model.dart';
@@ -29,16 +31,62 @@ class QuotationService {
       },
     ));
   }
-
   Future<String> _getAuthToken() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.getString('auth_token') ?? '';
   }
 
+  //-----------cache-------------------------
+  Future<void> cacheQuotations(List<Quotation> quotations) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+
+    final List<String> quotationStrings = quotations.map((quotation) {
+      final Map<String, dynamic> quotationJson = quotation.toJson();
+      return jsonEncode(quotationJson); // Convertir a JSON y luego a String
+    }).toList();
+    print('Cacheado $quotationStrings');
+    await prefs.setStringList('cached_quotations', quotationStrings);
+  }
+
+
+  Future<void> removeCachedQuotation(int quotationId) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    List<Quotation> cachedQuotations = await getCachedQuotations();
+
+    cachedQuotations
+        .removeWhere((cachedQuotation) => cachedQuotation.id == quotationId);
+
+    final List<String> quotationStrings = cachedQuotations.map((quotation) {
+      final Map<String, dynamic> quotationJson = quotation.toJson();
+      return jsonEncode(quotationJson);
+    }).toList();
+
+    await prefs.setStringList('cached_quotations', quotationStrings);
+  }
+
+  Future<List<Quotation>> getCachedQuotations() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+
+    final List<String>? quotationStrings =
+        prefs.getStringList('cached_quotations');
+    if (quotationStrings == null) {
+      return [];
+    }
+
+    final List<Quotation> quotations = quotationStrings.map((quotationString) {
+      final Map<String, dynamic> quotationJson =
+          jsonDecode(quotationString); // Convertir de String a JSON
+      return Quotation.fromJson(quotationJson);
+    }).toList();
+
+    return quotations;
+  }
+  //-----------end cache-------------------------
+
   Future<QuotationModel> getAllQuotation() async {
     try {
       final response = await _dio.get(
-        "${Environment.apiUrl}/quotations?populate=*&sort=createdAt:DESC",
+        "${Environment.apiUrl}/quotations?populate=*&sort=updatedAt:DESC",
       );
 
       return QuotationModel.fromJson(response.data);

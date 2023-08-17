@@ -4,6 +4,7 @@ import 'dart:developer';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:pract_01/providers/quotation_state.dart';
+import 'package:pract_01/screens/quotation/quotation_actions.dart';
 import 'package:pract_01/services/quotation_service.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
@@ -65,6 +66,8 @@ class MessagingService {
   }
 
   void _setupFirebaseListeners(BuildContext context) {
+    updateQuotationsInBackground(context);
+
     FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
     FirebaseMessaging.onMessage.listen((RemoteMessage message) {
       _handleForegroundMessage(context, message);
@@ -211,6 +214,9 @@ class MessagingService {
     try {
       final result = await QuotationService(context: context).getAllQuotation();
       quotationState.setQuotations(result.data);
+
+      // ignore: use_build_context_synchronously
+      await updateQuotationsInBackground(context);
     } catch (error) {
       debugPrint('Error al cargar las cotizaciones: $error');
     } finally {

@@ -1,19 +1,3 @@
-// class QuotationUpdateModel {
-//   Quotation data;
-
-//   QuotationUpdateModel({
-//     required this.data,
-//   });
-
-//   factory QuotationUpdateModel.fromJson(Map<String, dynamic> json) =>
-//       QuotationUpdateModel(
-//         data: Quotation.fromJson(json["data"]),
-//       );
-
-//   Map<String, dynamic> toJson() => {
-//         "data": data.toJson(),
-//       };
-// }
 class QuotationUpdateModel {
   Quotation data;
   String pdfUrl; // Agregar el campo de URL de PDF

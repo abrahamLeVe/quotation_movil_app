@@ -54,17 +54,19 @@ class _HomeScreenState extends State<HomeScreen>
   void _loadData() async {
     final quotationState = Provider.of<QuotationState>(context, listen: false);
 
-    final quotationsFuture =
-        QuotationService(context: context).getAllQuotation();
+    // final quotationsFuture =
+    //     QuotationService(context: context).getAllQuotation();
+    final cachedQuotations =
+        await QuotationService(context: context).getCachedQuotations();
 
-    final quotationsResult = await quotationsFuture;
+    final quotationsResult = cachedQuotations;
 
     setState(() {
-      _quotationsFuture = Future.value(quotationsResult.data);
+      _quotationsFuture = Future.value(quotationsResult);
       _isLoading = false;
     });
 
-    quotationState.setQuotations(quotationsResult.data);
+    quotationState.setQuotations(quotationsResult);
     _loadProducts();
   }
 
@@ -204,17 +206,14 @@ class _HomeScreenState extends State<HomeScreen>
       future: _quotationsFuture,
       builder: (context, snapshot) {
         final quotationList = snapshot.data ?? [];
-        if (quotationList.isEmpty) {
-          return const Center(child: Text('No hay cotizaciones disponibles'));
-        } else {
-          return ChangeNotifierProvider.value(
-            value: _quotationState,
-            child: QuotationListScreen(
-              quotationList: quotationList,
-              openEditQuotationScreen: openEditQuotationScreen,
-            ),
-          );
-        }
+
+        return ChangeNotifierProvider.value(
+          value: _quotationState,
+          child: QuotationListScreen(
+            quotationList: quotationList,
+            openEditQuotationScreen: openEditQuotationScreen,
+          ),
+        );
       },
     );
   }

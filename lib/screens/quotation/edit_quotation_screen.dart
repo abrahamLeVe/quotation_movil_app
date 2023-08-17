@@ -415,7 +415,10 @@ class _EditQuotationScreenState extends State<EditQuotationScreen> {
           ],
         );
       });
+
       if (context.mounted) {
+        updateQuotationsInBackground(context);
+
         setState(() {
           _isSaving = false;
           _hasChanges = false;
@@ -423,14 +426,15 @@ class _EditQuotationScreenState extends State<EditQuotationScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Cotización actualizada con éxito')),
         );
+
         Navigator.of(context).push(
           MaterialPageRoute(
             builder: (context) => PdfViewScreen(pdfUrl: pdfUrl),
           ),
         );
       }
+     
     } catch (error) {
-      
       if (context.mounted) {
         showAuthenticationErrorDialog(context, error);
 
