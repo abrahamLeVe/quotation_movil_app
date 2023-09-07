@@ -13,6 +13,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   bool _isLoggingIn = false;
+  bool _showPassword = false;
 
   @override
   void initState() {
@@ -35,9 +36,10 @@ class _LoginScreenState extends State<LoginScreen> {
       final authService = AuthenticationService(context: context);
       await authService.login(email, password);
       // ignore: use_build_context_synchronously
-      await updateQuotationsInBackground(context);
+      // await updateQuotationsInBackground(context);
 
       if (context.mounted) {
+        updateQuotationsInBackground(context);
         showDialog(
           context: context,
           builder: (BuildContext context) {
@@ -60,7 +62,7 @@ class _LoginScreenState extends State<LoginScreen> {
       }
     } finally {
       setState(() {
-        _isLoggingIn = false; // Finalizar el proceso de inicio de sesión
+        _isLoggingIn = false; 
       });
     }
   }
@@ -78,15 +80,39 @@ class _LoginScreenState extends State<LoginScreen> {
           child: ListView(
             padding: const EdgeInsets.all(20),
             children: [
+              Container(
+                alignment: Alignment.center,
+                padding: const EdgeInsets.all(20),
+                child: Image.asset(
+                  'assets/logo_app.png',
+                  width: 200, 
+                  height: 80, 
+                  fit: BoxFit.fill, 
+                ),
+              ),
               TextField(
                 controller: _emailController,
-                decoration: const InputDecoration(labelText: 'Email'),
-              ),
-              TextField(
-                controller: _passwordController,
-                decoration: const InputDecoration(labelText: 'Password'),
+                decoration: const InputDecoration(labelText: 'Usuario'),
               ),
               const SizedBox(height: 16),
+              TextField(
+                controller: _passwordController,
+                obscureText: !_showPassword,
+                decoration: InputDecoration(
+                  labelText: 'Password',
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      _showPassword ? Icons.visibility : Icons.visibility_off,
+                    ),
+                    onPressed: () {
+                      setState(() {
+                        _showPassword = !_showPassword;
+                      });
+                    },
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
               ElevatedButton(
                 onPressed: _isLoggingIn ? null : () => _login(context),
                 child: _isLoggingIn
@@ -99,4 +125,5 @@ class _LoginScreenState extends State<LoginScreen> {
       ),
     );
   }
+
 }

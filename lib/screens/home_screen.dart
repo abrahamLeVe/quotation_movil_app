@@ -52,7 +52,7 @@ class _HomeScreenState extends State<HomeScreen>
   }
 
   void _loadData() async {
-    final quotationState = Provider.of<QuotationState>(context, listen: false);
+    // final quotationState = Provider.of<QuotationState>(context, listen: false);
 
     // final quotationsFuture =
     //     QuotationService(context: context).getAllQuotation();
@@ -66,7 +66,7 @@ class _HomeScreenState extends State<HomeScreen>
       _isLoading = false;
     });
 
-    quotationState.setQuotations(quotationsResult);
+    // quotationState.setQuotations(quotationsResult);
     _loadProducts();
   }
 

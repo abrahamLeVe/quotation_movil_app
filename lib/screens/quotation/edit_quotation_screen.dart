@@ -328,6 +328,41 @@ class _EditQuotationScreenState extends State<EditQuotationScreen> {
   }
 
   void _saveQuotationChanges() async {
+    // Verificar si algún precio está vacío
+    bool hasEmptyPrice = false;
+    for (final controllerList in priceControllers) {
+      for (final controller in controllerList) {
+        if (controller.text.isEmpty) {
+          hasEmptyPrice = true;
+          break;
+        }
+      }
+      if (hasEmptyPrice) {
+        break;
+      }
+    }
+
+    if (hasEmptyPrice) {
+      showDialog(
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+            title: const Text('Precios vacíos'),
+            content: const Text(
+                'Por favor, completa todos los precios antes de guardar.'),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+                child: const Text('Aceptar'),
+              ),
+            ],
+          );
+        },
+      );
+      return; // Salir de la función sin guardar
+    }
     try {
       setState(() {
         _isSaving = true;
@@ -510,7 +545,7 @@ class _EditQuotationScreenState extends State<EditQuotationScreen> {
             itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
               const PopupMenuItem<String>(
                 value: 'download',
-                child: Text('Descargar PDF'),
+                child: Text('Ver comprobante'),
               ),
               const PopupMenuItem<String>(
                 value: 'whatsapp',

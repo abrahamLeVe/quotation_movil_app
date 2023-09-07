@@ -85,6 +85,7 @@ flutter:
     - .env.production
     - assets/sin_image.png
     - assets/error_image.png
+    - assets/logo_app.png
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware

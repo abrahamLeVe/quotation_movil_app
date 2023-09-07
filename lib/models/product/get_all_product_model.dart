@@ -1,3 +1,106 @@
+// class GetAllProductsModel {
+//   List<Product> data;
+//   Meta meta;
+
+//   GetAllProductsModel({
+//     required this.data,
+//     required this.meta,
+//   });
+
+//   factory GetAllProductsModel.fromJson(Map<String, dynamic> json) => GetAllProductsModel(
+//         data: List<Product>.from(
+//             json["data"].map((x) => Product.fromJson(x))),
+//         meta: Meta.fromJson(json["meta"]),
+//       );
+
+//   Map<String, dynamic> toJson() => {
+//         "data": List<dynamic>.from(data.map((x) => x.toJson())),
+//         "meta": meta.toJson(),
+//       };
+// }
+
+// class Product {
+//   int id;
+//   ProductAttributes attributes;
+
+//   Product({
+//     required this.id,
+//     required this.attributes,
+//   });
+
+//   factory Product.fromJson(Map<String, dynamic> json) =>
+//       Product(
+//         id: json["id"],
+//         attributes: ProductAttributes.fromJson(json["attributes"]),
+//       );
+
+//   Map<String, dynamic> toJson() => {
+//         "id": id,
+//         "attributes": attributes.toJson(),
+//       };
+// }
+
+// class ProductAttributes {
+//   String name;
+//   dynamic subtitle;
+//   String? description;
+//   String slug;
+//   double quotationPrice;
+//   DateTime createdAt;
+//   DateTime updatedAt;
+//   DateTime publishedAt;
+//   Image image;
+//   Thumbnail thumbnail;
+//   Categories categories;
+//   ProductSizes productSizes;
+
+//   ProductAttributes({
+//     required this.name,
+//     this.subtitle,
+//     this.description,
+//     required this.slug,
+//     required this.quotationPrice,
+//     required this.createdAt,
+//     required this.updatedAt,
+//     required this.publishedAt,
+//     required this.image,
+//     required this.thumbnail,
+//     required this.categories,
+//     required this.productSizes,
+//   });
+
+//   factory ProductAttributes.fromJson(Map<String, dynamic> json) =>
+//       ProductAttributes(
+//         name: json["name"],
+//         subtitle: json["subtitle"],
+//         description: json["description"],
+//         slug: json["slug"],
+//         quotationPrice: json["quotation_price"]?.toDouble(),
+//         createdAt: DateTime.parse(json["createdAt"]),
+//         updatedAt: DateTime.parse(json["updatedAt"]),
+//         publishedAt: DateTime.parse(json["publishedAt"]),
+//         image: Image.fromJson(json["image"]),
+//         thumbnail: Thumbnail.fromJson(json["thumbnail"]),
+//         categories: Categories.fromJson(json["categories"]),
+//         productSizes: ProductSizes.fromJson(json["product_sizes"]),
+//       );
+
+//   Map<String, dynamic> toJson() => {
+//         "name": name,
+//         "subtitle": subtitle,
+//         "description": description,
+//         "slug": slug,
+//         "quotation_price": quotationPrice,
+//         "createdAt": createdAt.toIso8601String(),
+//         "updatedAt": updatedAt.toIso8601String(),
+//         "publishedAt": publishedAt.toIso8601String(),
+//         "image": image.toJson(),
+//         "thumbnail": thumbnail.toJson(),
+//         "categories": categories.toJson(),
+//         "product_sizes": productSizes.toJson(),
+//       };
+// }
+
 class GetAllProductsModel {
   List<Product> data;
   Meta meta;
@@ -7,9 +110,9 @@ class GetAllProductsModel {
     required this.meta,
   });
 
-  factory GetAllProductsModel.fromJson(Map<String, dynamic> json) => GetAllProductsModel(
-        data: List<Product>.from(
-            json["data"].map((x) => Product.fromJson(x))),
+  factory GetAllProductsModel.fromJson(Map<String, dynamic> json) =>
+      GetAllProductsModel(
+        data: List<Product>.from(json["data"].map((x) => Product.fromJson(x))),
         meta: Meta.fromJson(json["meta"]),
       );
 
@@ -28,8 +131,7 @@ class Product {
     required this.attributes,
   });
 
-  factory Product.fromJson(Map<String, dynamic> json) =>
-      Product(
+  factory Product.fromJson(Map<String, dynamic> json) => Product(
         id: json["id"],
         attributes: ProductAttributes.fromJson(json["attributes"]),
       );
@@ -43,7 +145,7 @@ class Product {
 class ProductAttributes {
   String name;
   dynamic subtitle;
-  String? description;
+  String description;
   String slug;
   double quotationPrice;
   DateTime createdAt;
@@ -56,8 +158,8 @@ class ProductAttributes {
 
   ProductAttributes({
     required this.name,
-    this.subtitle,
-    this.description,
+    required this.subtitle,
+    required this.description,
     required this.slug,
     required this.quotationPrice,
     required this.createdAt,
@@ -176,7 +278,7 @@ class Image {
   List<ImageDatum>? data;
 
   Image({
-    this.data,
+    required this.data,
   });
 
   factory Image.fromJson(Map<String, dynamic> json) => Image(
@@ -233,8 +335,8 @@ class TentacledAttributes {
 
   TentacledAttributes({
     required this.name,
-    this.alternativeText,
-    this.caption,
+    required this.alternativeText,
+    required this.caption,
     required this.width,
     required this.height,
     required this.formats,
@@ -243,7 +345,7 @@ class TentacledAttributes {
     required this.mime,
     required this.size,
     required this.url,
-    this.previewUrl,
+    required this.previewUrl,
     required this.provider,
     required this.providerMetadata,
     required this.createdAt,
@@ -295,29 +397,29 @@ enum Ext { WEBP }
 final extValues = EnumValues({".webp": Ext.WEBP});
 
 class PurpleFormats {
-  Small large;
+  Small? large;
   Small small;
-  Small medium;
+  Small? medium;
   Small thumbnail;
 
   PurpleFormats({
-    required this.large,
+    this.large,
     required this.small,
-    required this.medium,
+    this.medium,
     required this.thumbnail,
   });
 
   factory PurpleFormats.fromJson(Map<String, dynamic> json) => PurpleFormats(
-        large: Small.fromJson(json["large"]),
+        large: json["large"] == null ? null : Small.fromJson(json["large"]),
         small: Small.fromJson(json["small"]),
-        medium: Small.fromJson(json["medium"]),
+        medium: json["medium"] == null ? null : Small.fromJson(json["medium"]),
         thumbnail: Small.fromJson(json["thumbnail"]),
       );
 
   Map<String, dynamic> toJson() => {
-        "large": large.toJson(),
+        "large": large?.toJson(),
         "small": small.toJson(),
-        "medium": medium.toJson(),
+        "medium": medium?.toJson(),
         "thumbnail": thumbnail.toJson(),
       };
 }
@@ -340,7 +442,7 @@ class Small {
     required this.hash,
     required this.mime,
     required this.name,
-    this.path,
+    required this.path,
     required this.size,
     required this.width,
     required this.height,
@@ -478,7 +580,7 @@ class Thumbnail {
   Data? data;
 
   Thumbnail({
-    this.data,
+    required this.data,
   });
 
   factory Thumbnail.fromJson(Map<String, dynamic> json) => Thumbnail(
@@ -530,8 +632,8 @@ class DataAttributes {
 
   DataAttributes({
     required this.name,
-    this.alternativeText,
-    this.caption,
+    required this.alternativeText,
+    required this.caption,
     required this.width,
     required this.height,
     required this.formats,
@@ -540,7 +642,7 @@ class DataAttributes {
     required this.mime,
     required this.size,
     required this.url,
-    this.previewUrl,
+    required this.previewUrl,
     required this.provider,
     required this.providerMetadata,
     required this.createdAt,

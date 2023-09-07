@@ -66,100 +66,99 @@ class _ProductListScreenState extends State<ProductListScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-        appBar: AppBar(
-          title: TextField(
-            controller: _searchController,
-            onChanged: (_) => _filterProducts(),
-            decoration: const InputDecoration(
-              hintText: 'Buscar por nombre',
+    return PopScope(
+        canPop: false,
+        child: Scaffold(
+            appBar: AppBar(
+              title: TextField(
+                controller: _searchController,
+                onChanged: (_) => _filterProducts(),
+                decoration: const InputDecoration(
+                  hintText: 'Buscar por nombre',
+                ),
+              ),
+              actions: [
+                Switch(
+                  value: showProductsWithoutSizes,
+                  onChanged: _toggleShowProductsWithoutSizes,
+                ),
+                const SizedBox(width: 8),
+                const Text('Mostrar sin medidas'),
+                const SizedBox(width: 16),
+              ],
+              automaticallyImplyLeading: false,
             ),
-          ),
-          actions: [
-            Switch(
-              value: showProductsWithoutSizes,
-              onChanged: _toggleShowProductsWithoutSizes,
-            ),
-            const SizedBox(width: 8),
-            const Text('Mostrar sin medidas'),
-            const SizedBox(width: 16),
-          ],
-        ),
-        body: filteredProducts.isEmpty
-            ? const Center(
-                child: CircularProgressIndicator(),
-              )
-            : ListView.builder(
-                itemCount: filteredProducts.length,
-                physics: const ScrollPhysics(),
-                itemBuilder: (BuildContext context, int index) {
-                  final product = filteredProducts[index];
-                  final productSizes = product.attributes.productSizes.data;
-                  final thumbnailUrl = product.attributes.thumbnail.data
-                      ?.attributes.formats.thumbnail.url;
+            body: filteredProducts.isEmpty
+                ? const Center(
+                    child: CircularProgressIndicator(),
+                  )
+                : ListView.builder(
+                    itemCount: filteredProducts.length,
+                    physics: const ScrollPhysics(),
+                    itemBuilder: (BuildContext context, int index) {
+                      final product = filteredProducts[index];
+                      final productSizes = product.attributes.productSizes.data;
+                      final thumbnailUrl = product.attributes.thumbnail.data
+                          ?.attributes.formats.thumbnail.url;
 
-                  return Card(
-                    child: ListTile(
-                      leading: SizedBox(
-                        // Envuelve en un Container para establecer un tamaño
-                        width:
-                            35, // Establece el ancho del container (ajústalo según tus necesidades)
-                        height:
-                            35, // Establece el alto del container (ajústalo según tus necesidades)
-                        child: ClipOval(
-                          child: CachedNetworkImage(
-                            imageUrl: thumbnailUrl ?? '',
-                            placeholder: (context, url) =>
-                                const CircularProgressIndicator(),
-                            errorWidget: (context, url, error) {
-                              try {
-                                throw error; // Lanzar el error para que pueda ser capturado por el bloque catch
-                              } catch (e) {
-                                if (e is HttpException) {
-                                  // Si el error es HttpException (404), muestra una imagen alternativa
-                                  return Column(
-                                    children: [
-                                      Image.asset('assets/error_image.png'),
-                                    ],
-                                  );
-                                } else {
-                                  // Otros errores, muestra un mensaje genérico
-                                  return Column(
-                                    children: [
-                                      Image.asset('assets/error_image.png'),
-                                    ],
-                                  );
-                                }
+                      return Card(
+                        child: ListTile(
+                          leading: SizedBox(
+                            width: 35,
+                            height: 35,
+                            child: ClipOval(
+                              child: CachedNetworkImage(
+                                imageUrl: thumbnailUrl ?? '',
+                                placeholder: (context, url) =>
+                                    const CircularProgressIndicator(),
+                                errorWidget: (context, url, error) {
+                                  try {
+                                    throw error;
+                                  } catch (e) {
+                                    if (e is HttpException) {
+                                      return Column(
+                                        children: [
+                                          Image.asset('assets/error_image.png'),
+                                        ],
+                                      );
+                                    } else {
+                                      return Column(
+                                        children: [
+                                          Image.asset('assets/error_image.png'),
+                                        ],
+                                      );
+                                    }
+                                  }
+                                },
+                              ),
+                            ),
+                          ),
+                          title: Text(product.attributes.name.toUpperCase()),
+                          subtitle: Text(productSizes.isNotEmpty
+                              ? 'Medidas: ${productSizes.length}'
+                              : 'Precio: ${CurrencyFormatter.format(product.attributes.quotationPrice)}'),
+                          trailing: GestureDetector(
+                            onTap: () {
+                              if (productSizes.isEmpty) {
+                                widget.openEditProductScreen(product);
+                              } else {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) =>
+                                        EditProductSizesScreen(
+                                      product: product,
+                                      sizes: productSizes,
+                                    ),
+                                  ),
+                                );
                               }
                             },
+                            child: const Icon(Icons.edit),
                           ),
                         ),
-                      ),
-                      title: Text(product.attributes.name.toUpperCase()),
-                      subtitle: Text(productSizes.isNotEmpty
-                          ? 'Medidas: ${productSizes.length}'
-                          : 'Precio: ${CurrencyFormatter.format(product.attributes.quotationPrice)}'),
-                      trailing: GestureDetector(
-                        onTap: () {
-                          if (productSizes.isEmpty) {
-                            widget.openEditProductScreen(product);
-                          } else {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => EditProductSizesScreen(
-                                  product: product,
-                                  sizes: productSizes,
-                                ),
-                              ),
-                            );
-                          }
-                        },
-                        child: const Icon(Icons.edit),
-                      ),
-                    ),
-                  );
-                },
-              ));
+                      );
+                    },
+                  )));
   }
 }

@@ -151,7 +151,9 @@ class _EditProductScreenState extends State<EditProductScreen> {
         return true;
       },
       child: Scaffold(
-          appBar: AppBar(),
+          appBar: AppBar(
+            title: const Text('Editar precio de producto'),
+          ),
           body: SingleChildScrollView(
             child: Padding(
               padding: const EdgeInsets.all(10.0),

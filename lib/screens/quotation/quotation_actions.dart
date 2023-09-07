@@ -50,7 +50,6 @@ Future<void> _performAction(BuildContext context, String loadingText,
     await action();
 
     if (context.mounted) {
-      Navigator.pop(context);
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Operación completada')),
@@ -60,7 +59,7 @@ Future<void> _performAction(BuildContext context, String loadingText,
           Provider.of<QuotationState>(context, listen: false);
       quotationState.removeQuotation(quotationId);
       QuotationService(context: context).removeCachedQuotation(quotationId);
-      Navigator.pop(context);
+      Navigator.pushReplacementNamed(context, '/home');
     }
   } catch (error) {
     if (context.mounted) {
@@ -99,7 +98,7 @@ void archiveQuotation(BuildContext context, int quotationId) {
 
 Future<void> updateQuotationsInBackground(BuildContext context) async {
   List<Quotation> updatedQuotations = [];
- print('empezo el segundo plano');
+  print('empezo el segundo plano');
 
   await Future.delayed(Duration.zero, () async {
     final response = await QuotationService(context: context).getAllQuotation();
@@ -115,6 +114,5 @@ Future<void> updateQuotationsInBackground(BuildContext context) async {
     final quotationState = Provider.of<QuotationState>(context, listen: false);
     quotationState.setQuotations(updatedQuotations);
   });
- print('terminó el segundo plano');
-
+  print('terminó el segundo plano');
 }

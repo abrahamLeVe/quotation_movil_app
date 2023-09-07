@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:pract_01/models/quotation/get_all_quotation_model.dart';
 import 'package:pract_01/providers/quotation_state.dart';
@@ -101,6 +102,12 @@ class _QuotationListScreenState extends State<QuotationListScreen> {
                         filterQuotations(quotationState.quotations);
                       });
                     },
+                    inputFormatters: [
+                      FilteringTextInputFormatter
+                          .digitsOnly, // Permitir solo dígitos
+                    ],
+                    keyboardType:
+                        TextInputType.number, // Mostrar teclado numérico
                     decoration: const InputDecoration(
                       labelText: 'Filtrar por código',
                       prefixIcon: Icon(Icons.search),
@@ -109,7 +116,7 @@ class _QuotationListScreenState extends State<QuotationListScreen> {
                 ),
               ),
               SizedBox(
-                width: 100,
+                width: 120,
                 child: DropdownButton<String>(
                   value: selectedFilter,
                   onChanged: (String? value) {
@@ -127,6 +134,9 @@ class _QuotationListScreenState extends State<QuotationListScreen> {
                     'Ayer',
                     'Semana',
                     'Mes',
+                    'Atendido',
+                    'En proceso',
+                    'Descendente'
                   ].map<DropdownMenuItem<String>>((String value) {
                     return DropdownMenuItem<String>(
                       value: value,
@@ -135,6 +145,7 @@ class _QuotationListScreenState extends State<QuotationListScreen> {
                   }).toList(),
                 ),
               ),
+           
             ],
           ),
           automaticallyImplyLeading: false,

@@ -142,13 +142,31 @@ class MessagingService {
         !_isDialogOpen) {
       _queuedNotifications.add(message);
       _isDialogOpen = true;
-      _showNotificationDialog(context, message);
+      _processQueuedNotifications(context);
     } else if (!_isLoadingQuotations &&
         quotationState.areQuotationsLoaded &&
         _isDialogOpen) {
       _queuedNotifications.add(message);
     }
   }
+
+  // void _handleNotificationClick(BuildContext context, RemoteMessage message) {
+  //   final quotationState = Provider.of<QuotationState>(context, listen: false);
+
+  //   if (!_isLoadingQuotations && !quotationState.areQuotationsLoaded) {
+  //     _loadQuotations(context, message);
+  //   } else if (!_isLoadingQuotations &&
+  //       quotationState.areQuotationsLoaded &&
+  //       !_isDialogOpen) {
+  //     _queuedNotifications.add(message);
+  //     _isDialogOpen = true;
+  //     _showNotificationDialog(context, message);
+  //   } else if (!_isLoadingQuotations &&
+  //       quotationState.areQuotationsLoaded &&
+  //       _isDialogOpen) {
+  //     _queuedNotifications.add(message);
+  //   }
+  // }
 
   void _processQueuedNotifications(BuildContext context) {
     if (_queuedNotifications.isNotEmpty) {
@@ -177,7 +195,7 @@ class MessagingService {
                     _isDialogOpen = false; // Marca el diálogo como cerrado
                     _handleNotificationClick(context, message);
                   },
-                  child: const Text('Ver cotización'),
+                  child: const Text('Confirmar'),
                 ),
               TextButton(
                 onPressed: () {
@@ -215,8 +233,8 @@ class MessagingService {
       final result = await QuotationService(context: context).getAllQuotation();
       quotationState.setQuotations(result.data);
 
-      // ignore: use_build_context_synchronously
-      await updateQuotationsInBackground(context);
+      // // ignore: use_build_context_synchronously
+      // await updateQuotationsInBackground(context);
     } catch (error) {
       debugPrint('Error al cargar las cotizaciones: $error');
     } finally {

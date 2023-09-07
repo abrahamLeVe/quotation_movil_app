@@ -86,7 +86,7 @@ class QuotationService {
   Future<QuotationModel> getAllQuotation() async {
     try {
       final response = await _dio.get(
-        "${Environment.apiUrl}/quotations?populate=*&sort=updatedAt:DESC",
+        "${Environment.apiUrl}/quotations?populate=*&sort=createdAt:ASC&pagination[page]=1&pagination[pageSize]=999",
       );
 
       return QuotationModel.fromJson(response.data);

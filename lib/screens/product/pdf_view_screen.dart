@@ -10,7 +10,7 @@ class PdfViewScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('PDF Viewer'),
+        title: const Text('Comprobante de cotización'),
       ),
       body: SfPdfViewer.network(
         pdfUrl,
