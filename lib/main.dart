@@ -2,7 +2,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:pract_01/models/enviroment_model.dart';
-import 'package:pract_01/providers/product_state.dart';
+// import 'package:pract_01/providers/product_state.dart';
 import 'package:pract_01/providers/quotation_state.dart';
 import 'package:pract_01/routes/app_routes.dart';
 import 'package:pract_01/screens/home_screen.dart';
@@ -13,18 +13,15 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await dotenv.load(fileName: Environment.fileName);
 
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
-  await dotenv.load(fileName: Environment.fileName);
-
   SharedPreferences prefs = await SharedPreferences.getInstance();
   final authToken = prefs.getString('auth_token');
   runApp(MyApp(
-      initialRoute: authToken != null
-          ? AppRoutes.home
-          : AppRoutes.login)); 
+      initialRoute: authToken != null ? AppRoutes.home : AppRoutes.login));
 }
 
 class MyApp extends StatelessWidget {
@@ -39,9 +36,9 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider<QuotationState>(
           create: (_) => QuotationState(),
         ),
-        ChangeNotifierProvider<ProductState>(
-          create: (_) => ProductState(),
-        ),
+        // ChangeNotifierProvider<ProductState>(
+        //   create: (_) => ProductState(),
+        // ),
       ],
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
@@ -49,7 +46,7 @@ class MyApp extends StatelessWidget {
         initialRoute: initialRoute,
         routes: {
           AppRoutes.login: (context) => const LoginScreen(),
-          AppRoutes.home: (context) => const HomeScreen(selectedTabIndex: 2),
+          AppRoutes.home: (context) => const HomeScreen(selectedTabIndex: 1),
         },
         theme: ThemeData(
           colorScheme: ColorScheme.fromSeed(

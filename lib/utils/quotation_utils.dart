@@ -40,30 +40,30 @@ List<Quotation> filterQuotations(List<Quotation> allQuotations, String filter) {
       }).toList();
 
     case 'Atendido':
-      return allQuotations.where((quotation) {
-        return quotation.attributes.pdfVoucher?.data?.isNotEmpty == true;
-      }).toList();
+    // return allQuotations.where((quotation) {
+    //   return quotation.attributes.pdfVoucher?.data?.isNotEmpty == true;
+    // }).toList();
 
     case 'En proceso':
-      return allQuotations.where((quotation) {
-        return quotation.attributes.pdfVoucher?.data?.isNotEmpty == false;
-      }).toList();
+    // return allQuotations.where((quotation) {
+    //   return quotation.attributes.pdfVoucher?.data?.isNotEmpty == false;
+    // }).toList();
 
     case 'Descendente':
-      final sortedQuotations = List<Quotation>.from(allQuotations);
-      sortedQuotations.sort((a, b) {
-        final createdAtA = a.attributes.createdAt;
-        final createdAtB = b.attributes.createdAt;
+    // final sortedQuotations = List<Quotation>.from(allQuotations);
+    // sortedQuotations.sort((a, b) {
+    //   final createdAtA = a.attributes.createdAt;
+    //   final createdAtB = b.attributes.createdAt;
 
-        if (createdAtA != null && createdAtB != null) {
-          return createdAtB.compareTo(createdAtA);
-        }
+    //   if (createdAtA != null && createdAtB != null) {
+    //     return createdAtB.compareTo(createdAtA);
+    //   }
 
-        // Manejo en caso de que uno o ambos valores sean null
-        return 0;
-      });
-      return sortedQuotations;
-     
+    //   // Manejo en caso de que uno o ambos valores sean null
+    //   return 0;
+    // });
+    // return sortedQuotations;
+
     default:
       return allQuotations;
   }

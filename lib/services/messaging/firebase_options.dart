@@ -3,6 +3,7 @@
 import 'package:firebase_core/firebase_core.dart' show FirebaseOptions;
 import 'package:flutter/foundation.dart'
     show defaultTargetPlatform, kIsWeb, TargetPlatform;
+import 'package:pract_01/models/enviroment_model.dart';
 
 /// Default [FirebaseOptions] for use with your Firebase apps.
 ///
@@ -52,8 +53,8 @@ class DefaultFirebaseOptions {
     }
   }
 
-  static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyD0giqIYf8U0Sr5ZF7BR3JEETFLD29cYgA',
+  static final FirebaseOptions android = FirebaseOptions(
+    apiKey: Environment.apiKey,
     appId: '1:163422653615:android:aaa68f2aebea0e43c8185a',
     messagingSenderId: '163422653615',
     projectId: 'quotationnotification-dc47a',

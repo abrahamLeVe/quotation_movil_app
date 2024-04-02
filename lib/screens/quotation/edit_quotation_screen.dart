@@ -8,8 +8,8 @@ import 'package:pract_01/screens/product/pdf_view_screen.dart';
 import 'package:pract_01/screens/quotation/quotation_actions.dart';
 import 'package:pract_01/services/quotation_service.dart';
 import 'package:pract_01/utils/error_handlers.dart';
-import 'package:pract_01/widgets/send_pdf_to_mail.dart';
-import 'package:pract_01/widgets/send_pdf_to_whatsapp.dart';
+// import 'package:pract_01/widgets/send_pdf_to_mail.dart';
+// import 'package:pract_01/widgets/send_pdf_to_whatsapp.dart';
 
 class EditQuotationScreen extends StatefulWidget {
   final model_quotation.Quotation quotation;
@@ -37,57 +37,51 @@ class _EditQuotationScreenState extends State<EditQuotationScreen> {
     _originalQuotation = model_quotation.Quotation.fromJson(
       widget.quotation.toJson(),
     );
-    originalPrices = widget.quotation.attributes.products.map((product) {
-      if (product.size.isNotEmpty) {
-        return List.generate(
-          product.size.length,
-          (sizeIndex) {
-            return product.size[sizeIndex].quotationPrice;
-          },
-        );
-      } else {
-        return [product.quotationPrice];
-      }
-    }).toList();
+    originalPrices = widget.quotation.attributes.products
+        .map((product) {
+          return [product.value];
+        })
+        .cast<List<double>>()
+        .toList();
 
     priceControllers = widget.quotation.attributes.products.map((product) {
-      if (product.size.isNotEmpty) {
-        return List.generate(
-          product.size.length,
-          (sizeIndex) {
-            final controller = TextEditingController(
-              text: product.size[sizeIndex].quotationPrice.toString(),
-            );
-            controller.addListener(() {
-              try {
-                if (double.parse(controller.text) !=
-                    product.size[sizeIndex].quotationPrice) {
-                  _handlePriceChange();
-                }
-              } catch (e) {
-                //---
-              }
-            });
+      // if (product.size.isNotEmpty) {
+      //   return List.generate(
+      //     product.size.length,
+      //     (sizeIndex) {
+      //       final controller = TextEditingController(
+      //         text: product.size[sizeIndex].quotationPrice.toString(),
+      //       );
+      //       controller.addListener(() {
+      //         try {
+      //           if (double.parse(controller.text) !=
+      //               product.size[sizeIndex].quotationPrice) {
+      //             _handlePriceChange();
+      //           }
+      //         } catch (e) {
+      //           //---
+      //         }
+      //       });
 
-            return controller;
-          },
-        );
-      } else {
-        final controller = TextEditingController(
-          text: product.quotationPrice.toString(),
-        );
-        controller.addListener(() {
-          try {
-            final newPrice = double.parse(controller.text);
-            if (newPrice != product.quotationPrice) {
-              _handlePriceChange();
-            }
-          } catch (e) {
-            // --
+      //       return controller;
+      //     },
+      //   );
+      // } else {
+      final controller = TextEditingController(
+        text: product.value.toString(),
+      );
+      controller.addListener(() {
+        try {
+          final newPrice = double.parse(controller.text);
+          if (newPrice != product.value) {
+            _handlePriceChange();
           }
-        });
-        return [controller];
-      }
+        } catch (e) {
+          // --
+        }
+      });
+      return [controller];
+      // }
     }).toList();
   }
 
@@ -104,23 +98,23 @@ class _EditQuotationScreenState extends State<EditQuotationScreen> {
       final originalProduct =
           _originalQuotation.attributes.products[productIndex];
 
-      if (updatedProduct.size.isNotEmpty) {
-        for (int sizeIndex = 0;
-            sizeIndex < updatedProduct.size.length;
-            sizeIndex++) {
-          final updatedSize = updatedProduct.size[sizeIndex];
-          final originalSize = originalProduct.size[sizeIndex];
-          if (updatedSize.quotationPrice != originalSize.quotationPrice) {
-            hasChanges = true;
-            break;
-          }
-        }
-      } else {
-        if (updatedProduct.quotationPrice != originalProduct.quotationPrice) {
-          hasChanges = true;
-          break;
-        }
+      // if (updatedProduct.size.isNotEmpty) {
+      //   for (int sizeIndex = 0;
+      //       sizeIndex < updatedProduct.size.length;
+      //       sizeIndex++) {
+      //     final updatedSize = updatedProduct.size[sizeIndex];
+      //     final originalSize = originalProduct.size[sizeIndex];
+      //     if (updatedSize.quotationPrice != originalSize.quotationPrice) {
+      //       hasChanges = true;
+      //       break;
+      //     }
+      //   }
+      // } else {
+      if (updatedProduct.value != originalProduct.value) {
+        hasChanges = true;
+        break;
       }
+      // }
     }
 
     setState(() {
@@ -133,12 +127,12 @@ class _EditQuotationScreenState extends State<EditQuotationScreen> {
       final product = widget.quotation.attributes.products[productIndex];
       try {
         final newPrice = double.parse(newValue);
-        if (sizeIndex != null) {
-          final size = product.size[sizeIndex];
-          size.quotationPrice = newPrice;
-        } else {
-          product.quotationPrice = newPrice;
-        }
+        // if (sizeIndex != null) {
+        //   final size = product.size[sizeIndex];
+        //   size.quotationPrice = newPrice;
+        // } else {
+        product.value = newPrice;
+        // }
         _checkForChanges();
       } catch (e) {
         print("Error al convertir el valor a double: $e");
@@ -155,23 +149,23 @@ class _EditQuotationScreenState extends State<EditQuotationScreen> {
       final originalProduct =
           _originalQuotation.attributes.products[productIndex];
 
-      if (updatedProduct.size.isNotEmpty) {
-        for (int sizeIndex = 0;
-            sizeIndex < updatedProduct.size.length;
-            sizeIndex++) {
-          final updatedSize = updatedProduct.size[sizeIndex];
-          final originalSize = originalProduct.size[sizeIndex];
-          if (updatedSize.quotationPrice != originalSize.quotationPrice) {
-            hasChanges = true;
-            break;
-          }
-        }
-      } else {
-        if (updatedProduct.quotationPrice != originalProduct.quotationPrice) {
-          hasChanges = true;
-          break;
-        }
+      // if (updatedProduct.size.isNotEmpty) {
+      //   for (int sizeIndex = 0;
+      //       sizeIndex < updatedProduct.size.length;
+      //       sizeIndex++) {
+      //     final updatedSize = updatedProduct.size[sizeIndex];
+      //     final originalSize = originalProduct.size[sizeIndex];
+      //     if (updatedSize.quotationPrice != originalSize.quotationPrice) {
+      //       hasChanges = true;
+      //       break;
+      //     }
+      //   }
+      // } else {
+      if (updatedProduct.value != originalProduct.value) {
+        hasChanges = true;
+        break;
       }
+      // }
     }
 
     setState(() {
@@ -203,7 +197,7 @@ class _EditQuotationScreenState extends State<EditQuotationScreen> {
                 Text('Nombre: ${widget.quotation.attributes.name}'),
                 Text('Teléfono: ${widget.quotation.attributes.phone}'),
                 Text('Email: ${widget.quotation.attributes.email}'),
-                Text('Mensaje: ${widget.quotation.attributes.message}'),
+                Text('Mensaje: ${widget.quotation.attributes.details}'),
               ],
             ),
           ),
@@ -233,12 +227,12 @@ class _EditQuotationScreenState extends State<EditQuotationScreen> {
                           for (int j = 0; j < priceControllers[i].length; j++) {
                             final product =
                                 widget.quotation.attributes.products[i];
-                            if (product.size.isNotEmpty) {
-                              product.size[j].quotationPrice =
-                                  originalPrices[i][j];
-                            } else {
-                              product.quotationPrice = originalPrices[i][0];
-                            }
+                            // if (product.size.isNotEmpty) {
+                            //   product.size[j].quotationPrice =
+                            //       originalPrices[i][j];
+                            // } else {
+                            product.value = originalPrices[i][0];
+                            // }
                             priceControllers[i][j].text =
                                 originalPrices[i][j].toString();
                           }
@@ -306,7 +300,8 @@ class _EditQuotationScreenState extends State<EditQuotationScreen> {
       children: [
         Expanded(
           child: Text(
-            sizeIndex != null ? product.size[sizeIndex].val : 'Precio general',
+            // sizeIndex != null ? product.size[sizeIndex].val :
+            'Precio general',
           ),
         ),
         const SizedBox(width: 10),
@@ -376,21 +371,21 @@ class _EditQuotationScreenState extends State<EditQuotationScreen> {
             widget.quotation.attributes.products[productIndex];
         List<post_quotation_model.Size> updatedSizes = [];
 
-        if (originalProduct.size.isNotEmpty) {
-          for (int sizeIndex = 0;
-              sizeIndex < originalProduct.size.length;
-              sizeIndex++) {
-            final size = originalProduct.size[sizeIndex];
-            final controller = priceControllers[productIndex][sizeIndex];
-            double newPrice = double.tryParse(controller.text) ?? 0.0;
-            updatedSizes.add(post_quotation_model.Size(
-              id: size.id,
-              val: size.val,
-              quantity: size.quantity,
-              quotationPrice: newPrice,
-            ));
-          }
-        }
+        // if (originalProduct.size.isNotEmpty) {
+        //   for (int sizeIndex = 0;
+        //       sizeIndex < originalProduct.size.length;
+        //       sizeIndex++) {
+        //     final size = originalProduct.size[sizeIndex];
+        //     final controller = priceControllers[productIndex][sizeIndex];
+        //     double newPrice = double.tryParse(controller.text) ?? 0.0;
+        //     updatedSizes.add(post_quotation_model.Size(
+        //       id: size.id,
+        //       val: size.val,
+        //       quantity: size.quantity,
+        //       quotationPrice: newPrice,
+        //     ));
+        //   }
+        // }
 
         final generalPriceController = priceControllers[productIndex][0];
         double generalPrice =
@@ -398,7 +393,7 @@ class _EditQuotationScreenState extends State<EditQuotationScreen> {
 
         updatedProducts.add(post_quotation_model.Product(
           id: originalProduct.id,
-          name: originalProduct.name,
+          name: originalProduct.title,
           size: updatedSizes,
           quantity: originalProduct.quantity,
           quotationPrice: generalPrice,
@@ -409,7 +404,7 @@ class _EditQuotationScreenState extends State<EditQuotationScreen> {
         id: widget.quotation.id,
         name: widget.quotation.attributes.name,
         phone: widget.quotation.attributes.phone,
-        message: widget.quotation.attributes.message,
+        message: widget.quotation.attributes.details!,
         email: widget.quotation.attributes.email,
         products: updatedProducts,
       );
@@ -425,30 +420,30 @@ class _EditQuotationScreenState extends State<EditQuotationScreen> {
 
 // Actualizar el estado para reflejar los cambios
       setState(() {
-        widget.quotation.attributes.pdfVoucher = model_quotation.PdfVoucher(
-          data: [
-            model_quotation.PdfVoucherDatum(
-              id: response.data.id,
-              attributes: model_quotation.FluffyAttributes(
-                url: pdfUrl,
-                name: response.data.pdfVoucher[0].name,
-                hash: response.data.pdfVoucher[0].hash,
-                ext: response.data.pdfVoucher[0].ext,
-                mime: response.data.pdfVoucher[0].mime,
-                size: response.data.pdfVoucher[0].size,
-                provider: response.data.pdfVoucher[0].provider,
-                providerMetadata: model_quotation.ProviderMetadata(
-                  publicId:
-                      response.data.pdfVoucher[0].providerMetadata.publicId,
-                  resourceType:
-                      response.data.pdfVoucher[0].providerMetadata.resourceType,
-                ),
-                createdAt: response.data.pdfVoucher[0].createdAt,
-                updatedAt: response.data.pdfVoucher[0].updatedAt,
-              ),
-            ),
-          ],
-        );
+        // widget.quotation.attributes.pdfVoucher = model_quotation.PdfVoucher(
+        //   data: [
+        //     model_quotation.PdfVoucherDatum(
+        //       id: response.data.id,
+        //       attributes: model_quotation.FluffyAttributes(
+        //         url: pdfUrl,
+        //         name: response.data.pdfVoucher[0].name,
+        //         hash: response.data.pdfVoucher[0].hash,
+        //         ext: response.data.pdfVoucher[0].ext,
+        //         mime: response.data.pdfVoucher[0].mime,
+        //         size: response.data.pdfVoucher[0].size,
+        //         provider: response.data.pdfVoucher[0].provider,
+        //         providerMetadata: model_quotation.ProviderMetadata(
+        //           publicId:
+        //               response.data.pdfVoucher[0].providerMetadata.publicId,
+        //           resourceType:
+        //               response.data.pdfVoucher[0].providerMetadata.resourceType,
+        //         ),
+        //         createdAt: response.data.pdfVoucher[0].createdAt,
+        //         updatedAt: response.data.pdfVoucher[0].updatedAt,
+        //       ),
+        //     ),
+        //   ],
+        // );
       });
 
       if (context.mounted) {
@@ -468,7 +463,6 @@ class _EditQuotationScreenState extends State<EditQuotationScreen> {
           ),
         );
       }
-     
     } catch (error) {
       if (context.mounted) {
         showAuthenticationErrorDialog(context, error);
@@ -502,27 +496,20 @@ class _EditQuotationScreenState extends State<EditQuotationScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   ListTile(
-                    title: Text(product.name),
+                    title: Text(product.title),
                     subtitle: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        if (product.size.isNotEmpty)
-                          for (int sizeIndex = 0;
-                              sizeIndex < product.size.length;
-                              sizeIndex++)
-                            _buildPriceRow(
-                              productIndex,
-                              sizeIndex,
-                              product,
-                              context,
-                            ),
-                        if (product.size.isEmpty)
-                          _buildPriceRow(
-                            productIndex,
-                            null,
-                            product,
-                            context,
-                          ),
+                        if (product.colors.isNotEmpty)
+                          for (var color in product.colors)
+                            Text(
+                                'Color: ${color.color.attributes.name}, Cantidad: ${color.quantity}, Precio: ${product.value}'),
+                        if (product.size != null)
+                          Text(
+                              'Tamaño: ${product.size}, Cantidad: ${product.quantity}, Precio: ${product.value}')
+                        else
+                          Text(
+                              'Cantidad: ${product.quantity}, Precio: ${product.value}'),
                       ],
                     ),
                   ),
@@ -536,85 +523,88 @@ class _EditQuotationScreenState extends State<EditQuotationScreen> {
   }
 
   Widget _popupMenuItem(model_quotation.Quotation quotation) {
-    final pdfVoucher = quotation.attributes.pdfVoucher?.data;
+    // final pdfVoucher = quotation.attributes.pdfVoucher?.data;
+    // const pdfVoucher = null;
+
     return Column(
       children: [
-        if (pdfVoucher!.isNotEmpty)
-          PopupMenuButton<String>(
-            icon: const Icon(Icons.more_vert), // Ícono del menú
-            itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
-              const PopupMenuItem<String>(
-                value: 'download',
-                child: Text('Ver comprobante'),
-              ),
-              const PopupMenuItem<String>(
-                value: 'whatsapp',
-                child: Text('Enviar por WhatsApp'),
-              ),
-              const PopupMenuItem<String>(
-                value: 'email',
-                child: Text('Enviar por Email'),
-              ),
-              const PopupMenuItem<String>(
-                value: 'eliminar',
-                child: Text('Eliminar'),
-              ),
-              const PopupMenuItem<String>(
-                value: 'archivar',
-                child: Text('Archivar'),
-              ),
-            ],
-            onSelected: (String value) {
-              final pdfUrl = pdfVoucher[0].attributes.url;
-              if (value == 'download') {
-                // _openPdf(pdfUrl);
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => PdfViewScreen(pdfUrl: pdfUrl),
-                  ),
-                );
-              } else if (value == 'whatsapp') {
-                SendPdfToWhatsAppButton(
-                  customerName: widget.quotation.attributes.name,
-                  code: widget.quotation.id,
-                  pdfFilePath: pdfUrl,
-                  phoneNumber: widget.quotation.attributes.phone,
-                );
-              } else if (value == 'email') {
-                SendEmailButton(
-                  customerName: widget.quotation.attributes.name,
-                  code: widget.quotation.id,
-                  pdfFilePath: pdfUrl,
-                  recipientEmail: widget.quotation.attributes.email,
-                );
-              } else if (value == 'eliminar') {
-                deleteQuotation(context, widget.quotation.id);
-              } else if (value == 'archivar') {
-                archiveQuotation(context, widget.quotation.id);
-              }
+        // if (pdfVoucher!.isNotEmpty)
+        //   PopupMenuButton<String>(
+        //     icon: const Icon(Icons.more_vert), // Ícono del menú
+        //     itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
+        //       const PopupMenuItem<String>(
+        //         value: 'download',
+        //         child: Text('Ver comprobante'),
+        //       ),
+        //       const PopupMenuItem<String>(
+        //         value: 'whatsapp',
+        //         child: Text('Enviar por WhatsApp'),
+        //       ),
+        //       const PopupMenuItem<String>(
+        //         value: 'email',
+        //         child: Text('Enviar por Email'),
+        //       ),
+        //       const PopupMenuItem<String>(
+        //         value: 'eliminar',
+        //         child: Text('Eliminar'),
+        //       ),
+        //       const PopupMenuItem<String>(
+        //         value: 'archivar',
+        //         child: Text('Archivar'),
+        //       ),
+        //     ],
+        //     onSelected: (String value) {
+        //       final pdfUrl = pdfVoucher[0].attributes.url;
+        //       if (value == 'download') {
+        //         // _openPdf(pdfUrl);
+        //         Navigator.push(
+        //           context,
+        //           MaterialPageRoute(
+        //             builder: (context) => PdfViewScreen(pdfUrl: pdfUrl),
+        //           ),
+        //         );
+        //       } else if (value == 'whatsapp') {
+        //         SendPdfToWhatsAppButton(
+        //           customerName: widget.quotation.attributes.name,
+        //           code: widget.quotation.id,
+        //           pdfFilePath: pdfUrl,
+        //           phoneNumber: widget.quotation.attributes.phone,
+        //         );
+        //       } else if (value == 'email') {
+        //         SendEmailButton(
+        //           customerName: widget.quotation.attributes.name,
+        //           code: widget.quotation.id,
+        //           pdfFilePath: pdfUrl,
+        //           recipientEmail: widget.quotation.attributes.email,
+        //         );
+        //       } else if (value == 'eliminar') {
+        //         deleteQuotation(context, widget.quotation.id);
+        //       } else if (value == 'archivar') {
+        //         archiveQuotation(context, widget.quotation.id);
+        //       }
+        //     },
+        //   ),
+
+        // if (pdfVoucher.isEmpty)
+        Container(
+          alignment: Alignment.bottomRight,
+          padding: const EdgeInsets.only(right: 16.0),
+          child: ElevatedButton(
+            onPressed: () {
+              deleteQuotation(context, widget.quotation.id);
             },
-          ),
-        if (pdfVoucher.isEmpty)
-          Container(
-            alignment: Alignment.bottomRight,
-            padding: const EdgeInsets.only(right: 16.0),
-            child: ElevatedButton(
-              onPressed: () {
-                deleteQuotation(context, widget.quotation.id);
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor:
-                    Colors.red, // Color de fondo rojo para indicar eliminar
-              ),
-              child: const Text(
-                "Eliminar",
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                ),
+            style: ElevatedButton.styleFrom(
+              backgroundColor:
+                  Colors.red, // Color de fondo rojo para indicar eliminar
+            ),
+            child: const Text(
+              "Eliminar",
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
               ),
             ),
           ),
+        ),
       ],
     );
   }

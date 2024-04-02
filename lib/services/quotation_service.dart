@@ -38,6 +38,8 @@ class QuotationService {
 
   //-----------cache-------------------------
   Future<void> cacheQuotations(List<Quotation> quotations) async {
+    print('response.data cacheQuotations: $quotations');
+
     SharedPreferences prefs = await SharedPreferences.getInstance();
 
     final List<String> quotationStrings = quotations.map((quotation) {
@@ -47,7 +49,6 @@ class QuotationService {
     print('Cacheado $quotationStrings');
     await prefs.setStringList('cached_quotations', quotationStrings);
   }
-
 
   Future<void> removeCachedQuotation(int quotationId) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -73,6 +74,8 @@ class QuotationService {
       return [];
     }
 
+    print('quotationStrings $quotationStrings');
+
     final List<Quotation> quotations = quotationStrings.map((quotationString) {
       final Map<String, dynamic> quotationJson =
           jsonDecode(quotationString); // Convertir de String a JSON
@@ -88,10 +91,10 @@ class QuotationService {
       final response = await _dio.get(
         "${Environment.apiUrl}/quotations?populate=*&sort=createdAt:ASC&pagination[page]=1&pagination[pageSize]=999",
       );
-
+      print('JSON completo: $response');
       return QuotationModel.fromJson(response.data);
     } on DioException catch (error) {
-      print('Error in getAllQuotation: $error');
+      print('Error en getAllQuotation: $error');
       rethrow;
     }
   }

@@ -40,7 +40,7 @@ class _QuotationListScreenState extends State<QuotationListScreen> {
 
     if (searchText.isNotEmpty) {
       filteredQuotations = filteredQuotations.where((quotation) {
-        final String code = quotation.attributes.codeQuotation!.toUpperCase();
+        final String code = quotation.id.toString();
         return code.contains(searchText.toUpperCase());
       }).toList();
     }
@@ -145,7 +145,6 @@ class _QuotationListScreenState extends State<QuotationListScreen> {
                   }).toList(),
                 ),
               ),
-           
             ],
           ),
           automaticallyImplyLeading: false,
@@ -153,6 +152,7 @@ class _QuotationListScreenState extends State<QuotationListScreen> {
         body: provider.Consumer<QuotationState>(
           builder: (context, quotationState, _) {
             final quotations = quotationState.quotations;
+
             filterQuotations(quotations);
 
             if (quotationState.isNewNotificationAvailable()) {

@@ -21,6 +21,7 @@ class QuotationState with ChangeNotifier {
   }
 
   void setQuotations(List<Quotation> quotations) {
+    print('setQuotation $quotations');
     _quotations = quotations;
     _originalQuotations = List<Quotation>.from(quotations);
     setQuotationsCount(quotations.length);
@@ -37,8 +38,8 @@ class QuotationState with ChangeNotifier {
       _quotations = List<Quotation>.from(_originalQuotations);
     } else {
       final filteredQuotations = _originalQuotations.where((quotation) {
-        final code = quotation.attributes.codeQuotation?.toUpperCase();
-        return code!.contains(searchText.toUpperCase());
+        final code = quotation.id.toString();
+        return code.contains(searchText.toUpperCase());
       }).toList();
 
       _quotations = filteredQuotations;
