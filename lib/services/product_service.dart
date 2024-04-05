@@ -126,4 +126,29 @@ class ProductService {
       rethrow;
     }
   }
+
+  Future<void> updatePrice(int? id, Map<String, dynamic> data) async {
+    try {
+      final response = await _dio.put(
+        "${Environment.apiUrl}/prices/$id?populate=*",
+        data: data,
+      );
+
+      if (response.statusCode == 200) {
+        return;
+      }
+
+      final responseData = response.data as Map<String, dynamic>;
+      final errorMessage = responseData['message'] ?? 'Error desconocido';
+
+      throw DioException(
+        requestOptions: response.requestOptions,
+        response: response,
+        error: errorMessage,
+      );
+    } on DioException catch (error) {
+      print('Error in updateQuotation: $error');
+      rethrow;
+    }
+  }
 }

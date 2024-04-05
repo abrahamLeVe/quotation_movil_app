@@ -7,7 +7,7 @@ import 'package:pract_01/models/quotation/archive_quotation_model.dart';
 import 'package:pract_01/models/quotation/delete_quotation_model.dart';
 import 'package:pract_01/models/quotation/get_all_quotation_model.dart';
 import 'package:pract_01/models/quotation/get_details_quotation_model.dart';
-import 'package:pract_01/models/quotation/update_quotation_model.dart';
+// import 'package:pract_01/models/quotation/update_quotation_model.dart';
 import 'package:pract_01/utils/error_handlers.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -99,15 +99,25 @@ class QuotationService {
     }
   }
 
-  Future<UpdateQuotationModel> updateQuotation(
-      int? id, Map<String, dynamic> data) async {
+  Future<void> updateQuotation(int? id, Map<String, dynamic> data) async {
     try {
       final response = await _dio.put(
         "${Environment.apiUrl}/quotations/$id?populate=*",
         data: data,
       );
 
-      return UpdateQuotationModel.fromJson(response.data);
+      if (response.statusCode == 200) {
+        return;
+      }
+
+      final responseData = response.data as Map<String, dynamic>;
+      final errorMessage = responseData['message'] ?? 'Error desconocido';
+
+      throw DioException(
+        requestOptions: response.requestOptions,
+        response: response,
+        error: errorMessage,
+      );
     } on DioException catch (error) {
       print('Error in updateQuotation: $error');
       rethrow;

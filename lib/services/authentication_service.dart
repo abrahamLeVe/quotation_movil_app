@@ -35,8 +35,8 @@ class AuthenticationService {
       final response = await _dio.post(
         "${Environment.apiUrl}/auth/local",
         data: {
-          "identifier": email,
-          "password": password,
+          "identifier": 'i2812893@continental.edu.pe',
+          "password": 'i2812893@continental.edu.peA',
         },
       );
 

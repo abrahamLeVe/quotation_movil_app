@@ -1,34 +1,3 @@
-class QuotationUpdateModel {
-  Quotation data;
-  String pdfUrl; // Agregar el campo de URL de PDF
-
-  QuotationUpdateModel({
-    required this.data,
-    required this.pdfUrl, // Incluir el campo de URL de PDF en el constructor
-  });
-
-  factory QuotationUpdateModel.fromJson(Map<String, dynamic> json) =>
-      QuotationUpdateModel(
-        data: Quotation.fromJson(json["data"]),
-        pdfUrl: json["pdfUrl"], // Leer la URL de PDF del JSON
-      );
-
-  Map<String, dynamic> toJson() => {
-        "data": data.toJson(),
-        "pdfUrl": pdfUrl, // Incluir la URL de PDF en el JSON
-      };
-}
-
-// To parse this JSON data, do
-//
-//     final quotationModel = quotationModelFromJson(jsonString);
-
-// import 'dart:convert';
-
-// QuotationModel quotationModelFromJson(String str) => QuotationModel.fromJson(json.decode(str));
-
-// String quotationModelToJson(QuotationModel data) => json.encode(data.toJson());
-
 class QuotationModel {
   List<Quotation> data;
   Meta meta;
