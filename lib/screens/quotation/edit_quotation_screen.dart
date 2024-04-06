@@ -4,9 +4,11 @@ import 'package:pract_01/models/quotation/get_all_quotation_model.dart'
     as model_quotation;
 import 'package:pract_01/models/quotation/post_quotation_model.dart'
     as post_quotation_model;
+import 'package:pract_01/models/state/state_model.dart';
 import 'package:pract_01/screens/quotation/quotation_actions.dart';
 import 'package:pract_01/services/product_service.dart';
 import 'package:pract_01/services/quotation_service.dart';
+import 'package:pract_01/services/state_service.dart';
 import 'package:pract_01/utils/error_handlers.dart';
 
 class EditQuotationScreen extends StatefulWidget {
@@ -30,6 +32,8 @@ class _EditQuotationScreenState extends State<EditQuotationScreen> {
   bool _isClientInfoExpanded = false;
   bool _isSaving = false;
   bool _hasChanges = false;
+  late StateModel _stateModel = StateModel(data: []);
+  late DataState _selectedState;
 
   @override
   void initState() {
@@ -46,6 +50,35 @@ class _EditQuotationScreenState extends State<EditQuotationScreen> {
       controller.addListener(_handlePriceChange);
       return [controller];
     }).toList();
+
+    // Inicializar el estado por defecto como el primer estado de la lista
+    if (_stateModel.data.isNotEmpty) {
+      _selectedState = _stateModel.data.first;
+    }
+
+    _loadStates();
+  }
+
+  void _loadStates() async {
+    try {
+      final stateService = StateService(context: context);
+      final stateModel = await stateService.getState();
+      setState(() {
+        _stateModel = stateModel;
+      });
+
+      // Establecer el estado por defecto de la cotización en el dropdown
+      if (_stateModel.data.isNotEmpty) {
+        final defaultStateId = widget.quotation.attributes.state.data.id;
+        final defaultState =
+            _stateModel.data.firstWhere((state) => state.id == defaultStateId);
+        setState(() {
+          _selectedState = defaultState;
+        });
+      }
+    } catch (error) {
+      print('Error cargando estados: $error');
+    }
   }
 
   void _handlePriceChange() {
@@ -156,8 +189,9 @@ class _EditQuotationScreenState extends State<EditQuotationScreen> {
 
       final updateQuotation = post_quotation_model.UpdateQuotationAtributes(
         products: updatedProducts,
-        notes: 'hola esto es un mensaje desde la app movil',
-        codeStatus: 'atendido',
+        notes: '',
+        codeStatus: _selectedState.attributes.name,
+        state: _selectedState.id,
       );
 
       final updateData = {'data': updateQuotation.toJson()};
@@ -266,6 +300,7 @@ class _EditQuotationScreenState extends State<EditQuotationScreen> {
           child: Column(
             children: [
               _buildClientInfoAccordion(),
+              _buildStateDropdown(), // Nuevo: Agregar el dropdown de estados
               const SizedBox(height: 16),
               ListView.builder(
                 shrinkWrap: true,
@@ -281,6 +316,35 @@ class _EditQuotationScreenState extends State<EditQuotationScreen> {
           child: _isSaving
               ? const CircularProgressIndicator()
               : const Icon(Icons.save),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildStateDropdown() {
+    if (_stateModel.data.isEmpty) {
+      return const SizedBox.shrink();
+    }
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: DropdownButtonFormField<DataState>(
+        value: _selectedState,
+        items: _stateModel.data
+            .map((state) => DropdownMenuItem<DataState>(
+                  value: state,
+                  child: Text(state.attributes.name),
+                ))
+            .toList(),
+        onChanged: (newValue) {
+          setState(() {
+            _selectedState = newValue!;
+            _hasChanges = true;
+          });
+          // Aquí puedes realizar otras acciones según la selección del estado si es necesario
+        },
+        decoration: const InputDecoration(
+          labelText: 'Estado',
+          border: OutlineInputBorder(),
         ),
       ),
     );
