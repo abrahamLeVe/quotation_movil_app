@@ -117,7 +117,7 @@ Future<void> updateQuotationsInBackground(BuildContext context) async {
   print('terminó el segundo plano');
 }
 
-Future<void> updateQuotations(BuildContext context, int idState) async {
+Future<void> updateQuotationsCache(BuildContext context, int idState) async {
   List<Quotation> updatedQuotations = [];
   print('Actualizando cotizaciones...');
 
@@ -128,11 +128,17 @@ Future<void> updateQuotations(BuildContext context, int idState) async {
     updatedQuotations = response.data;
 
     // Actualizar la caché
-    await QuotationService(context: context).cacheQuotations(updatedQuotations);
+    await Future(() async {
+      await QuotationService(context: context)
+          .cacheQuotations(updatedQuotations);
+    });
 
     // Actualizar el estado global
-    final quotationState = Provider.of<QuotationState>(context, listen: false);
-    quotationState.setQuotations(updatedQuotations);
+    await Future(() async {
+      final quotationState =
+          Provider.of<QuotationState>(context, listen: false);
+      quotationState.setQuotations(updatedQuotations);
+    });
 
     print('Cotizaciones actualizadas con éxito.');
   } catch (error) {

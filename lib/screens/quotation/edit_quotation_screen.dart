@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:pract_01/models/quotation/get_all_quotation_model.dart'
@@ -34,6 +36,7 @@ class _EditQuotationScreenState extends State<EditQuotationScreen> {
   bool _hasChanges = false;
   late StateModel _stateModel = StateModel(data: []);
   late DataState _selectedState;
+  late int _initialStateId;
 
   @override
   void initState() {
@@ -70,6 +73,7 @@ class _EditQuotationScreenState extends State<EditQuotationScreen> {
       // Establecer el estado por defecto de la cotización en el dropdown
       if (_stateModel.data.isNotEmpty) {
         final defaultStateId = widget.quotation.attributes.state.data.id;
+        _initialStateId = widget.quotation.attributes.state.data.id;
         final defaultState =
             _stateModel.data.firstWhere((state) => state.id == defaultStateId);
         setState(() {
@@ -99,7 +103,8 @@ class _EditQuotationScreenState extends State<EditQuotationScreen> {
   void _saveQuotationChanges() async {
     bool hasEmptyPrice = false;
     bool hasChanges = _hasChanges;
-
+    bool stateChanged =
+        _selectedState.id != widget.quotation.attributes.state.data.id;
     // Verificar si hay campos de precio vacíos o mal formateados
     for (final controllerList in priceControllers) {
       for (final controller in controllerList) {
@@ -133,10 +138,9 @@ class _EditQuotationScreenState extends State<EditQuotationScreen> {
       );
       return;
     }
+    setState(() => _isSaving = true);
 
     try {
-      setState(() => _isSaving = true);
-
       final List<int> changedProductIds = [];
       final List<post_quotation_model.Product> updatedProducts = [];
 
@@ -187,39 +191,43 @@ class _EditQuotationScreenState extends State<EditQuotationScreen> {
         return;
       }
 
-      final updateQuotation = post_quotation_model.UpdateQuotationAtributes(
-        products: updatedProducts,
-        notes: '',
-        codeStatus: _selectedState.attributes.name,
-        state: _selectedState.id,
-      );
+      if (_hasChanges || stateChanged) {
+        // Lógica para guardar cambios en el backend o servicio
+        final updateQuotation = post_quotation_model.UpdateQuotationAtributes(
+          products: updatedProducts,
+          notes: '',
+          codeStatus: _selectedState.attributes!.name,
+          state: _selectedState.id,
+        );
 
-      final updateData = {'data': updateQuotation.toJson()};
-      await QuotationService(context: context)
-          .updateQuotation(widget.quotation.id, updateData);
+        final updateData = {'data': updateQuotation.toJson()};
+        await QuotationService(context: context)
+            .updateQuotation(widget.quotation.id, updateData);
 
-      await Future.delayed(const Duration(seconds: 1));
-      if (!mounted) return;
-
-      updateQuotationsInBackground(context);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Cotización actualizada con éxito')),
-      );
-
-      for (final changedProductId in changedProductIds) {
-        final updatedProduct =
-            updatedProducts.firstWhere((p) => p.id == changedProductId);
-        final updateData = {
-          'data': {'value': updatedProduct.value}
-        };
-        await ProductService(context: context)
-            .updatePrice(changedProductId, updateData);
+        // Actualizar la caché o el estado global si es necesario
+        // updateQuotationsInBackground(context);
+        await updateQuotationsCache(context, _initialStateId);
+        for (final changedProductId in changedProductIds) {
+          final updatedProduct =
+              updatedProducts.firstWhere((p) => p.id == changedProductId);
+          final updateData = {
+            'data': {'value': updatedProduct.value}
+          };
+          await ProductService(context: context)
+              .updatePrice(changedProductId, updateData);
+        }
+        // Mostrar mensaje de éxito
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Cotización actualizada con éxito')),
+        );
+      } else {
+        // Mostrar mensaje de que no hay cambios para guardar
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('No hay cambios para guardar')),
+        );
       }
 
-      setState(() {
-        _isSaving = false;
-        _hasChanges = false;
-      });
+      // updateQuotationsInBackground(context);
     } catch (error) {
       await Future.delayed(const Duration(seconds: 1));
       if (!mounted) return;
@@ -228,6 +236,7 @@ class _EditQuotationScreenState extends State<EditQuotationScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Error no se pudo actualizar')),
       );
+    } finally {
       setState(() {
         _isSaving = false;
         _hasChanges = false;
@@ -332,7 +341,7 @@ class _EditQuotationScreenState extends State<EditQuotationScreen> {
         items: _stateModel.data
             .map((state) => DropdownMenuItem<DataState>(
                   value: state,
-                  child: Text(state.attributes.name),
+                  child: Text(state.attributes!.name),
                 ))
             .toList(),
         onChanged: (newValue) {
@@ -469,7 +478,7 @@ class _EditQuotationScreenState extends State<EditQuotationScreen> {
                         inputFormatters: [
                           FilteringTextInputFormatter.allow(
                               RegExp(r'^\d+\.?\d{0,2}')),
-                          LengthLimitingTextInputFormatter(12),
+                          LengthLimitingTextInputFormatter(6),
                         ],
                         onChanged: (_) => _checkForChanges(),
                       ),

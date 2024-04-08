@@ -4,9 +4,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:pract_01/models/quotation/get_all_quotation_model.dart';
+import 'package:pract_01/models/state/state_model.dart';
 import 'package:pract_01/providers/quotation_state.dart';
 import 'package:pract_01/screens/quotation/edit_quotation_screen.dart';
-import 'package:pract_01/utils/quotation_utils.dart' as utils;
+import 'package:pract_01/screens/quotation/quotation_actions.dart';
+import 'package:pract_01/services/quotation_service.dart';
+import 'package:pract_01/services/state_service.dart';
+// import 'package:pract_01/utils/quotation_utils.dart' as utils;
 import 'package:pract_01/widgets/quotation/quotation_list_item.dart';
 import 'package:provider/provider.dart' as provider;
 import 'package:pract_01/services/messaging/messaging_service.dart';
@@ -33,15 +37,27 @@ class _QuotationListScreenState extends State<QuotationListScreen> {
   final MessagingService _messagingService = MessagingService();
   StreamSubscription<void>? _subscription;
   late QuotationState quotationState;
+  List<DataState> quotationStates = [];
+  DataState? selectedQuotationState;
 
   void filterQuotations(List<Quotation> quotations) {
-    filteredQuotations = utils.filterQuotations(quotations, selectedFilter);
-    final String searchText = searchController.text;
+    if (selectedQuotationState != null) {
+      // Filtrar por estado seleccionado
+      filteredQuotations = quotations
+          .where((quotation) =>
+              quotation.attributes.state.data.id == selectedQuotationState!.id)
+          .toList();
+    } else {
+      // Si no hay estado seleccionado, muestra todas las cotizaciones
+      filteredQuotations = quotations;
+    }
 
+    final String searchText = searchController.text.toUpperCase();
     if (searchText.isNotEmpty) {
+      // Filtrar adicionalmente por el texto de búsqueda
       filteredQuotations = filteredQuotations.where((quotation) {
         final String code = quotation.id.toString();
-        return code.contains(searchText.toUpperCase());
+        return code.contains(searchText);
       }).toList();
     }
   }
@@ -73,6 +89,46 @@ class _QuotationListScreenState extends State<QuotationListScreen> {
         filteredQuotations = quotationState.quotations;
       });
     });
+    _loadQuotationStates();
+
+    // Escuchar el Stream para actualizaciones de cotizaciones debido a notificaciones
+    _subscription = _messagingService.onQuotationsUpdated.listen((_) {
+      // Llamar a un método para resetear el estado seleccionado y recargar las cotizaciones
+      resetToDefaultStateAndReload();
+    });
+  }
+
+  void resetToDefaultStateAndReload() async {
+    // Encuentra el estado con ID 1 y establece como seleccionado
+    final defaultState = quotationStates.firstWhere(
+      (s) => s.id == 1,
+      orElse: () => DataState(
+        id: 1, /* otros campos */
+      ),
+    );
+
+    setState(() {
+      selectedQuotationState = defaultState;
+    });
+    // Aquí también podrías recargar las cotizaciones basadas en el estado por defecto si es necesario
+    // Por ejemplo, podría ser una llamada a un método que haga una petición de red para obtener las cotizaciones
+  }
+
+  void _loadQuotationStates() async {
+    setState(() => isLoading = true); // Iniciar carga
+    try {
+      final stateModel = await StateService(context: context).getState();
+      setState(() {
+        quotationStates = stateModel.data;
+        // Establece el estado por defecto al que tenga ID 1, si existe
+        selectedQuotationState =
+            quotationStates.firstWhere((state) => state.id == 1);
+      });
+    } catch (error) {
+      print('Error cargando estados de cotizaciones: $error');
+    } finally {
+      setState(() => isLoading = false); // Finalizar carga
+    }
   }
 
   @override
@@ -115,32 +171,69 @@ class _QuotationListScreenState extends State<QuotationListScreen> {
                   ),
                 ),
               ),
+              // SizedBox(
+              //   width: 120,
+              //   child: DropdownButton<String>(
+              //     value: selectedFilter,
+              //     onChanged: (String? value) {
+              //       setState(() {
+              //         selectedFilter = value!;
+              //         final quotationState =
+              //             provider.Provider.of<QuotationState>(context,
+              //                 listen: false);
+              //         filterQuotations(quotationState.quotations);
+              //       });
+              //     },
+              //     items: [
+              //       'Todos',
+              //       'Hoy',
+              //       'Ayer',
+              //       'Semana',
+              //       'Mes',
+              //       'Atendido',
+              //       'En proceso',
+              //       'Descendente'
+              //     ].map<DropdownMenuItem<String>>((String value) {
+              //       return DropdownMenuItem<String>(
+              //         value: value,
+              //         child: Text(value),
+              //       );
+              //     }).toList(),
+              //   ),
+              // ),
+
               SizedBox(
                 width: 120,
-                child: DropdownButton<String>(
-                  value: selectedFilter,
-                  onChanged: (String? value) {
-                    setState(() {
-                      selectedFilter = value!;
-                      final quotationState =
-                          provider.Provider.of<QuotationState>(context,
-                              listen: false);
-                      filterQuotations(quotationState.quotations);
-                    });
+                child: DropdownButton<DataState>(
+                  value: selectedQuotationState,
+                  onChanged: (DataState? newValue) async {
+                    if (newValue != null) {
+                      setState(() {
+                        selectedQuotationState = newValue;
+                        isLoading =
+                            true; // Suponiendo que tienes un indicador de carga.
+                      });
+
+                      try {
+                        await updateQuotationsCache(context, newValue.id);
+
+                        setState(() {
+                          isLoading = false;
+                        });
+                      } catch (error) {
+                        print(
+                            "Error al filtrar cotizaciones por estado: $error");
+                        setState(() {
+                          isLoading = false;
+                        });
+                      }
+                    }
                   },
-                  items: [
-                    'Todos',
-                    'Hoy',
-                    'Ayer',
-                    'Semana',
-                    'Mes',
-                    'Atendido',
-                    'En proceso',
-                    'Descendente'
-                  ].map<DropdownMenuItem<String>>((String value) {
-                    return DropdownMenuItem<String>(
-                      value: value,
-                      child: Text(value),
+                  items: quotationStates
+                      .map<DropdownMenuItem<DataState>>((DataState state) {
+                    return DropdownMenuItem<DataState>(
+                      value: state,
+                      child: Text(state.attributes!.name),
                     );
                   }).toList(),
                 ),
@@ -149,36 +242,40 @@ class _QuotationListScreenState extends State<QuotationListScreen> {
           ),
           automaticallyImplyLeading: false,
         ),
-        body: provider.Consumer<QuotationState>(
-          builder: (context, quotationState, _) {
-            final quotations = quotationState.quotations;
+        body: isLoading
+            ? const Center(
+                child: CircularProgressIndicator()) // Mostrar spinner
+            : provider.Consumer<QuotationState>(
+                builder: (context, quotationState, _) {
+                  final quotations = quotationState.quotations;
 
-            filterQuotations(quotations);
+                  filterQuotations(quotations);
 
-            if (quotationState.isNewNotificationAvailable()) {
-              filterQuotations(quotationState.quotations);
-            }
+                  if (quotationState.isNewNotificationAvailable()) {
+                    filterQuotations(quotationState.quotations);
+                  }
 
-            return SingleChildScrollView(
-              child: Column(
-                children: [
-                  ListView.builder(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    itemCount: filteredQuotations.length,
-                    itemBuilder: (BuildContext context, int index) {
-                      final quotation = filteredQuotations[index];
-                      return QuotationItem(
-                        openEditQuotationScreen: widget.openEditQuotationScreen,
-                        quotation: quotation,
-                      );
-                    },
-                  ),
-                ],
+                  return SingleChildScrollView(
+                    child: Column(
+                      children: [
+                        ListView.builder(
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          itemCount: filteredQuotations.length,
+                          itemBuilder: (BuildContext context, int index) {
+                            final quotation = filteredQuotations[index];
+                            return QuotationItem(
+                              openEditQuotationScreen:
+                                  widget.openEditQuotationScreen,
+                              quotation: quotation,
+                            );
+                          },
+                        ),
+                      ],
+                    ),
+                  );
+                },
               ),
-            );
-          },
-        ),
       ),
     );
   }

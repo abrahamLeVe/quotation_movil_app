@@ -12,6 +12,7 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 typedef MessageReceivedCallback = void Function(RemoteMessage message);
 
 class MessagingService {
+  Function()? onNotificationAccepted;
   MessageReceivedCallback? onMessageReceived;
   static String? fcmToken;
   // ignore: unused_field
@@ -31,6 +32,10 @@ class MessagingService {
 
   final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
       FlutterLocalNotificationsPlugin();
+
+  void setOnNotificationAcceptedCallback(Function() callback) {
+    onNotificationAccepted = callback;
+  }
 
   Future<void> init(BuildContext context) async {
     await _initializeQuotationState(context);
@@ -101,6 +106,7 @@ class MessagingService {
     } else {
       _queuedMessages.add(message);
     }
+    _quotationsUpdatedController.add(null);
   }
 
   bool _shouldProcessMessage(RemoteMessage message) {
@@ -150,24 +156,6 @@ class MessagingService {
     }
   }
 
-  // void _handleNotificationClick(BuildContext context, RemoteMessage message) {
-  //   final quotationState = Provider.of<QuotationState>(context, listen: false);
-
-  //   if (!_isLoadingQuotations && !quotationState.areQuotationsLoaded) {
-  //     _loadQuotations(context, message);
-  //   } else if (!_isLoadingQuotations &&
-  //       quotationState.areQuotationsLoaded &&
-  //       !_isDialogOpen) {
-  //     _queuedNotifications.add(message);
-  //     _isDialogOpen = true;
-  //     _showNotificationDialog(context, message);
-  //   } else if (!_isLoadingQuotations &&
-  //       quotationState.areQuotationsLoaded &&
-  //       _isDialogOpen) {
-  //     _queuedNotifications.add(message);
-  //   }
-  // }
-
   void _processQueuedNotifications(BuildContext context) {
     if (_queuedNotifications.isNotEmpty) {
       final nextMessage = _queuedNotifications.removeAt(0);
@@ -194,6 +182,9 @@ class MessagingService {
                     Navigator.pop(context);
                     _isDialogOpen = false; // Marca el diálogo como cerrado
                     _handleNotificationClick(context, message);
+                    if (onNotificationAccepted != null) {
+                      onNotificationAccepted!();
+                    }
                   },
                   child: const Text('Confirmar'),
                 ),
@@ -233,9 +224,6 @@ class MessagingService {
       final result =
           await QuotationService(context: context).getAllQuotation(1);
       quotationState.setQuotations(result.data);
-
-      // // ignore: use_build_context_synchronously
-      // await updateQuotationsInBackground(context);
     } catch (error) {
       debugPrint('Error al cargar las cotizaciones: $error');
     } finally {

@@ -17,11 +17,11 @@ class StateModel {
 
 class DataState {
   int id;
-  Attributes attributes;
+  Attributes? attributes;
 
   DataState({
     required this.id,
-    required this.attributes,
+    this.attributes,
   });
 
   factory DataState.fromJson(Map<String, dynamic> json) => DataState(
@@ -31,7 +31,7 @@ class DataState {
 
   Map<String, dynamic> toJson() => {
         "id": id,
-        "attributes": attributes.toJson(),
+        "attributes": attributes?.toJson(),
       };
 }
 
