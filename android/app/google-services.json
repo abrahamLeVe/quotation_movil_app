@@ -1,36 +1,26 @@
 {
   "project_info": {
-    "project_number": "163422653615",
-    "project_id": "quotationnotification-dc47a",
-    "storage_bucket": "quotationnotification-dc47a.appspot.com"
+    "project_number": "952464005112",
+    "project_id": "quotation-app-bc5b3",
+    "storage_bucket": "quotation-app-bc5b3.appspot.com"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:163422653615:android:aaa68f2aebea0e43c8185a",
+        "mobilesdk_app_id": "1:952464005112:android:2c70fc3aafe9e6ebac680d",
         "android_client_info": {
           "package_name": "com.example.pract_01"
         }
       },
-      "oauth_client": [
-        {
-          "client_id": "163422653615-qtvc6pla8bq06d1unqknsckacnrsqgp5.apps.googleusercontent.com",
-          "client_type": 3
-        }
-      ],
+      "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyD0giqIYf8U0Sr5ZF7BR3JEETFLD29cYgA"
+          "current_key": "AIzaSyCkQFAzqBGsPB5F7E0KDGuHI3X6OBWa7Wg"
         }
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": [
-            {
-              "client_id": "163422653615-qtvc6pla8bq06d1unqknsckacnrsqgp5.apps.googleusercontent.com",
-              "client_type": 3
-            }
-          ]
+          "other_platform_oauth_client": []
         }
       }
     }

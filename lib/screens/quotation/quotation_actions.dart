@@ -50,7 +50,6 @@ Future<void> _performAction(BuildContext context, String loadingText,
     await action();
 
     if (context.mounted) {
-
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Operación completada')),
       );
@@ -101,7 +100,8 @@ Future<void> updateQuotationsInBackground(BuildContext context) async {
   print('empezo el segundo plano');
 
   await Future.delayed(Duration.zero, () async {
-    final response = await QuotationService(context: context).getAllQuotation();
+    final response =
+        await QuotationService(context: context).getAllQuotation(1);
     updatedQuotations = response.data;
   });
   // Actualizar la caché en segundo plano
@@ -115,4 +115,27 @@ Future<void> updateQuotationsInBackground(BuildContext context) async {
     quotationState.setQuotations(updatedQuotations);
   });
   print('terminó el segundo plano');
+}
+
+Future<void> updateQuotations(BuildContext context, int idState) async {
+  List<Quotation> updatedQuotations = [];
+  print('Actualizando cotizaciones...');
+
+  try {
+    // Obtener las cotizaciones para el estado específico
+    final response =
+        await QuotationService(context: context).getAllQuotation(idState);
+    updatedQuotations = response.data;
+
+    // Actualizar la caché
+    await QuotationService(context: context).cacheQuotations(updatedQuotations);
+
+    // Actualizar el estado global
+    final quotationState = Provider.of<QuotationState>(context, listen: false);
+    quotationState.setQuotations(updatedQuotations);
+
+    print('Cotizaciones actualizadas con éxito.');
+  } catch (error) {
+    print('Error al actualizar las cotizaciones: $error');
+  }
 }

@@ -79,7 +79,7 @@ class _HomeScreenState extends State<HomeScreen>
   // }
 
   void _loadQuotationsOnNotification() async {
-    final result = await QuotationService(context: context).getAllQuotation();
+    final result = await QuotationService(context: context).getAllQuotation(1);
 
     setState(() {
       _quotationsFuture = Future.value(result.data);

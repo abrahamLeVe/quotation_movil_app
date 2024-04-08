@@ -62,7 +62,7 @@ class _LoginScreenState extends State<LoginScreen> {
       }
     } finally {
       setState(() {
-        _isLoggingIn = false; 
+        _isLoggingIn = false;
       });
     }
   }
@@ -85,9 +85,9 @@ class _LoginScreenState extends State<LoginScreen> {
                 padding: const EdgeInsets.all(20),
                 child: Image.asset(
                   'assets/logo_app.png',
-                  width: 200, 
-                  height: 80, 
-                  fit: BoxFit.fill, 
+                  width: 200,
+                  height: 80,
+                  fit: BoxFit.fill,
                 ),
               ),
               TextField(
@@ -125,5 +125,4 @@ class _LoginScreenState extends State<LoginScreen> {
       ),
     );
   }
-
 }

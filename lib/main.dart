@@ -14,10 +14,10 @@ import 'package:shared_preferences/shared_preferences.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await dotenv.load(fileName: Environment.fileName);
-
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+
   SharedPreferences prefs = await SharedPreferences.getInstance();
   final authToken = prefs.getString('auth_token');
   runApp(MyApp(

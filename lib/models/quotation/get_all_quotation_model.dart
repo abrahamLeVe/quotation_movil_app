@@ -1,21 +1,17 @@
 class QuotationModel {
   List<Quotation> data;
-  Meta meta;
 
   QuotationModel({
     required this.data,
-    required this.meta,
   });
 
   factory QuotationModel.fromJson(Map<String, dynamic> json) => QuotationModel(
         data: List<Quotation>.from(
             json["data"].map((x) => Quotation.fromJson(x))),
-        meta: Meta.fromJson(json["meta"]),
       );
 
   Map<String, dynamic> toJson() => {
         "data": List<dynamic>.from(data.map((x) => x.toJson())),
-        "meta": meta.toJson(),
       };
 }
 

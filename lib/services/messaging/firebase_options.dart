@@ -3,7 +3,6 @@
 import 'package:firebase_core/firebase_core.dart' show FirebaseOptions;
 import 'package:flutter/foundation.dart'
     show defaultTargetPlatform, kIsWeb, TargetPlatform;
-import 'package:pract_01/models/enviroment_model.dart';
 
 /// Default [FirebaseOptions] for use with your Firebase apps.
 ///
@@ -18,24 +17,15 @@ import 'package:pract_01/models/enviroment_model.dart';
 class DefaultFirebaseOptions {
   static FirebaseOptions get currentPlatform {
     if (kIsWeb) {
-      throw UnsupportedError(
-        'DefaultFirebaseOptions have not been configured for web - '
-        'you can reconfigure this by running the FlutterFire CLI again.',
-      );
+      return web;
     }
     switch (defaultTargetPlatform) {
       case TargetPlatform.android:
         return android;
       case TargetPlatform.iOS:
-        throw UnsupportedError(
-          'DefaultFirebaseOptions have not been configured for ios - '
-          'you can reconfigure this by running the FlutterFire CLI again.',
-        );
+        return ios;
       case TargetPlatform.macOS:
-        throw UnsupportedError(
-          'DefaultFirebaseOptions have not been configured for macos - '
-          'you can reconfigure this by running the FlutterFire CLI again.',
-        );
+        return macos;
       case TargetPlatform.windows:
         throw UnsupportedError(
           'DefaultFirebaseOptions have not been configured for windows - '
@@ -53,11 +43,39 @@ class DefaultFirebaseOptions {
     }
   }
 
-  static final FirebaseOptions android = FirebaseOptions(
-    apiKey: Environment.apiKey,
-    appId: '1:163422653615:android:aaa68f2aebea0e43c8185a',
-    messagingSenderId: '163422653615',
-    projectId: 'quotationnotification-dc47a',
-    storageBucket: 'quotationnotification-dc47a.appspot.com',
+  static const FirebaseOptions web = FirebaseOptions(
+    apiKey: 'AIzaSyC51iAVF2mOzeN7Ku2jnSQ0x8mI-LqYRlE',
+    appId: '1:952464005112:web:43ae7705be526805ac680d',
+    messagingSenderId: '952464005112',
+    projectId: 'quotation-app-bc5b3',
+    authDomain: 'quotation-app-bc5b3.firebaseapp.com',
+    storageBucket: 'quotation-app-bc5b3.appspot.com',
+    measurementId: 'G-WXK3FMBJR2',
+  );
+
+  static const FirebaseOptions android = FirebaseOptions(
+    apiKey: 'AIzaSyCkQFAzqBGsPB5F7E0KDGuHI3X6OBWa7Wg',
+    appId: '1:952464005112:android:2c70fc3aafe9e6ebac680d',
+    messagingSenderId: '952464005112',
+    projectId: 'quotation-app-bc5b3',
+    storageBucket: 'quotation-app-bc5b3.appspot.com',
+  );
+
+  static const FirebaseOptions ios = FirebaseOptions(
+    apiKey: 'AIzaSyB44T94PMuGHEhcdyz6YkEZ3x65DrIsGyE',
+    appId: '1:952464005112:ios:e5bbb029d0ae18acac680d',
+    messagingSenderId: '952464005112',
+    projectId: 'quotation-app-bc5b3',
+    storageBucket: 'quotation-app-bc5b3.appspot.com',
+    iosBundleId: 'com.example.pract01',
+  );
+
+  static const FirebaseOptions macos = FirebaseOptions(
+    apiKey: 'AIzaSyB44T94PMuGHEhcdyz6YkEZ3x65DrIsGyE',
+    appId: '1:952464005112:ios:25169ced197ad35dac680d',
+    messagingSenderId: '952464005112',
+    projectId: 'quotation-app-bc5b3',
+    storageBucket: 'quotation-app-bc5b3.appspot.com',
+    iosBundleId: 'com.example.pract01.RunnerTests',
   );
 }

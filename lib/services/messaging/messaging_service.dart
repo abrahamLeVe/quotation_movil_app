@@ -230,7 +230,8 @@ class MessagingService {
     _isLoadingQuotations = true;
 
     try {
-      final result = await QuotationService(context: context).getAllQuotation();
+      final result =
+          await QuotationService(context: context).getAllQuotation(1);
       quotationState.setQuotations(result.data);
 
       // // ignore: use_build_context_synchronously

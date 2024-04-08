@@ -31,6 +31,7 @@ class QuotationService {
       },
     ));
   }
+
   Future<String> _getAuthToken() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.getString('auth_token') ?? '';
@@ -86,13 +87,30 @@ class QuotationService {
   }
   //-----------end cache-------------------------
 
-  Future<QuotationModel> getAllQuotation() async {
+  Future<QuotationModel> getAllQuotation(int? idState) async {
     try {
-      final response = await _dio.get(
-        "${Environment.apiUrl}/quotations?populate=*&sort=createdAt:ASC&pagination[page]=1&pagination[pageSize]=999",
-      );
+      // Construir la parte de la URL que incluye el filtro de estado si se proporciona un ID de estado
+      String url =
+          "${Environment.apiUrl}/quotations?populate=*&sort=createdAt:ASC&pagination[page]=1&pagination[pageSize]=999";
+      if (idState != null) {
+        url += "&filters[state][id][\$eq]=$idState";
+      } else {
+        url += "&filters[state][id][\$eq]=1";
+      }
+
+      final response = await _dio.get(url);
+
       print('JSON completo: $response');
-      return QuotationModel.fromJson(response.data);
+
+      final data = response.data as Map<String, dynamic>;
+      final quotationList = List<Map<String, dynamic>>.from(data["data"]);
+
+      // Convertir la lista de mapas a una lista de objetos Quotation
+      final quotations = quotationList.map((quotationJson) {
+        return Quotation.fromJson(quotationJson);
+      }).toList();
+
+      return QuotationModel(data: quotations);
     } on DioException catch (error) {
       print('Error en getAllQuotation: $error');
       rethrow;

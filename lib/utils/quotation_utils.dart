@@ -39,30 +39,54 @@ List<Quotation> filterQuotations(List<Quotation> allQuotations, String filter) {
         return createdAt.year == now.year && createdAt.month == now.month;
       }).toList();
 
-    case 'Atendido':
-    // return allQuotations.where((quotation) {
-    //   return quotation.attributes.pdfVoucher?.data?.isNotEmpty == true;
-    // }).toList();
+    case 'Vencido':
+      return allQuotations.where((quotation) {
+        final dateLimit =
+            DateTime.parse(quotation.attributes.dateLimit.toString());
 
-    case 'En proceso':
-    // return allQuotations.where((quotation) {
-    //   return quotation.attributes.pdfVoucher?.data?.isNotEmpty == false;
-    // }).toList();
+        final now = DateTime.now().toUtc();
+
+        return dateLimit.isBefore(now);
+      }).toList();
+
+    case 'En progreso':
+      final inProgressQuotations = allQuotations
+          .where(
+              (quotation) => quotation.attributes.codeStatus == "En progreso")
+          .toList();
+
+      return inProgressQuotations;
+
+    case 'Cancelada':
+      final canceledQuotations = allQuotations
+          .where((quotation) => quotation.attributes.codeStatus == "Cancelada")
+          .toList();
+
+      return canceledQuotations;
+
+    case 'Cerrada':
+      final closedQuotations = allQuotations
+          .where((quotation) => quotation.attributes.codeStatus == "Cerrada")
+          .toList();
+
+      return closedQuotations;
+
+    case 'Completada':
+      final completedQuotations = allQuotations
+          .where((quotation) => quotation.attributes.codeStatus == "Completada")
+          .toList();
+
+      return completedQuotations;
 
     case 'Descendente':
-    // final sortedQuotations = List<Quotation>.from(allQuotations);
-    // sortedQuotations.sort((a, b) {
-    //   final createdAtA = a.attributes.createdAt;
-    //   final createdAtB = b.attributes.createdAt;
+      final sortedQuotations = List<Quotation>.from(allQuotations);
+      sortedQuotations.sort((a, b) {
+        final createdAtA = a.attributes.createdAt;
+        final createdAtB = b.attributes.createdAt;
 
-    //   if (createdAtA != null && createdAtB != null) {
-    //     return createdAtB.compareTo(createdAtA);
-    //   }
-
-    //   // Manejo en caso de que uno o ambos valores sean null
-    //   return 0;
-    // });
-    // return sortedQuotations;
+        return createdAtB.compareTo(createdAtA);
+      });
+      return sortedQuotations;
 
     default:
       return allQuotations;
