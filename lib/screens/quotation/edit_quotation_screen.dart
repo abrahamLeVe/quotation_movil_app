@@ -8,7 +8,6 @@ import 'package:pract_01/models/quotation/post_quotation_model.dart'
     as post_quotation_model;
 import 'package:pract_01/models/state/state_model.dart';
 import 'package:pract_01/screens/quotation/quotation_actions.dart';
-import 'package:pract_01/services/product_service.dart';
 import 'package:pract_01/services/quotation_service.dart';
 import 'package:pract_01/services/state_service.dart';
 import 'package:pract_01/utils/error_handlers.dart';
@@ -192,7 +191,6 @@ class _EditQuotationScreenState extends State<EditQuotationScreen> {
       }
 
       if (_hasChanges || stateChanged) {
-        // Lógica para guardar cambios en el backend o servicio
         final updateQuotation = post_quotation_model.UpdateQuotationAtributes(
           products: updatedProducts,
           notes: '',
@@ -204,24 +202,20 @@ class _EditQuotationScreenState extends State<EditQuotationScreen> {
         await QuotationService(context: context)
             .updateQuotation(widget.quotation.id, updateData);
 
-        // Actualizar la caché o el estado global si es necesario
-        // updateQuotationsInBackground(context);
-        await updateQuotationsCache(context, _initialStateId);
-        for (final changedProductId in changedProductIds) {
-          final updatedProduct =
-              updatedProducts.firstWhere((p) => p.id == changedProductId);
-          final updateData = {
-            'data': {'value': updatedProduct.value}
-          };
-          await ProductService(context: context)
-              .updatePrice(changedProductId, updateData);
+        if (mounted) {
+          await updateQuotationsCache(context, _initialStateId);
+          updatePricesInBackground(context, changedProductIds, updatedProducts,
+              () {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Precios actualizados con éxito')),
+            );
+          });
+
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Cotización actualizada con éxito')),
+          );
         }
-        // Mostrar mensaje de éxito
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Cotización actualizada con éxito')),
-        );
       } else {
-        // Mostrar mensaje de que no hay cambios para guardar
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('No hay cambios para guardar')),
         );

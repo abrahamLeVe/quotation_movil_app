@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:pract_01/models/quotation/get_all_quotation_model.dart';
 import 'package:pract_01/providers/quotation_state.dart';
+import 'package:pract_01/services/product_service.dart';
 import 'package:pract_01/services/quotation_service.dart';
 import 'package:pract_01/utils/dialog_utils.dart';
 import 'package:pract_01/utils/error_handlers.dart';
 import 'package:provider/provider.dart';
+import 'package:pract_01/models/quotation/post_quotation_model.dart'
+    as post_quotation_model;
 
 void _handleButtonPress(BuildContext context) {
   showLoadingDialog(context);
@@ -144,4 +147,40 @@ Future<void> updateQuotationsCache(BuildContext context, int idState) async {
   } catch (error) {
     print('Error al actualizar las cotizaciones: $error');
   }
+}
+
+Future<void> updatePricesInBackground(
+    BuildContext context,
+    List<int> changedProductIds,
+    List<post_quotation_model.Product> updatedProducts,
+    Function() onCompletion) async {
+  print('empezó el segundo plano updatePricesInBackground');
+
+  // Esto asegura que el código se ejecute en el próximo ciclo del event loop,
+  // lo que permite que el await funcione dentro del Future.delayed.
+  await Future.delayed(Duration.zero, () async {
+    for (final changedProductId in changedProductIds) {
+      // Encuentra el producto actualizado basado en el ID
+      final updatedProduct = updatedProducts.firstWhere(
+        (product) => product.id == changedProductId,
+      );
+      // Si encontramos un producto, actualizamos su precio
+      final updateData = {
+        'data': {'value': updatedProduct.value}
+      };
+      try {
+        await ProductService(context: context)
+            .updatePrice(changedProductId, updateData);
+      } catch (e) {
+        print(
+            'Error actualizando precio del producto ID $changedProductId: $e');
+      }
+    }
+    // Llama a onCompletion si el contexto aún está montado
+    if (context.mounted) {
+      onCompletion();
+    }
+  });
+
+  print('terminó el segundo plano updatePricesInBackground');
 }

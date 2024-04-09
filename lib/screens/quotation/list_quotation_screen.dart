@@ -8,9 +8,7 @@ import 'package:pract_01/models/state/state_model.dart';
 import 'package:pract_01/providers/quotation_state.dart';
 import 'package:pract_01/screens/quotation/edit_quotation_screen.dart';
 import 'package:pract_01/screens/quotation/quotation_actions.dart';
-import 'package:pract_01/services/quotation_service.dart';
 import 'package:pract_01/services/state_service.dart';
-// import 'package:pract_01/utils/quotation_utils.dart' as utils;
 import 'package:pract_01/widgets/quotation/quotation_list_item.dart';
 import 'package:provider/provider.dart' as provider;
 import 'package:pract_01/services/messaging/messaging_service.dart';
@@ -31,8 +29,6 @@ class QuotationListScreen extends StatefulWidget {
 class _QuotationListScreenState extends State<QuotationListScreen> {
   List<Quotation> filteredQuotations = [];
   bool isLoading = false;
-  String filter = 'Todos';
-  String selectedFilter = 'Todos';
   TextEditingController searchController = TextEditingController();
   final MessagingService _messagingService = MessagingService();
   StreamSubscription<void>? _subscription;
@@ -171,37 +167,6 @@ class _QuotationListScreenState extends State<QuotationListScreen> {
                   ),
                 ),
               ),
-              // SizedBox(
-              //   width: 120,
-              //   child: DropdownButton<String>(
-              //     value: selectedFilter,
-              //     onChanged: (String? value) {
-              //       setState(() {
-              //         selectedFilter = value!;
-              //         final quotationState =
-              //             provider.Provider.of<QuotationState>(context,
-              //                 listen: false);
-              //         filterQuotations(quotationState.quotations);
-              //       });
-              //     },
-              //     items: [
-              //       'Todos',
-              //       'Hoy',
-              //       'Ayer',
-              //       'Semana',
-              //       'Mes',
-              //       'Atendido',
-              //       'En proceso',
-              //       'Descendente'
-              //     ].map<DropdownMenuItem<String>>((String value) {
-              //       return DropdownMenuItem<String>(
-              //         value: value,
-              //         child: Text(value),
-              //       );
-              //     }).toList(),
-              //   ),
-              // ),
-
               SizedBox(
                 width: 120,
                 child: DropdownButton<DataState>(
