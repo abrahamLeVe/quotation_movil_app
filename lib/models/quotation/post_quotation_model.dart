@@ -41,12 +41,18 @@ class UpdateQuotationAtributes {
   String codeStatus;
   List<Product> products;
   int state;
+  String email;
+  int id;
+  int userId;
 
   UpdateQuotationAtributes({
     required this.notes,
     required this.codeStatus,
     required this.products,
     required this.state,
+    required this.email,
+    required this.id,
+    required this.userId,
   });
 
   factory UpdateQuotationAtributes.fromJson(Map<String, dynamic> json) =>
@@ -54,6 +60,9 @@ class UpdateQuotationAtributes {
         notes: json["notes"],
         codeStatus: json["codeStatus"],
         state: json["state"],
+        email: json["email"],
+        id: json["id"],
+        userId: json["userId"],
         products: List<Product>.from(
             json["products"].map((x) => Product.fromJson(x))),
       );
@@ -63,6 +72,9 @@ class UpdateQuotationAtributes {
         "codeStatus": codeStatus,
         "products": List<dynamic>.from(products.map((x) => x.toJson())),
         "state": state,
+        "email": email,
+        "id": id,
+        "userId": userId
       };
 }
 

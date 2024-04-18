@@ -7,7 +7,6 @@ import 'package:pract_01/models/quotation/archive_quotation_model.dart';
 import 'package:pract_01/models/quotation/delete_quotation_model.dart';
 import 'package:pract_01/models/quotation/get_all_quotation_model.dart';
 import 'package:pract_01/models/quotation/get_details_quotation_model.dart';
-// import 'package:pract_01/models/quotation/update_quotation_model.dart';
 import 'package:pract_01/utils/error_handlers.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -89,7 +88,6 @@ class QuotationService {
 
   Future<QuotationModel> getAllQuotation(int? idState) async {
     try {
-      // Construir la parte de la URL que incluye el filtro de estado si se proporciona un ID de estado
       String url =
           "${Environment.apiUrl}/quotations?populate=*&sort=createdAt:ASC&pagination[page]=1&pagination[pageSize]=999";
       if (idState != null) {
@@ -118,6 +116,7 @@ class QuotationService {
   }
 
   Future<void> updateQuotation(int? id, Map<String, dynamic> data) async {
+    print("updateQuotationdata $data");
     try {
       final response = await _dio.put(
         "${Environment.apiUrl}/quotations/$id?populate=*",

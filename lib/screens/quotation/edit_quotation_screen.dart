@@ -192,11 +192,13 @@ class _EditQuotationScreenState extends State<EditQuotationScreen> {
 
       if (_hasChanges || stateChanged) {
         final updateQuotation = post_quotation_model.UpdateQuotationAtributes(
-          products: updatedProducts,
-          notes: '',
-          codeStatus: _selectedState.attributes!.name,
-          state: _selectedState.id,
-        );
+            products: updatedProducts,
+            notes: '',
+            codeStatus: _selectedState.attributes!.name,
+            state: _selectedState.id,
+            email: widget.quotation.attributes.email,
+            id: widget.quotation.id,
+            userId: widget.quotation.attributes.user.data.id);
 
         final updateData = {'data': updateQuotation.toJson()};
         await QuotationService(context: context)
@@ -261,39 +263,47 @@ class _EditQuotationScreenState extends State<EditQuotationScreen> {
         if (_hasChanges) {
           final shouldDiscard = await showDialog(
             context: context,
-            builder: (context) {
-              return AlertDialog(
-                title: const Text('¿Descartar cambios?'),
-                content: const Text(
-                    'Hay cambios no guardados. ¿Deseas descartarlos?'),
-                actions: [
-                  TextButton(
-                    onPressed: () {
-                      for (final controllerList in priceControllers) {
-                        controllerList[0].text = _originalQuotation
-                            .attributes
-                            .products[priceControllers.indexOf(controllerList)]
-                            .value
-                            .toString();
-                      }
-                      _hasChanges = false;
-                      Navigator.pop(context, true);
-                    },
-                    child: const Text('Descartar'),
-                  ),
-                  TextButton(
-                    onPressed: () {
-                      Navigator.pop(context, false);
-                    },
-                    child: const Text('Cancelar'),
-                  ),
-                ],
-              );
-            },
+            builder: (context) => AlertDialog(
+              title: const Text('¿Descartar cambios?'),
+              content:
+                  const Text('Hay cambios no guardados. ¿Deseas descartarlos?'),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    // Restablecer los controladores de precios
+                    for (final controllerList in priceControllers) {
+                      controllerList[0].text = _originalQuotation
+                          .attributes
+                          .products[priceControllers.indexOf(controllerList)]
+                          .value
+                          .toString();
+                    }
+                    // Restablecer el estado seleccionado
+                    if (_stateModel.data.isNotEmpty) {
+                      final defaultState = _stateModel.data.firstWhere(
+                          (state) => state.id == _initialStateId,
+                          orElse: () => _stateModel.data.first);
+                      setState(() {
+                        _selectedState = defaultState;
+                      });
+                    }
+                    _hasChanges = false;
+                    Navigator.pop(context, true);
+                  },
+                  child: const Text('Descartar'),
+                ),
+                TextButton(
+                  onPressed: () {
+                    Navigator.pop(context, false);
+                  },
+                  child: const Text('Cancelar'),
+                ),
+              ],
+            ),
           );
 
           return shouldDiscard;
-        } else {}
+        }
       },
       child: Scaffold(
         appBar: AppBar(
@@ -387,7 +397,8 @@ class _EditQuotationScreenState extends State<EditQuotationScreen> {
                     'Provincia: ${widget.quotation.attributes.location.provincia}'),
                 Text(
                     'Distrito: ${widget.quotation.attributes.location.distrito}'),
-                Text('Mensaje: ${widget.quotation.attributes.details}'),
+                if (widget.quotation.attributes.details != null)
+                  Text('Mensaje: ${widget.quotation.attributes.details}'),
               ],
             ),
           ),
