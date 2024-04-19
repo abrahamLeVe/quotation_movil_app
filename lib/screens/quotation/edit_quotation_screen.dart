@@ -9,7 +9,7 @@ import 'package:pract_01/models/quotation/post_quotation_model.dart'
 import 'package:pract_01/models/state/state_model.dart';
 import 'package:pract_01/screens/quotation/quotation_actions.dart';
 import 'package:pract_01/services/quotation_service.dart';
-import 'package:pract_01/services/state_service.dart';
+import 'package:pract_01/services/state_quotation_service.dart';
 import 'package:pract_01/utils/error_handlers.dart';
 
 class EditQuotationScreen extends StatefulWidget {

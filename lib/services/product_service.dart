@@ -44,7 +44,6 @@ class ProductService {
           },
         ),
       );
-      print('headers in getAllProduct: ${response.requestOptions.headers}');
 
       return GetAllProductsModel.fromJson(response.data);
     } catch (error) {
@@ -71,7 +70,6 @@ class ProductService {
           },
         ),
       );
-      print('response in updateProduct: $response');
 
       return ProductUpdateModel.fromJson(response.data);
     } on DioException catch (error) {
@@ -118,7 +116,6 @@ class ProductService {
           },
         ),
       );
-      print('response in updateSize: $response');
 
       return SizeUpdateModel.fromJson(response.data);
     } on DioException catch (error) {

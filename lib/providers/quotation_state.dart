@@ -21,7 +21,6 @@ class QuotationState with ChangeNotifier {
   }
 
   void setQuotations(List<Quotation> quotations) {
-    print('setQuotation $quotations');
     _quotations = quotations;
     _originalQuotations = List<Quotation>.from(quotations);
     setQuotationsCount(quotations.length);

@@ -38,15 +38,12 @@ class QuotationService {
 
   //-----------cache-------------------------
   Future<void> cacheQuotations(List<Quotation> quotations) async {
-    print('response.data cacheQuotations: $quotations');
-
     SharedPreferences prefs = await SharedPreferences.getInstance();
 
     final List<String> quotationStrings = quotations.map((quotation) {
       final Map<String, dynamic> quotationJson = quotation.toJson();
       return jsonEncode(quotationJson); // Convertir a JSON y luego a String
     }).toList();
-    print('Cacheado $quotationStrings');
     await prefs.setStringList('cached_quotations', quotationStrings);
   }
 
@@ -74,8 +71,6 @@ class QuotationService {
       return [];
     }
 
-    print('quotationStrings $quotationStrings');
-
     final List<Quotation> quotations = quotationStrings.map((quotationString) {
       final Map<String, dynamic> quotationJson =
           jsonDecode(quotationString); // Convertir de String a JSON
@@ -98,8 +93,6 @@ class QuotationService {
 
       final response = await _dio.get(url);
 
-      print('JSON completo: $response');
-
       final data = response.data as Map<String, dynamic>;
       final quotationList = List<Map<String, dynamic>>.from(data["data"]);
 
@@ -116,7 +109,6 @@ class QuotationService {
   }
 
   Future<void> updateQuotation(int? id, Map<String, dynamic> data) async {
-    print("updateQuotationdata $data");
     try {
       final response = await _dio.put(
         "${Environment.apiUrl}/quotations/$id?populate=*",

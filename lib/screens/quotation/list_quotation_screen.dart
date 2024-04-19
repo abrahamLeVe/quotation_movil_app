@@ -8,7 +8,7 @@ import 'package:pract_01/models/state/state_model.dart';
 import 'package:pract_01/providers/quotation_state.dart';
 import 'package:pract_01/screens/quotation/edit_quotation_screen.dart';
 import 'package:pract_01/screens/quotation/quotation_actions.dart';
-import 'package:pract_01/services/state_service.dart';
+import 'package:pract_01/services/state_quotation_service.dart';
 import 'package:pract_01/widgets/quotation/quotation_list_item.dart';
 import 'package:provider/provider.dart' as provider;
 import 'package:pract_01/services/messaging/messaging_service.dart';

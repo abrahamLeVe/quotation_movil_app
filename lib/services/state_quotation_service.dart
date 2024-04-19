@@ -35,7 +35,6 @@ class StateService {
       final response = await _dio.get(
         "${Environment.apiUrl}/states",
       );
-      print('getState completo: $response');
       return StateModel.fromJson(response.data);
     } on DioException catch (error) {
       print('Error en getAllQuotation: $error');

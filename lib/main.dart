@@ -2,7 +2,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:pract_01/models/enviroment_model.dart';
-// import 'package:pract_01/providers/product_state.dart';
+import 'package:pract_01/providers/payment_state.dart';
 import 'package:pract_01/providers/quotation_state.dart';
 import 'package:pract_01/routes/app_routes.dart';
 import 'package:pract_01/screens/home_screen.dart';
@@ -36,9 +36,9 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider<QuotationState>(
           create: (_) => QuotationState(),
         ),
-        // ChangeNotifierProvider<ProductState>(
-        //   create: (_) => ProductState(),
-        // ),
+        ChangeNotifierProvider<PaymentState>(
+          create: (_) => PaymentState(),
+        ),
       ],
       child: MaterialApp(
         debugShowCheckedModeBanner: false,

@@ -1,17 +1,14 @@
 import 'package:flutter/material.dart';
-// import 'package:pract_01/models/product/get_all_product_model.dart'
-//     as product_all_model;
 import 'package:pract_01/models/quotation/get_all_quotation_model.dart'
     as quotation_all_model;
-// import 'package:pract_01/providers/product_state.dart';
+import 'package:pract_01/providers/payment_state.dart';
 import 'package:pract_01/providers/quotation_state.dart';
-// import 'package:pract_01/screens/product/edit_product_screen.dart';
-// import 'package:pract_01/screens/product/list_product_screen.dart';
+import 'package:pract_01/screens/payment/list_payment_screen.dart';
 import 'package:pract_01/screens/quotation/edit_quotation_screen.dart';
 import 'package:pract_01/screens/quotation/list_quotation_screen.dart';
 import 'package:pract_01/services/authentication_service.dart';
 import 'package:pract_01/services/messaging/messaging_service.dart';
-// import 'package:pract_01/services/product_service.dart';
+import 'package:pract_01/services/payment_service.dart';
 import 'package:pract_01/services/quotation_service.dart';
 import 'package:provider/provider.dart';
 
@@ -32,7 +29,7 @@ class _HomeScreenState extends State<HomeScreen>
   final _messagingService = MessagingService();
 
   late QuotationState _quotationState;
-  // late ProductState _productState;
+  late PaymentState _paymentState;
   bool _isLoading = true;
 
   @override
@@ -41,9 +38,9 @@ class _HomeScreenState extends State<HomeScreen>
 
     super.initState();
 
-    _tabController = TabController(length: 1, vsync: this);
+    _tabController = TabController(length: 2, vsync: this);
     _quotationState = Provider.of<QuotationState>(context, listen: false);
-    // _productState = Provider.of<ProductState>(context, listen: false);
+    _paymentState = Provider.of<PaymentState>(context, listen: false);
 
     _messagingService.init(context);
     _messagingService.onQuotationsUpdated.listen((_) {
@@ -52,10 +49,6 @@ class _HomeScreenState extends State<HomeScreen>
   }
 
   void _loadData() async {
-    // final quotationState = Provider.of<QuotationState>(context, listen: false);
-
-    // final quotationsFuture =
-    //     QuotationService(context: context).getAllQuotation();
     final cachedQuotations =
         await QuotationService(context: context).getCachedQuotations();
 
@@ -66,17 +59,16 @@ class _HomeScreenState extends State<HomeScreen>
       _isLoading = false;
     });
 
-    // quotationState.setQuotations(quotationsResult);
-    // _loadProducts();
+    _loadPayments();
   }
 
   Tab _getQuotationTab(int quotationCount) {
     return Tab(text: 'Cotizaciones ($quotationCount)');
   }
 
-  // Tab _getProductTab(int productCount) {
-  //   return Tab(text: 'Productos ($productCount)');
-  // }
+  Tab _getPaymentTab(int productCount) {
+    return Tab(text: 'Pagos ($productCount)');
+  }
 
   void _loadQuotationsOnNotification() async {
     final result = await QuotationService(context: context).getAllQuotation(1);
@@ -96,30 +88,11 @@ class _HomeScreenState extends State<HomeScreen>
     }
   }
 
-  // void _loadProducts() async {
-  //   final result = await ProductService(context: context).getAllProduct();
-  //   setState(() {});
-  //   _productState.setProducts(result.data);
-  //   _productState.setProductsCount(result.data.length);
-  // }
-
-  // void openEditProductScreen(product_all_model.Product product) async {
-  //   final result = await Navigator.push(
-  //     context,
-  //     MaterialPageRoute(
-  //       builder: (context) => EditProductScreen(
-  //         product: product,
-  //         onProductUpdated: (updatedProduct) {
-  //           _loadProducts();
-  //         },
-  //       ),
-  //     ),
-  //   );
-
-  //   if (result == true) {
-  //     _loadProducts();
-  //   }
-  // }
+  void _loadPayments() async {
+    final result = await PaymentService(context: context).getPaymentAll();
+    _paymentState.payments = result.data;
+    _paymentState.setPaymentsCount(result.data.length);
+  }
 
   void openEditQuotationScreen(quotation_all_model.Quotation quotation) async {
     final result = await Navigator.push(
@@ -157,9 +130,11 @@ class _HomeScreenState extends State<HomeScreen>
   @override
   Widget build(BuildContext context) {
     _quotationState = Provider.of<QuotationState>(context, listen: true);
+    _paymentState = Provider.of<PaymentState>(context, listen: true);
+
     final tabs = [
       _getQuotationTab(_quotationState.quotationsCount),
-      // _getProductTab(_productState.productsCount),
+      _getPaymentTab(_paymentState.paymentsCount),
     ];
 
     return PopScope(
@@ -194,7 +169,7 @@ class _HomeScreenState extends State<HomeScreen>
                   controller: _tabController,
                   children: [
                     _buildQuotationList(),
-                    // _buildProductList(),
+                    _buildPaymentsList(),
                   ],
                 ),
         ));
@@ -217,22 +192,22 @@ class _HomeScreenState extends State<HomeScreen>
     );
   }
 
-  // Widget _buildProductList() {
-  //   return ChangeNotifierProvider.value(
-  //     value: _productState,
-  //     child: Consumer<ProductState>(
-  //       builder: (context, productState, _) {
-  //         final productList = productState.products;
-  //         if (productList.isEmpty) {
-  //           return const Center(child: Text('No hay productos disponibles'));
-  //         } else {
-  //           return ProductListScreen(
-  //             productList: productList,
-  //             openEditProductScreen: openEditProductScreen,
-  //           );
-  //         }
-  //       },
-  //     ),
-  //   );
-  // }
+  Widget _buildPaymentsList() {
+    return ChangeNotifierProvider.value(
+      value: _paymentState,
+      child: Consumer<PaymentState>(
+        builder: (context, paymentState, _) {
+          final paymentList = paymentState.payments;
+          if (paymentList.isEmpty) {
+            return const Center(child: Text('No hay productos disponibles'));
+          } else {
+            return PaymentListScreen(
+              paymentList: paymentList,
+              // openEditProductScreen: openEditProductScreen,
+            );
+          }
+        },
+      ),
+    );
+  }
 }
