@@ -16,3 +16,13 @@ class DateUtils {
     }
   }
 }
+
+class DateFacUtils {
+  static String formatCreationDate(String createdAt) {
+    final creationDate = DateTime.parse(createdAt).toLocal();
+    final formatter = DateFormat.yMMMMEEEEd('es_PE');
+    final formatterTime = DateFormat.Hm('es_PE');
+
+    return '${formatter.format(creationDate)} ${formatterTime.format(creationDate)}';
+  }
+}

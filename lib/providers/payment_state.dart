@@ -1,6 +1,5 @@
-// payment_state.dart
 import 'package:flutter/material.dart';
-import 'package:pract_01/models/payment/get_all_payment.dart'; // Asegúrate de tener este modelo correctamente definido.
+import 'package:pract_01/models/payment/get_all_payment.dart';
 
 class PaymentState with ChangeNotifier {
   List<Payment> _payments = [];
@@ -52,6 +51,31 @@ class PaymentState with ChangeNotifier {
     _payments = payments;
     _originalPayments = List<Payment>.from(payments);
     setPaymentsCount(payments.length);
+    notifyListeners();
+  }
+
+  void filterPayments(String searchText) {
+    if (searchText.isEmpty) {
+      _payments = List<Payment>.from(_originalPayments);
+    } else {
+      final filteredPayments = _originalPayments.where((payment) {
+        final code = payment.id.toString();
+        return code.contains(searchText.toUpperCase());
+      }).toList();
+
+      _payments = filteredPayments;
+    }
+    notifyListeners();
+  }
+
+  void updatePaymentsCount() {
+    _paymentsCount = _payments.length;
+    notifyListeners();
+  }
+
+  void removePayment(int paymentId) {
+    _payments.removeWhere((payment) => payment.id == paymentId);
+    updatePaymentsCount();
     notifyListeners();
   }
 

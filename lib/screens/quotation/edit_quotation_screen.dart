@@ -104,6 +104,16 @@ class _EditQuotationScreenState extends State<EditQuotationScreen> {
     bool hasChanges = _hasChanges;
     bool stateChanged =
         _selectedState.id != widget.quotation.attributes.state.data.id;
+    if (_selectedState.id == _initialStateId) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+              'Por favor, selecciona un estado diferente al actual antes de guardar.'),
+          duration: Duration(seconds: 2),
+        ),
+      );
+      return; // Salir de la función si el estado no ha cambiado
+    }
     // Verificar si hay campos de precio vacíos o mal formateados
     for (final controllerList in priceControllers) {
       for (final controller in controllerList) {

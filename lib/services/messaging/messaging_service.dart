@@ -27,10 +27,14 @@ class MessagingService {
   final FirebaseMessaging _fcm = FirebaseMessaging.instance;
   bool _isDialogOpen = false;
   final List<RemoteMessage> _queuedMessages = [];
+
   final StreamController<void> _quotationsUpdatedController =
       StreamController<void>.broadcast();
-
   Stream<void> get onQuotationsUpdated => _quotationsUpdatedController.stream;
+
+  final StreamController<void> _paymentsUpdatedController =
+      StreamController<void>.broadcast();
+  Stream<void> get onPaymentsUpdated => _paymentsUpdatedController.stream;
 
   final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
       FlutterLocalNotificationsPlugin();
@@ -97,19 +101,6 @@ class MessagingService {
     await flutterLocalNotificationsPlugin.initialize(initializationSettings);
   }
 
-  // void _handleForegroundMessage(BuildContext context, RemoteMessage message) {
-  //   if (_shouldProcessMessage(message)) {
-  //     _showNotificationDialog(context, message);
-  //     _showLocalNotification(
-  //       message.notification!.title!,
-  //       message.notification!.body!,
-  //     );
-  //     _processQueuedNotifications(context);
-  //   } else {
-  //     _queuedMessages.add(message);
-  //   }
-  //   _quotationsUpdatedController.add(null);
-  // }
   void _handleForegroundMessage(BuildContext context, RemoteMessage message) {
     if (_shouldProcessMessage(message)) {
       _showNotificationDialog(context, message);
@@ -144,6 +135,7 @@ class MessagingService {
     debugPrint(
         "Processing new payment with code: ${message.notification!.body!}");
     // Actualizar estado relacionado con pagos si es necesario
+    _paymentsUpdatedController.add(null); // Notificar a los listeners
   }
 
   bool _shouldProcessMessage(RemoteMessage message) {

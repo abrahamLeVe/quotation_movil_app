@@ -36,7 +36,7 @@ class _PaymentListScreenState extends State<PaymentListScreen> {
     if (searchText.isNotEmpty) {
       // Filtrar adicionalmente por el texto de búsqueda
       filtersPayments = payments.where((payment) {
-        final String code = payment.id.toString();
+        final String code = payment.attributes.cotizacion.data!.id.toString();
         return code.contains(searchText);
       }).toList();
     } else {
@@ -51,14 +51,14 @@ class _PaymentListScreenState extends State<PaymentListScreen> {
     initializeDateFormatting();
     final paymentState =
         provider.Provider.of<PaymentState>(context, listen: false);
-    _subscription = _messagingService.onQuotationsUpdated.listen((_) {
+    _subscription = _messagingService.onPaymentsUpdated.listen((_) {
       setState(() {
         filtersPayments = paymentState.payments;
       });
     });
 
     // Escuchar el Stream para actualizaciones de cotizaciones debido a notificaciones
-    _subscription = _messagingService.onQuotationsUpdated.listen((_) {
+    _subscription = _messagingService.onPaymentsUpdated.listen((_) {
       // Llamar a un método para resetear el estado seleccionado y recargar las cotizaciones
     });
   }

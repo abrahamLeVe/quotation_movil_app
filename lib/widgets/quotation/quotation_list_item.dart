@@ -48,7 +48,10 @@ class QuotationItem extends StatelessWidget {
               onTap: () {
                 openEditQuotationScreen(quotation);
               },
-              child: const Icon(Icons.edit),
+              child: const Icon(
+                Icons.edit,
+                size: 35,
+              ),
             ),
           ],
         ),

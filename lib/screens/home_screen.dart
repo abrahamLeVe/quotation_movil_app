@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:pract_01/models/payment/get_all_payment.dart';
 import 'package:pract_01/models/quotation/get_all_quotation_model.dart'
     as quotation_all_model;
 import 'package:pract_01/providers/payment_state.dart';
@@ -26,6 +27,8 @@ class _HomeScreenState extends State<HomeScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
   Future<List<quotation_all_model.Quotation>>? _quotationsFuture;
+  Future<List<Payment>>? _paymentsFuture;
+
   final _messagingService = MessagingService();
 
   late QuotationState _quotationState;
@@ -46,16 +49,24 @@ class _HomeScreenState extends State<HomeScreen>
     _messagingService.onQuotationsUpdated.listen((_) {
       _loadQuotationsOnNotification();
     });
+    _messagingService.onPaymentsUpdated.listen((_) {
+      _loadPaymentsOnNotification();
+    });
   }
 
   void _loadData() async {
     final cachedQuotations =
         await QuotationService(context: context).getCachedQuotations();
-
     final quotationsResult = cachedQuotations;
+
+    final cachedPayments =
+        await PaymentService(context: context).getCachedPayments();
+    final paymentsResult = cachedPayments;
 
     setState(() {
       _quotationsFuture = Future.value(quotationsResult);
+      _paymentsFuture = Future.value(paymentsResult);
+
       _isLoading = false;
     });
 
@@ -84,6 +95,24 @@ class _HomeScreenState extends State<HomeScreen>
 
       if (!exists) {
         _quotationState.addQuotation(newQuotation);
+      }
+    }
+  }
+
+  void _loadPaymentsOnNotification() async {
+    final result = await PaymentService(context: context).getPaymentAll();
+
+    setState(() {
+      _paymentsFuture = Future.value(result.data);
+    });
+
+    for (final newPayment in result.data) {
+      final exists = _quotationState.quotations.any(
+        (existingQuotation) => existingQuotation.id == newPayment.id,
+      );
+
+      if (!exists) {
+        _paymentState.addPayment(newPayment);
       }
     }
   }
@@ -193,21 +222,38 @@ class _HomeScreenState extends State<HomeScreen>
   }
 
   Widget _buildPaymentsList() {
-    return ChangeNotifierProvider.value(
-      value: _paymentState,
-      child: Consumer<PaymentState>(
-        builder: (context, paymentState, _) {
-          final paymentList = paymentState.payments;
-          if (paymentList.isEmpty) {
-            return const Center(child: Text('No hay productos disponibles'));
-          } else {
-            return PaymentListScreen(
-              paymentList: paymentList,
-              // openEditProductScreen: openEditProductScreen,
-            );
-          }
-        },
-      ),
+    return FutureBuilder<List<Payment>>(
+      future: _paymentsFuture,
+      builder: (context, snapshot) {
+        final paymentList = snapshot.data ?? [];
+
+        return ChangeNotifierProvider.value(
+          value: _paymentState,
+          child: PaymentListScreen(
+            paymentList: paymentList,
+            // openEditQuotationScreen: openEditQuotationScreen,
+          ),
+        );
+      },
     );
   }
+
+  // Widget _buildPaymentsList() {
+  //   return ChangeNotifierProvider.value(
+  //     value: _paymentState,
+  //     child: Consumer<PaymentState>(
+  //       builder: (context, paymentState, _) {
+  //         final paymentList = paymentState.payments;
+  //         if (paymentList.isEmpty) {
+  //           return const Center(child: Text('No hay productos disponibles'));
+  //         } else {
+  //           return PaymentListScreen(
+  //             paymentList: paymentList,
+  //             // openEditProductScreen: openEditProductScreen,
+  //           );
+  //         }
+  //       },
+  //     ),
+  //   );
+  // }
 }

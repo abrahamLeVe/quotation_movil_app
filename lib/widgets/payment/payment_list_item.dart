@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:pract_01/models/payment/get_all_payment.dart';
+import 'package:pract_01/screens/payment/payment_actions.dart';
 import 'package:pract_01/widgets/payment/payment_invoice.dart';
 import 'package:pract_01/utils/date_utils.dart' as util_format;
 
@@ -43,12 +44,27 @@ class PaymentItem extends StatelessWidget {
         trailing: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
+            Padding(
+              padding: const EdgeInsets.only(right: 10),
+              child: GestureDetector(
+                onTap: () {
+                  downloadInvoice(context, payment);
+                },
+                child: const Icon(
+                  Icons.cloud_download,
+                  size: 35,
+                ),
+              ),
+            ),
             GestureDetector(
               onTap: () {
-                downloadInvoice(context,
-                    payment); // Aquí utilizamos el nombre correcto de la función
+                archivePayment(context, payment.id,
+                    payment.attributes.cotizacion.data!.id);
               },
-              child: const Icon(Icons.edit),
+              child: const Icon(
+                Icons.archive,
+                size: 35,
+              ),
             ),
           ],
         ),

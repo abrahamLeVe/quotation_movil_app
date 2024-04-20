@@ -1,33 +1,32 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:pract_01/models/payment/get_all_payment.dart';
-import 'package:open_file/open_file.dart';
 import 'package:pract_01/utils/date_utils.dart' as util_format;
+import 'package:share_plus/share_plus.dart';
 
 void downloadInvoice(BuildContext context, Payment payment) async {
-  // Crear el documento PDF
   final pdf = pw.Document();
 
-  // Definición de estilos de texto con colores hexadecimales
   final pw.TextStyle headerStyle = pw.TextStyle(
       fontSize: 18,
       fontWeight: pw.FontWeight.bold,
-      color: PdfColor.fromHex("#0000FF") // Azul para encabezados
-      );
+      color: PdfColor.fromHex("#0000FF"));
 
   final pw.TextStyle titleStyle = pw.TextStyle(
       fontSize: 14,
       fontWeight: pw.FontWeight.bold,
-      color: PdfColor.fromHex("#333333") // Gris oscuro para títulos
-      );
+      color: PdfColor.fromHex("#333333"));
 
-  final pw.TextStyle normalStyle = pw.TextStyle(
-      fontSize: 12,
-      color: PdfColor.fromHex("#666666") // Gris más claro para texto normal
-      );
+  final pw.TextStyle normalStyle =
+      pw.TextStyle(fontSize: 12, color: PdfColor.fromHex("#666666"));
+
+  final img = await rootBundle.load('assets/logo_app.png');
+  final imageBytes = img.buffer.asUint8List();
+  pw.Image image1 = pw.Image(pw.MemoryImage(imageBytes));
 
   pdf.addPage(
     pw.MultiPage(
@@ -35,16 +34,25 @@ void downloadInvoice(BuildContext context, Payment payment) async {
         pw.Column(
           crossAxisAlignment: pw.CrossAxisAlignment.start,
           children: [
-            pw.Header(
-              level: 0,
-              child: pw.Text(
-                'Código de Pago - ${payment.attributes.cotizacion.data!.id}',
-                style: headerStyle,
-              ),
-            ),
+            pw.Row(
+                mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                children: [
+                  pw.Header(
+                    level: 0,
+                    child: pw.Text(
+                      'Código de Pago - ${payment.attributes.cotizacion.data!.id}',
+                      style: headerStyle,
+                    ),
+                  ),
+                  pw.Container(
+                    alignment: pw.Alignment.center,
+                    height: 50,
+                    child: image1,
+                  ),
+                ]),
             pw.SizedBox(height: 20),
             pw.Text(
-              'Fecha de Creación: ${util_format.DateUtils.formatCreationDate(
+              'Fecha de Creación: ${util_format.DateFacUtils.formatCreationDate(
                 payment.attributes.createdAt.toString(),
               )}',
               style: titleStyle,
@@ -88,7 +96,7 @@ void downloadInvoice(BuildContext context, Payment payment) async {
                   pw.SizedBox(height: 10),
                   pw.Text('Colores:'),
                   pw.Wrap(
-                    spacing: 8, // Espacio horizontal entre los colores
+                    spacing: 8,
                     children: product.colors.map<pw.Widget>((color) {
                       return pw.Row(
                         mainAxisSize: pw.MainAxisSize.min,
@@ -120,40 +128,22 @@ void downloadInvoice(BuildContext context, Payment payment) async {
     ),
   );
 
-  // Guardar el documento como archivo
   final String fileName =
       'factura_${payment.attributes.cotizacion.data!.id}.pdf';
 
-  // Obtener la ruta del directorio temporal
   final directory = await getTemporaryDirectory();
   final String path = '${directory.path}/$fileName';
 
-  // Guardar el archivo y mostrar un diálogo de confirmación
   final File file = File(path);
   final bytes = await pdf.save();
   await file.writeAsBytes(bytes);
 
+  // Opción para compartir inmediatamente después de guardar el archivo
+  Share.shareXFiles([XFile(path)], text: 'Aquí está tu factura.');
+
+  // Mostrar una notificación de que el PDF fue compartido
   ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-    content: Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Expanded(
-          child: Text('Factura descargada: $fileName'),
-        ),
-        TextButton(
-          onPressed: () {
-            OpenFile.open(path);
-          },
-          child: const Text('Abrir', style: TextStyle(color: Colors.white)),
-        ),
-        TextButton(
-          onPressed: () {
-            ScaffoldMessenger.of(context).hideCurrentSnackBar();
-          },
-          child: const Text('Cerrar', style: TextStyle(color: Colors.white)),
-        ),
-      ],
-    ),
-    duration: const Duration(minutes: 5),
+    content: Text('Factura guardada y lista para compartir: $fileName'),
+    duration: const Duration(seconds: 3),
   ));
 }

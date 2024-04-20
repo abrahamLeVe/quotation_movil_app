@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-// import 'package:pract_01/screens/quotation/quotation_actions.dart';
 import 'package:pract_01/services/authentication_service.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -35,12 +34,8 @@ class _LoginScreenState extends State<LoginScreen> {
     try {
       final authService = AuthenticationService(context: context);
       await authService.login(email, password);
-      // ignore: use_build_context_synchronously
-      // await updateQuotationsInBackground(context);
 
       if (context.mounted) {
-        // updateQuotationsInBackground(context);
-        // updateQuotationsCache(context, 1);
         showDialog(
           context: context,
           builder: (BuildContext context) {
