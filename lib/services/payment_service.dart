@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:pract_01/models/enviroment_model.dart';
 import 'package:pract_01/models/payment/get_all_payment.dart';
@@ -79,12 +80,14 @@ class PaymentService {
   Future<PaymentModel> getPaymentAll() async {
     try {
       final response = await _dio.get(
-        "${Environment.apiUrl}/payments?populate=*&sort=createdAt:ASC&pagination[page]=1&pagination[pageSize]=999",
+        "${Environment.apiUrl}/payments?populate=*&sort=createdAt:ASC",
       );
-      print('getPaymentAll completo: $response');
+
       return PaymentModel.fromJson(response.data);
     } on DioException catch (error) {
-      print('Error en getPaymentAll: $error');
+      if (kDebugMode) {
+        print('Error en getPaymentAll: $error');
+      }
       rethrow;
     }
   }
@@ -94,8 +97,41 @@ class PaymentService {
       final response = await _dio.put(
         "${Environment.apiUrl}/payments/$id",
         data: {
+          "data": {"publishedAt": null, 'paymentId': id}
+        },
+      );
+      if (response.statusCode == 200) {
+        return;
+      }
+
+      final responseData = response.data as Map<String, dynamic>;
+      final errorMessage = responseData['message'] ?? 'Error desconocido';
+
+      throw DioException(
+        requestOptions: response.requestOptions,
+        response: response,
+        error: errorMessage,
+      );
+    } on DioException catch (error) {
+      if (kDebugMode) {
+        print('Error in archivePayment: $error');
+      }
+      rethrow;
+    }
+  }
+
+  Future<void> approvePayments(int paymentId, int quoId, int userId,
+      String status, String publishedAt) async {
+    try {
+      final response = await _dio.put(
+        "${Environment.apiUrl}/payments/$paymentId",
+        data: {
           "data": {
-            "publishedAt": null,
+            "paymentId": paymentId,
+            "quotationId": quoId,
+            "userId": userId,
+            "status": status,
+            "publishedAt": publishedAt
           }
         },
       );
@@ -112,7 +148,9 @@ class PaymentService {
         error: errorMessage,
       );
     } on DioException catch (error) {
-      print('Error in archivePayment: $error');
+      if (kDebugMode) {
+        print('Error in archivePayment: $error');
+      }
       rethrow;
     }
   }

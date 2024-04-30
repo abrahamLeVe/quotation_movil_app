@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:pract_01/models/quotation/get_all_quotation_model.dart';
 import 'package:pract_01/providers/quotation_state.dart';
@@ -10,7 +11,6 @@ import 'package:pract_01/models/quotation/post_quotation_model.dart'
 
 Future<void> updateQuotationsInBackground(BuildContext context) async {
   List<Quotation> updatedQuotations = [];
-  print('empezo el segundo plano quotation');
 
   await Future.delayed(Duration.zero, () async {
     final response =
@@ -25,12 +25,10 @@ Future<void> updateQuotationsInBackground(BuildContext context) async {
     final quotationState = Provider.of<QuotationState>(context, listen: false);
     quotationState.setQuotations(updatedQuotations);
   });
-  print('terminó el segundo plano quotation');
 }
 
 Future<void> updateQuotationsCache(BuildContext context, int idState) async {
   List<Quotation> updatedQuotations = [];
-  print('Actualizando cotizaciones...');
 
   try {
     final response =
@@ -47,10 +45,10 @@ Future<void> updateQuotationsCache(BuildContext context, int idState) async {
           Provider.of<QuotationState>(context, listen: false);
       quotationState.setQuotations(updatedQuotations);
     });
-
-    print('Cotizaciones actualizadas con éxito.');
   } catch (error) {
-    print('Error al actualizar las cotizaciones: $error');
+    if (kDebugMode) {
+      print('Error al actualizar las cotizaciones: $error');
+    }
   }
 }
 
@@ -59,8 +57,6 @@ Future<void> updatePricesInBackground(
     List<int> changedProductIds,
     List<post_quotation_model.Product> updatedProducts,
     Function() onCompletion) async {
-  print('empezó el segundo plano updatePricesInBackground');
-
   await Future.delayed(Duration.zero, () async {
     for (final changedProductId in changedProductIds) {
       final updatedProduct = updatedProducts.firstWhere(
@@ -73,14 +69,14 @@ Future<void> updatePricesInBackground(
         await ProductService(context: context)
             .updatePrice(changedProductId, updateData);
       } catch (e) {
-        print(
-            'Error actualizando precio del producto ID $changedProductId: $e');
+        if (kDebugMode) {
+          print(
+              'Error actualizando precio del producto ID $changedProductId: $e');
+        }
       }
     }
     if (context.mounted) {
       onCompletion();
     }
   });
-
-  print('terminó el segundo plano updatePricesInBackground');
 }

@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:pract_01/models/enviroment_model.dart';
 import 'package:pract_01/models/quotation/archive_quotation_model.dart';
@@ -84,7 +85,9 @@ class QuotationService {
   Future<QuotationModel> getAllQuotation(int? idState) async {
     try {
       String url =
-          "${Environment.apiUrl}/quotations?populate=*&sort=createdAt:ASC&pagination[page]=1&pagination[pageSize]=999";
+          // "${Environment.apiUrl}/quotations?populate=*&sort=createdAt:ASC&pagination[page]=1&pagination[pageSize]=999";
+          "${Environment.apiUrl}/quotations?populate=*&sort=createdAt:ASC";
+
       if (idState != null) {
         url += "&filters[state][id][\$eq]=$idState";
       } else {
@@ -96,14 +99,21 @@ class QuotationService {
       final data = response.data as Map<String, dynamic>;
       final quotationList = List<Map<String, dynamic>>.from(data["data"]);
 
-      // Convertir la lista de mapas a una lista de objetos Quotation
-      final quotations = quotationList.map((quotationJson) {
+      // Filtrar en el cliente las cotizaciones cuyo usuario no es nulo
+      List<Map<String, dynamic>> filteredQuotations = quotationList.where((q) {
+        return q["attributes"]["user"]["data"] !=
+            null; // Asegúrate de que esta ruta de acceso está correcta
+      }).toList();
+
+      final quotations = filteredQuotations.map((quotationJson) {
         return Quotation.fromJson(quotationJson);
       }).toList();
 
       return QuotationModel(data: quotations);
     } on DioException catch (error) {
-      print('Error en getAllQuotation: $error');
+      if (kDebugMode) {
+        print('Error en getAllQuotation: $error');
+      }
       rethrow;
     }
   }
@@ -128,7 +138,9 @@ class QuotationService {
         error: errorMessage,
       );
     } on DioException catch (error) {
-      print('Error in updateQuotation: $error');
+      if (kDebugMode) {
+        print('Error in updateQuotation: $error');
+      }
       rethrow;
     }
   }
@@ -140,7 +152,9 @@ class QuotationService {
       );
       return GetDetailsQuotation.fromJson(response.data);
     } on DioException catch (error) {
-      print('Error in getDetailsQuotation: $error');
+      if (kDebugMode) {
+        print('Error in getDetailsQuotation: $error');
+      }
       rethrow;
     }
   }
@@ -148,11 +162,13 @@ class QuotationService {
   Future<DeleteQuotation> deleteQuotation(int id) async {
     try {
       final response = await _dio.delete(
-        "${Environment.apiUrl}/quotations/$id?populate=*",
+        "${Environment.apiUrl}/quotations/$id",
       );
       return DeleteQuotation.fromJson(response.data);
     } on DioException catch (error) {
-      print('Error in deleteQuotation: $error');
+      if (kDebugMode) {
+        print('Error in deleteQuotation: $error');
+      }
       rethrow;
     }
   }
@@ -160,7 +176,7 @@ class QuotationService {
   Future<ArchiveQuotation> archiveQuotation(int id) async {
     try {
       final response = await _dio.put(
-        "${Environment.apiUrl}/quotations/$id?populate=*",
+        "${Environment.apiUrl}/quotations/$id",
         data: {
           "data": {
             "publishedAt": null,
@@ -169,7 +185,38 @@ class QuotationService {
       );
       return ArchiveQuotation.fromJson(response.data);
     } on DioException catch (error) {
-      print('Error in archiveQuotation: $error');
+      if (kDebugMode) {
+        print('Error in archiveQuotation: $error');
+      }
+      rethrow;
+    }
+  }
+
+  Future<QuotationModel> getFullQuotation() async {
+    try {
+      String url =
+          // "${Environment.apiUrl}/quotations?populate=*&sort=createdAt:ASC&pagination[page]=1&pagination[pageSize]=999";
+          "${Environment.apiUrl}/quotations?populate=*&sort=createdAt:ASC";
+
+      final response = await _dio.get(url);
+
+      final data = response.data as Map<String, dynamic>;
+      final quotationList = List<Map<String, dynamic>>.from(data["data"]);
+      // Filtrar en el cliente las cotizaciones cuyo usuario no es nulo
+      List<Map<String, dynamic>> filteredQuotations = quotationList.where((q) {
+        return q["attributes"]["user"]["data"] !=
+            null; // Asegúrate de que esta ruta de acceso está correcta
+      }).toList();
+
+      final quotations = filteredQuotations.map((quotationJson) {
+        return Quotation.fromJson(quotationJson);
+      }).toList();
+
+      return QuotationModel(data: quotations);
+    } on DioException catch (error) {
+      if (kDebugMode) {
+        print('Error en getAllQuotation: $error');
+      }
       rethrow;
     }
   }

@@ -1,16 +1,20 @@
 import 'package:flutter/material.dart';
-import 'package:pract_01/models/payment/get_all_payment.dart';
+import 'package:pract_01/models/contact/get_all_contact.dart';
+import 'package:pract_01/models/payment/get_all_payment.dart'
+    as payment_all_model;
 import 'package:pract_01/models/quotation/get_all_quotation_model.dart'
     as quotation_all_model;
+import 'package:pract_01/providers/client_state.dart';
+import 'package:pract_01/providers/contact_state.dart';
 import 'package:pract_01/providers/payment_state.dart';
+import 'package:pract_01/providers/price_state.dart';
+import 'package:pract_01/providers/product_state.dart';
 import 'package:pract_01/providers/quotation_state.dart';
+import 'package:pract_01/screens/contact/list_contact_screen.dart';
 import 'package:pract_01/screens/payment/list_payment_screen.dart';
-import 'package:pract_01/screens/quotation/edit_quotation_screen.dart';
 import 'package:pract_01/screens/quotation/list_quotation_screen.dart';
 import 'package:pract_01/services/authentication_service.dart';
 import 'package:pract_01/services/messaging/messaging_service.dart';
-import 'package:pract_01/services/payment_service.dart';
-import 'package:pract_01/services/quotation_service.dart';
 import 'package:provider/provider.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -27,119 +31,46 @@ class _HomeScreenState extends State<HomeScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
   Future<List<quotation_all_model.Quotation>>? _quotationsFuture;
-  Future<List<Payment>>? _paymentsFuture;
-
-  final _messagingService = MessagingService();
-
+  Future<List<payment_all_model.Payment>>? _paymentsFuture;
+  Future<List<Contact>>? _contactsFuture;
   late QuotationState _quotationState;
   late PaymentState _paymentState;
+  late ContactState _contactState;
   bool _isLoading = true;
 
   @override
   void initState() {
-    _loadData();
-
     super.initState();
-
-    _tabController = TabController(length: 2, vsync: this);
-    _quotationState = Provider.of<QuotationState>(context, listen: false);
-    _paymentState = Provider.of<PaymentState>(context, listen: false);
-
-    _messagingService.init(context);
-    _messagingService.onQuotationsUpdated.listen((_) {
-      _loadQuotationsOnNotification();
-    });
-    _messagingService.onPaymentsUpdated.listen((_) {
-      _loadPaymentsOnNotification();
-    });
+    _tabController = TabController(length: 3, vsync: this);
+    _loadData();
   }
 
   void _loadData() async {
-    final cachedQuotations =
-        await QuotationService(context: context).getCachedQuotations();
-    final quotationsResult = cachedQuotations;
+    final messagingService = MessagingService();
+    messagingService.init(context);
+    Provider.of<QuotationState>(context, listen: false)
+        .loadNewQuotations(context);
+    Provider.of<QuotationState>(context, listen: false)
+        .loadFullQuotations(context);
+    Provider.of<PaymentState>(context, listen: false).loadNewPayments(context);
+    Provider.of<ContactState>(context, listen: false).loadNewContacts(context);
+    Provider.of<ClientState>(context, listen: false).loadNewClients(context);
+    Provider.of<ProductState>(context, listen: false).loadFullProducts(context);
+    Provider.of<PriceState>(context, listen: false).loadFullPrices(context);
 
-    final cachedPayments =
-        await PaymentService(context: context).getCachedPayments();
-    final paymentsResult = cachedPayments;
+    messagingService.onQuotationsUpdated.listen((_) {
+      _quotationState.loadNewQuotations(context);
+    });
+    messagingService.onPaymentsUpdated.listen((_) {
+      _paymentState.loadNewPayments(context);
+    });
+    messagingService.onContactsUpdated.listen((_) {
+      _contactState.loadNewContacts(context);
+    });
 
     setState(() {
-      _quotationsFuture = Future.value(quotationsResult);
-      _paymentsFuture = Future.value(paymentsResult);
-
       _isLoading = false;
     });
-
-    _loadPayments();
-  }
-
-  Tab _getQuotationTab(int quotationCount) {
-    return Tab(text: 'Cotizaciones ($quotationCount)');
-  }
-
-  Tab _getPaymentTab(int productCount) {
-    return Tab(text: 'Pagos ($productCount)');
-  }
-
-  void _loadQuotationsOnNotification() async {
-    final result = await QuotationService(context: context).getAllQuotation(1);
-
-    setState(() {
-      _quotationsFuture = Future.value(result.data);
-    });
-
-    for (final newQuotation in result.data) {
-      final exists = _quotationState.quotations.any(
-        (existingQuotation) => existingQuotation.id == newQuotation.id,
-      );
-
-      if (!exists) {
-        _quotationState.addQuotation(newQuotation);
-      }
-    }
-  }
-
-  void _loadPaymentsOnNotification() async {
-    final result = await PaymentService(context: context).getPaymentAll();
-
-    setState(() {
-      _paymentsFuture = Future.value(result.data);
-    });
-
-    for (final newPayment in result.data) {
-      final exists = _quotationState.quotations.any(
-        (existingQuotation) => existingQuotation.id == newPayment.id,
-      );
-
-      if (!exists) {
-        _paymentState.addPayment(newPayment);
-      }
-    }
-  }
-
-  void _loadPayments() async {
-    final result = await PaymentService(context: context).getPaymentAll();
-    _paymentState.payments = result.data;
-    _paymentState.setPaymentsCount(result.data.length);
-  }
-
-  void openEditQuotationScreen(quotation_all_model.Quotation quotation) async {
-    final result = await Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => EditQuotationScreen(
-          quotation: quotation,
-          onQuotationUpdated: (updatedQuotation) {
-            _loadQuotationsOnNotification();
-            _quotationState.updateQuotationProvider(updatedQuotation);
-          },
-        ),
-      ),
-    );
-
-    if (result == true) {
-      _loadQuotationsOnNotification();
-    }
   }
 
   @override
@@ -151,78 +82,114 @@ class _HomeScreenState extends State<HomeScreen>
   void logout(BuildContext context) {
     final authService = AuthenticationService(context: context);
     authService.logout();
-
-    // Redirigir al inicio de sesión
     Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
+  }
+
+  Tab _getQuotationTab(int quotationCount) {
+    return Tab(text: 'Cotización ($quotationCount)');
+  }
+
+  Tab _getPaymentTab(int productCount) {
+    return Tab(text: 'Pagos ($productCount)');
+  }
+
+  Tab _getContactTab(int contactCount) {
+    return Tab(text: 'Mensajes ($contactCount)');
   }
 
   @override
   Widget build(BuildContext context) {
     _quotationState = Provider.of<QuotationState>(context, listen: true);
     _paymentState = Provider.of<PaymentState>(context, listen: true);
+    _contactState = Provider.of<ContactState>(context, listen: true);
 
     final tabs = [
       _getQuotationTab(_quotationState.quotationsCount),
       _getPaymentTab(_paymentState.paymentsCount),
+      _getContactTab(_contactState.contactsCount),
     ];
 
-    return PopScope(
-        canPop: false,
-        child: Scaffold(
-          appBar: AppBar(
-            title: const Text('Pantalla Principal'),
-            automaticallyImplyLeading: false,
-            actions: [
-              PopupMenuButton(
-                onSelected: (value) {
-                  if (value == 'logout') {
-                    logout(context);
-                  }
-                },
-                itemBuilder: (BuildContext context) => [
-                  const PopupMenuItem(
-                    value: 'logout',
-                    child: Text('Cerrar sesión'),
-                  ),
-                ],
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Pantalla Principal'),
+        automaticallyImplyLeading: false,
+        actions: [
+          PopupMenuButton(
+            onSelected: (value) {
+              if (value == 'logout') {
+                logout(context);
+              } else if (value == 'charts') {
+                Navigator.pushNamed(context, '/charts');
+              } else if (value == 'chartsstates') {
+                Navigator.pushNamed(context, '/chartsstates');
+              } else if (value == 'chartsclients') {
+                Navigator.pushNamed(context, '/chartsclients');
+              } else if (value == 'prices') {
+                Navigator.pushNamed(context, '/prices');
+              }
+            },
+            itemBuilder: (BuildContext context) => [
+              const PopupMenuItem(
+                value: 'prices',
+                child: Text('Productos'),
+              ),
+              const PopupMenuItem(
+                value: 'charts',
+                child: Text('Top Cotizaciones'),
+              ),
+              const PopupMenuItem(
+                value: 'chartsstates',
+                child: Text('Top Ventas'),
+              ),
+              const PopupMenuItem(
+                value: 'chartsclients',
+                child: Text('Top Clientes'),
+              ),
+              const PopupMenuItem(
+                value: 'logout',
+                child: Text('Cerrar sesión'),
               ),
             ],
-            bottom: TabBar(
-              controller: _tabController,
-              tabs: tabs,
-            ),
           ),
-          body: _isLoading
-              ? const LinearProgressIndicator()
-              : TabBarView(
-                  controller: _tabController,
-                  children: [
-                    _buildQuotationList(),
-                    _buildPaymentsList(),
-                  ],
-                ),
-        ));
+        ],
+        bottom: TabBar(
+          controller: _tabController,
+          tabs: tabs,
+        ),
+      ),
+      body: _isLoading
+          ? const LinearProgressIndicator()
+          : TabBarView(
+              controller: _tabController,
+              children: [
+                _buildQuotationList(),
+                _buildPaymentsList(),
+                _buildContactsList()
+              ],
+            ),
+    );
   }
 
   Widget _buildQuotationList() {
     return FutureBuilder<List<quotation_all_model.Quotation>>(
       future: _quotationsFuture,
       builder: (context, snapshot) {
-        final quotationList = snapshot.data ?? [];
-
-        return ChangeNotifierProvider.value(
-          value: _quotationState,
-          child: QuotationListScreen(
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const CircularProgressIndicator();
+        } else if (snapshot.hasError) {
+          return Text('Error: ${snapshot.error}');
+        } else {
+          final quotationList = snapshot.data ?? [];
+          return QuotationListScreen(
             quotationList: quotationList,
-            openEditQuotationScreen: openEditQuotationScreen,
-          ),
-        );
+          );
+        }
       },
     );
   }
 
   Widget _buildPaymentsList() {
-    return FutureBuilder<List<Payment>>(
+    return FutureBuilder<List<payment_all_model.Payment>>(
       future: _paymentsFuture,
       builder: (context, snapshot) {
         final paymentList = snapshot.data ?? [];
@@ -231,29 +198,25 @@ class _HomeScreenState extends State<HomeScreen>
           value: _paymentState,
           child: PaymentListScreen(
             paymentList: paymentList,
-            // openEditQuotationScreen: openEditQuotationScreen,
           ),
         );
       },
     );
   }
 
-  // Widget _buildPaymentsList() {
-  //   return ChangeNotifierProvider.value(
-  //     value: _paymentState,
-  //     child: Consumer<PaymentState>(
-  //       builder: (context, paymentState, _) {
-  //         final paymentList = paymentState.payments;
-  //         if (paymentList.isEmpty) {
-  //           return const Center(child: Text('No hay productos disponibles'));
-  //         } else {
-  //           return PaymentListScreen(
-  //             paymentList: paymentList,
-  //             // openEditProductScreen: openEditProductScreen,
-  //           );
-  //         }
-  //       },
-  //     ),
-  //   );
-  // }
+  Widget _buildContactsList() {
+    return FutureBuilder<List<Contact>>(
+      future: _contactsFuture,
+      builder: (context, snapshot) {
+        final contactList = snapshot.data ?? [];
+
+        return ChangeNotifierProvider.value(
+          value: _contactState,
+          child: ContactListScreen(
+            contactList: contactList,
+          ),
+        );
+      },
+    );
+  }
 }

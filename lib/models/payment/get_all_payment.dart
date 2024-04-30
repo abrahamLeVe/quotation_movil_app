@@ -45,7 +45,7 @@ class PaymentAttributes {
   DateTime createdAt;
   DateTime updatedAt;
   DateTime publishedAt;
-  Cotizacion user;
+  User user;
   Cotizacion cotizacion;
 
   PaymentAttributes({
@@ -62,12 +62,12 @@ class PaymentAttributes {
   factory PaymentAttributes.fromJson(Map<String, dynamic> json) =>
       PaymentAttributes(
         paymentId: json["payment_id"],
-        amount: json["amount"].toDouble(),
+        amount: json["amount"]?.toDouble(),
         status: json["status"],
         createdAt: DateTime.parse(json["createdAt"]),
         updatedAt: DateTime.parse(json["updatedAt"]),
         publishedAt: DateTime.parse(json["publishedAt"]),
-        user: Cotizacion.fromJson(json["user"]),
+        user: User.fromJson(json["user"]),
         cotizacion: Cotizacion.fromJson(json["cotizacion"]),
       );
 
@@ -84,33 +84,35 @@ class PaymentAttributes {
 }
 
 class Cotizacion {
-  Data? data;
+  CotizacionData? data;
 
-  Cotizacion({
-    required this.data,
-  });
+  Cotizacion({this.data});
 
-  factory Cotizacion.fromJson(Map<String, dynamic> json) => Cotizacion(
-        data: json["data"] == null ? null : Data.fromJson(json["data"]),
-      );
+  factory Cotizacion.fromJson(Map<String, dynamic> json) {
+    return Cotizacion(
+      data: json['data'] != null ? CotizacionData.fromJson(json['data']) : null,
+    );
+  }
 
-  Map<String, dynamic> toJson() => {
-        "data": data?.toJson(),
-      };
+  Map<String, dynamic> toJson() {
+    return {
+      'data': data?.toJson(),
+    };
+  }
 }
 
-class Data {
+class CotizacionData {
   int id;
-  DataAttributes attributes;
+  PurpleAttributes attributes;
 
-  Data({
+  CotizacionData({
     required this.id,
     required this.attributes,
   });
 
-  factory Data.fromJson(Map<String, dynamic> json) => Data(
+  factory CotizacionData.fromJson(Map<String, dynamic> json) => CotizacionData(
         id: json["id"],
-        attributes: DataAttributes.fromJson(json["attributes"]),
+        attributes: PurpleAttributes.fromJson(json["attributes"]),
       );
 
   Map<String, dynamic> toJson() => {
@@ -119,7 +121,7 @@ class Data {
       };
 }
 
-class DataAttributes {
+class PurpleAttributes {
   DateTime createdAt;
   DateTime updatedAt;
   DateTime publishedAt;
@@ -128,7 +130,7 @@ class DataAttributes {
   String direction;
   String phone;
   int dayLimit;
-  String? details;
+  dynamic details;
   String notes;
   DateTime dateLimit;
   String codeStatus;
@@ -137,7 +139,7 @@ class DataAttributes {
   Location location;
   String numDoc;
 
-  DataAttributes({
+  PurpleAttributes({
     required this.createdAt,
     required this.updatedAt,
     required this.publishedAt,
@@ -156,7 +158,8 @@ class DataAttributes {
     required this.numDoc,
   });
 
-  factory DataAttributes.fromJson(Map<String, dynamic> json) => DataAttributes(
+  factory PurpleAttributes.fromJson(Map<String, dynamic> json) =>
+      PurpleAttributes(
         createdAt: DateTime.parse(json["createdAt"]),
         updatedAt: DateTime.parse(json["updatedAt"]),
         publishedAt: DateTime.parse(json["publishedAt"]),
@@ -245,17 +248,15 @@ class Product {
   });
 
   factory Product.fromJson(Map<String, dynamic> json) => Product(
-        id: json["id"], // Asegúrate de que "id" siempre viene como un entero
+        id: json["id"],
         size: json["size"],
         slug: json["slug"],
         title: json["title"],
-        value: json["value"].toDouble(), // Asegura la conversión a double
+        value: json["value"]?.toDouble(),
         colors: List<ColorElement>.from(
             json["colors"].map((x) => ColorElement.fromJson(x))),
-        discount: (json["discount"] as num)
-            .toInt(), // Si discount podría venir como double
-        quantity: (json["quantity"] as num)
-            .toInt(), // Si quantity podría venir como double
+        discount: json["discount"],
+        quantity: json["quantity"],
         pictureUrl: json["picture_url"],
       );
 
@@ -350,6 +351,87 @@ class ColorAttributes {
         "updatedAt": updatedAt.toIso8601String(),
         "description": description,
         "publishedAt": publishedAt.toIso8601String(),
+      };
+}
+
+class User {
+  UserData data;
+
+  User({
+    required this.data,
+  });
+
+  factory User.fromJson(Map<String, dynamic> json) => User(
+        data: UserData.fromJson(json["data"]),
+      );
+
+  Map<String, dynamic> toJson() => {
+        "data": data.toJson(),
+      };
+}
+
+class UserData {
+  int id;
+  FluffyAttributes attributes;
+
+  UserData({
+    required this.id,
+    required this.attributes,
+  });
+
+  factory UserData.fromJson(Map<String, dynamic> json) => UserData(
+        id: json["id"],
+        attributes: FluffyAttributes.fromJson(json["attributes"]),
+      );
+
+  Map<String, dynamic> toJson() => {
+        "id": id,
+        "attributes": attributes.toJson(),
+      };
+}
+
+class FluffyAttributes {
+  String username;
+  String email;
+  String provider;
+  bool confirmed;
+  bool blocked;
+  DateTime createdAt;
+  DateTime updatedAt;
+  bool observer;
+
+  FluffyAttributes({
+    required this.username,
+    required this.email,
+    required this.provider,
+    required this.confirmed,
+    required this.blocked,
+    required this.createdAt,
+    required this.updatedAt,
+    required this.observer,
+  });
+
+  factory FluffyAttributes.fromJson(Map<String, dynamic> json) =>
+      FluffyAttributes(
+        username: json["username"],
+        email: json["email"],
+        provider: json["provider"],
+        confirmed: json["confirmed"],
+        blocked: json["blocked"],
+        createdAt: DateTime.parse(json["createdAt"]),
+        updatedAt: DateTime.parse(json["updatedAt"]),
+        observer: json["observer"],
+      );
+
+  Map<String, dynamic> toJson() => {
+        "username": username,
+        "email": email,
+        "provider": provider,
+        "confirmed": confirmed,
+        "blocked": blocked,
+        "createdAt": createdAt.toIso8601String(),
+        "updatedAt": updatedAt.toIso8601String(),
+        "observer": observer,
       };
 }
 

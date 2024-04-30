@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:pract_01/models/quotation/get_all_quotation_model.dart'
@@ -14,12 +15,10 @@ import 'package:pract_01/utils/error_handlers.dart';
 
 class EditQuotationScreen extends StatefulWidget {
   final model_quotation.Quotation quotation;
-  final void Function(model_quotation.Quotation) onQuotationUpdated;
 
   const EditQuotationScreen({
     Key? key,
     required this.quotation,
-    required this.onQuotationUpdated,
   }) : super(key: key);
 
   @override
@@ -32,14 +31,25 @@ class _EditQuotationScreenState extends State<EditQuotationScreen> {
   late List<List<TextEditingController>> priceControllers;
   bool _isClientInfoExpanded = false;
   bool _isSaving = false;
+  bool _isSaved = false;
   bool _hasChanges = false;
   late StateModel _stateModel = StateModel(data: []);
-  late DataState _selectedState;
+  late DataState _selectedState = DataState(
+      id: 0,
+      attributes: Attributes(
+          name: 'Estados',
+          description: '',
+          createdAt: DateTime.now(),
+          updatedAt: DateTime.now(),
+          publishedAt: DateTime.now(),
+          code: ''));
+
   late int _initialStateId;
 
   @override
   void initState() {
     super.initState();
+    // _selectedState = DataState(id: 0, attributes: Attributes(name: ''));
     _originalQuotation = widget.quotation;
     originalPrices = widget.quotation.attributes.products
         .map((product) => [product.value])
@@ -80,7 +90,9 @@ class _EditQuotationScreenState extends State<EditQuotationScreen> {
         });
       }
     } catch (error) {
-      print('Error cargando estados: $error');
+      if (kDebugMode) {
+        print('Error cargando estados: $error');
+      }
     }
   }
 
@@ -101,19 +113,9 @@ class _EditQuotationScreenState extends State<EditQuotationScreen> {
 
   void _saveQuotationChanges() async {
     bool hasEmptyPrice = false;
-    bool hasChanges = _hasChanges;
     bool stateChanged =
         _selectedState.id != widget.quotation.attributes.state.data.id;
-    if (_selectedState.id == _initialStateId) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-              'Por favor, selecciona un estado diferente al actual antes de guardar.'),
-          duration: Duration(seconds: 2),
-        ),
-      );
-      return; // Salir de la función si el estado no ha cambiado
-    }
+
     // Verificar si hay campos de precio vacíos o mal formateados
     for (final controllerList in priceControllers) {
       for (final controller in controllerList) {
@@ -147,19 +149,50 @@ class _EditQuotationScreenState extends State<EditQuotationScreen> {
       );
       return;
     }
+
+    // Mostrar mensaje si ha guardado con éxito y preguntar si desea guardar
+    final shouldSave = await showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Cotización actualizada'),
+        content: const Text(
+          'La cotización se ha actualizado. ¿Deseas guardar los cambios?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context, true);
+            },
+            child: const Text('Guardar'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context, false);
+            },
+            child: const Text('Cancelar'),
+          ),
+        ],
+      ),
+    );
+
+    try {
+      if (!shouldSave) {
+        return;
+      }
+    } catch (e) {}
+
     setState(() => _isSaving = true);
 
     try {
       final List<int> changedProductIds = [];
       final List<post_quotation_model.Product> updatedProducts = [];
 
-      // Verificar si hay cambios en los precios de los productos y construir la lista de productos actualizados
+// Verificar si hay cambios en los precios de los productos y construir la lista de productos actualizados
       for (int i = 0; i < widget.quotation.attributes.products.length; i++) {
         final originalProduct = _originalQuotation.attributes.products[i];
         final newPrice = double.parse(priceControllers[i][0].text);
 
         if (newPrice != originalProduct.value) {
-          hasChanges = true;
           changedProductIds.add(originalProduct.id);
         }
 
@@ -192,48 +225,62 @@ class _EditQuotationScreenState extends State<EditQuotationScreen> {
         ));
       }
 
-      if (!hasChanges) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('No hay cambios para guardar')),
-        );
-        setState(() => _isSaving = false);
-        return;
-      }
-
-      if (_hasChanges || stateChanged) {
+      if (_selectedState.attributes!.name == 'En progreso') {
         final updateQuotation = post_quotation_model.UpdateQuotationAtributes(
-            products: updatedProducts,
-            notes: '',
-            codeStatus: _selectedState.attributes!.name,
-            state: _selectedState.id,
-            email: widget.quotation.attributes.email,
-            id: widget.quotation.id,
-            userId: widget.quotation.attributes.user.data.id);
-
+          products: updatedProducts,
+          notes: '',
+          codeStatus: 'Completada',
+          state: 4,
+          email: widget.quotation.attributes.email,
+          id: widget.quotation.id,
+          userId: widget.quotation.attributes.user.data.id,
+        );
         final updateData = {'data': updateQuotation.toJson()};
-        await QuotationService(context: context)
-            .updateQuotation(widget.quotation.id, updateData);
-
         if (mounted) {
-          await updateQuotationsCache(context, _initialStateId);
+          await QuotationService(context: context)
+              .updateQuotation(widget.quotation.id, updateData);
+        }
+        if (mounted) {
           updatePricesInBackground(context, changedProductIds, updatedProducts,
               () {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(content: Text('Precios actualizados con éxito')),
             );
           });
-
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Cotización actualizada con éxito')),
-          );
         }
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('No hay cambios para guardar')),
-        );
-      }
+        if (_hasChanges || stateChanged) {
+          final updateQuotation = post_quotation_model.UpdateQuotationAtributes(
+            products: updatedProducts,
+            notes: '',
+            codeStatus: _selectedState.attributes!.name,
+            state: _selectedState.id,
+            email: widget.quotation.attributes.email,
+            id: widget.quotation.id,
+            userId: widget.quotation.attributes.user.data.id,
+          );
 
-      // updateQuotationsInBackground(context);
+          final updateData = {'data': updateQuotation.toJson()};
+          if (mounted) {
+            await QuotationService(context: context)
+                .updateQuotation(widget.quotation.id, updateData);
+          }
+        } else {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('No hay cambios para guardar')),
+            );
+          }
+          return;
+        }
+      }
+      setState(() => _isSaved = true);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Cotización actualizada con éxito')),
+        );
+        await updateQuotationsCache(context, _initialStateId);
+      }
     } catch (error) {
       await Future.delayed(const Duration(seconds: 1));
       if (!mounted) return;
@@ -242,6 +289,7 @@ class _EditQuotationScreenState extends State<EditQuotationScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Error no se pudo actualizar')),
       );
+      setState(() => _isSaved = false);
     } finally {
       setState(() {
         _isSaving = false;
@@ -268,91 +316,146 @@ class _EditQuotationScreenState extends State<EditQuotationScreen> {
   @override
   Widget build(BuildContext context) {
     return PopScope(
-      canPop: _hasChanges ? false : true,
-      onPopInvoked: (_) async {
-        if (_hasChanges) {
-          final shouldDiscard = await showDialog(
-            context: context,
-            builder: (context) => AlertDialog(
-              title: const Text('¿Descartar cambios?'),
-              content:
-                  const Text('Hay cambios no guardados. ¿Deseas descartarlos?'),
-              actions: [
-                TextButton(
-                  onPressed: () {
-                    // Restablecer los controladores de precios
-                    for (final controllerList in priceControllers) {
-                      controllerList[0].text = _originalQuotation
-                          .attributes
-                          .products[priceControllers.indexOf(controllerList)]
-                          .value
-                          .toString();
-                    }
-                    // Restablecer el estado seleccionado
-                    if (_stateModel.data.isNotEmpty) {
-                      final defaultState = _stateModel.data.firstWhere(
-                          (state) => state.id == _initialStateId,
-                          orElse: () => _stateModel.data.first);
-                      setState(() {
-                        _selectedState = defaultState;
-                      });
-                    }
-                    _hasChanges = false;
-                    Navigator.pop(context, true);
-                  },
-                  child: const Text('Descartar'),
-                ),
-                TextButton(
-                  onPressed: () {
-                    Navigator.pop(context, false);
-                  },
-                  child: const Text('Cancelar'),
-                ),
-              ],
-            ),
-          );
-
-          return shouldDiscard;
-        }
-      },
-      child: Scaffold(
-        appBar: AppBar(
-          title: Text('Editar Cotización N° ${widget.quotation.id}'),
-        ),
-        body: SingleChildScrollView(
-          child: Column(
-            children: [
-              _buildClientInfoAccordion(),
-              _buildStateDropdown(), // Nuevo: Agregar el dropdown de estados
-              const SizedBox(height: 16),
-              ListView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                itemCount: widget.quotation.attributes.products.length,
-                itemBuilder: (context, index) => _buildProductCard(index),
+        canPop: _hasChanges ? false : true,
+        onPopInvoked: (_) async {
+          if (_hasChanges) {
+            final shouldDiscard = await showDialog(
+              context: context,
+              builder: (context) => AlertDialog(
+                title: const Text('¿Descartar cambios?'),
+                content: const Text(
+                    'Hay cambios no guardados. ¿Deseas descartarlos?'),
+                actions: [
+                  TextButton(
+                    onPressed: () {
+                      // Restablecer los controladores de precios
+                      for (final controllerList in priceControllers) {
+                        controllerList[0].text = _originalQuotation
+                            .attributes
+                            .products[priceControllers.indexOf(controllerList)]
+                            .value
+                            .toString();
+                      }
+                      // Restablecer el estado seleccionado
+                      if (_stateModel.data.isNotEmpty) {
+                        final defaultState = _stateModel.data.firstWhere(
+                            (state) => state.id == _initialStateId,
+                            orElse: () => _stateModel.data.first);
+                        setState(() {
+                          _selectedState = defaultState;
+                        });
+                      }
+                      _hasChanges = false;
+                      Navigator.pop(context, true);
+                    },
+                    child: const Text('Descartar'),
+                  ),
+                  TextButton(
+                    onPressed: () {
+                      Navigator.pop(context, false);
+                    },
+                    child: const Text('Cancelar'),
+                  ),
+                ],
               ),
-            ],
+            );
+
+            return shouldDiscard;
+          }
+        },
+        child: Container(
+          margin: const EdgeInsets.only(bottom: 16.0),
+          child: Scaffold(
+            appBar: AppBar(
+              title: Text('Editar Cotización N° ${widget.quotation.id}'),
+            ),
+            body: SingleChildScrollView(
+              child: Column(
+                children: [
+                  _buildClientInfoAccordion(),
+                  _buildStateDropdown(), // Nuevo: Agregar el dropdown de estados
+                  const SizedBox(height: 16),
+
+                  ListView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount: widget.quotation.attributes.products.length,
+                    itemBuilder: (context, index) => _buildProductCard(index),
+                  ),
+                ],
+              ),
+            ),
+            floatingActionButton: _isSaved
+                ? FloatingActionButton(
+                    onPressed: () {
+                      // Aquí puedes agregar el código para mostrar el mensaje de "Ya se envió"
+                      // o realizar cualquier otra acción necesaria
+                    },
+                    child: const Icon(Icons.check),
+                  )
+                : FloatingActionButton(
+                    onPressed: _isSaving ? null : _saveQuotationChanges,
+                    child: _isSaving
+                        ? const CircularProgressIndicator()
+                        : const Icon(Icons.save),
+                  ),
           ),
-        ),
-        floatingActionButton: FloatingActionButton(
-          onPressed: _isSaving || !_hasChanges ? null : _saveQuotationChanges,
-          child: _isSaving
-              ? const CircularProgressIndicator()
-              : const Icon(Icons.save),
-        ),
-      ),
-    );
+        ));
   }
 
   Widget _buildStateDropdown() {
-    if (_stateModel.data.isEmpty) {
-      return const SizedBox.shrink();
+    // Verificar si la cotización está en progreso
+    final isInProgress = _selectedState.attributes!.name == 'En progreso';
+    List<DataState> filteredStates = _stateModel.data
+        .where((state) =>
+            state.attributes!.name != 'En progreso' &&
+            state.attributes!.name != 'Vencido')
+        .toList();
+
+    if (_stateModel.data.isEmpty || isInProgress) {
+      // Si no hay datos de estado o la cotización está en progreso, mostrar el texto del estado
+      if (!_isSaved) {
+        return const Padding(
+          padding: EdgeInsets.all(8.0),
+          child: Row(
+            children: [
+              Icon(
+                Icons.info_outline,
+                color: Colors.orange,
+              ),
+              SizedBox(width: 8.0),
+              Text(
+                "Estado: En progreso",
+                style: TextStyle(fontSize: 16.0, fontWeight: FontWeight.bold),
+              ),
+            ],
+          ),
+        );
+      } else {
+        return const Padding(
+          padding: EdgeInsets.all(8.0),
+          child: Row(
+            children: [
+              Icon(
+                Icons.check_circle_outline_outlined,
+                color: Colors.green,
+              ),
+              SizedBox(width: 8.0),
+              Text(
+                "Estado: Completado",
+                style: TextStyle(fontSize: 16.0, fontWeight: FontWeight.bold),
+              ),
+            ],
+          ),
+        );
+      }
     }
+    //select
     return Padding(
       padding: const EdgeInsets.all(8.0),
       child: DropdownButtonFormField<DataState>(
         value: _selectedState,
-        items: _stateModel.data
+        items: filteredStates
             .map((state) => DropdownMenuItem<DataState>(
                   value: state,
                   child: Text(state.attributes!.name),
@@ -361,12 +464,13 @@ class _EditQuotationScreenState extends State<EditQuotationScreen> {
         onChanged: (newValue) {
           setState(() {
             _selectedState = newValue!;
-            _hasChanges = true;
+            _hasChanges =
+                true; // Actualiza _hasChanges cuando se selecciona un nuevo estado
           });
           // Aquí puedes realizar otras acciones según la selección del estado si es necesario
         },
         decoration: const InputDecoration(
-          labelText: 'Estado',
+          labelText: 'Seleccionar estado para esta cotización',
           border: OutlineInputBorder(),
         ),
       ),
@@ -422,88 +526,94 @@ class _EditQuotationScreenState extends State<EditQuotationScreen> {
     final product = widget.quotation.attributes.products[index];
     final controller = priceControllers[index][0];
     return Card(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          ListTile(
-            title: Padding(
-              padding: const EdgeInsets.only(bottom: 8.0),
-              child: Text(product.title),
-            ),
-            subtitle: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('Cantidad: ${product.quantity}'),
-                if (product.size != null) Text('Medida: ${product.size}'),
-                if (product.colors.isNotEmpty) ...[
-                  const Text(
-                    'Colores:',
-                    style: TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 8),
-                  Table(
-                    border: TableBorder.all(),
-                    children: [
-                      for (var color in product.colors)
-                        TableRow(
-                          children: [
-                            TableCell(
-                              child: Container(
-                                margin: const EdgeInsets.all(4.0),
-                                width: 30,
-                                height: 30,
-                                decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  color: Color(int.parse(
-                                      '0xFF${color.color.attributes.code.substring(1)}')),
-                                ),
-                              ),
-                            ),
-                            TableCell(
-                              child: Padding(
-                                padding: const EdgeInsets.all(8.0),
-                                child: Text(color.color.attributes.name),
-                              ),
-                            ),
-                            TableCell(
-                              child: Padding(
-                                padding: const EdgeInsets.all(8.0),
-                                child: Text('Cantidad: ${color.quantity}'),
-                              ),
-                            ),
-                          ],
-                        ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                ],
-                Row(
-                  children: [
-                    const Expanded(
-                      child: Text(
-                        'Precio general:',
-                        style: TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    Flexible(
-                      child: TextField(
-                        controller: controller,
-                        keyboardType: TextInputType.number,
-                        inputFormatters: [
-                          FilteringTextInputFormatter.allow(
-                              RegExp(r'^\d+\.?\d{0,2}')),
-                          LengthLimitingTextInputFormatter(6),
-                        ],
-                        onChanged: (_) => _checkForChanges(),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
+      elevation: 4.0,
+      margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      child: Container(
+        decoration: BoxDecoration(color: Colors.amber[50]),
+        child: ListTile(
+          title: Padding(
+            padding: const EdgeInsets.only(bottom: 8.0),
+            child: Text(
+              product.title,
+              style: const TextStyle(
+                  fontWeight: FontWeight.bold, color: Colors.black87),
             ),
           ),
-        ],
+          subtitle: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Cantidad: ${product.quantity}'),
+              if (product.size != null) Text('Medida: ${product.size}'),
+              if (product.colors.isNotEmpty) ...[
+                const Text(
+                  'Colores:',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 8),
+                Table(
+                  border: TableBorder.all(),
+                  children: [
+                    for (var color in product.colors)
+                      TableRow(
+                        children: [
+                          TableCell(
+                            child: Container(
+                              margin: const EdgeInsets.all(4.0),
+                              width: 30,
+                              height: 30,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: Color(int.parse(
+                                    '0xFF${color.color.attributes.code.substring(1)}')),
+                              ),
+                            ),
+                          ),
+                          TableCell(
+                            child: Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: Text(color.color.attributes.name),
+                            ),
+                          ),
+                          TableCell(
+                            child: Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: Text('Cantidad: ${color.quantity}'),
+                            ),
+                          ),
+                        ],
+                      ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+              ],
+              Row(
+                children: [
+                  const Expanded(
+                    child: Text(
+                      'Precio general:',
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Flexible(
+                    child: TextField(
+                      controller: controller,
+                      keyboardType: TextInputType.number,
+                      inputFormatters: [
+                        FilteringTextInputFormatter.allow(
+                            RegExp(r'^\d+\.?\d{0,2}')),
+                        LengthLimitingTextInputFormatter(7),
+                      ],
+                      onChanged: (_) => _checkForChanges(),
+                      enabled: _selectedState.attributes!.name ==
+                          'En progreso', // Solo se habilita la edición si el estado es "En Progreso"
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

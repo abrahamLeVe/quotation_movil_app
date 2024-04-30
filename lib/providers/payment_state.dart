@@ -1,5 +1,8 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:pract_01/models/payment/get_all_payment.dart';
+import 'package:pract_01/services/payment_service.dart';
+import 'package:provider/provider.dart';
 
 class PaymentState with ChangeNotifier {
   List<Payment> _payments = [];
@@ -17,6 +20,24 @@ class PaymentState with ChangeNotifier {
       return true;
     }
     return false;
+  }
+
+  // En PaymentState
+  void loadNewPayments(BuildContext context) async {
+    try {
+      PaymentService service =
+          Provider.of<PaymentService>(context, listen: false);
+      PaymentModel newPayments = await service.getPaymentAll();
+
+      // Actualiza el estado con los nuevos pagos
+      setPayments(newPayments.data);
+      setArePaymentsLoaded(true);
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error al cargar nuevos pagos: $e');
+      }
+      setArePaymentsLoaded(false);
+    }
   }
 
   set payments(List<Payment> newPayments) {

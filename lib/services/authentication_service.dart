@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:pract_01/models/auth_model.dart';
 import 'package:pract_01/models/enviroment_model.dart';
@@ -35,18 +36,22 @@ class AuthenticationService {
       final response = await _dio.post(
         "${Environment.apiUrl}/auth/local",
         data: {
-          "identifier": 'i2812893@continental.edu.pe',
-          "password": 'i2812893@continental.edu.peA1',
+          "identifier": email,
+          "password": password,
         },
       );
-
+      if (kDebugMode) {
+        print('Error in login: $response');
+      }
       final authToken = response.data['jwt'];
 
       SharedPreferences prefs = await SharedPreferences.getInstance();
       prefs.setString('auth_token', authToken);
       return AuthModel.fromJson(response.data);
     } catch (error) {
-      print('Error in login: $error');
+      if (kDebugMode) {
+        print('Error in login: $error');
+      }
 
       rethrow;
     }

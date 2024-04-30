@@ -1,118 +1,15 @@
-// class GetAllProductsModel {
-//   List<Product> data;
-//   Meta meta;
-
-//   GetAllProductsModel({
-//     required this.data,
-//     required this.meta,
-//   });
-
-//   factory GetAllProductsModel.fromJson(Map<String, dynamic> json) => GetAllProductsModel(
-//         data: List<Product>.from(
-//             json["data"].map((x) => Product.fromJson(x))),
-//         meta: Meta.fromJson(json["meta"]),
-//       );
-
-//   Map<String, dynamic> toJson() => {
-//         "data": List<dynamic>.from(data.map((x) => x.toJson())),
-//         "meta": meta.toJson(),
-//       };
-// }
-
-// class Product {
-//   int id;
-//   ProductAttributes attributes;
-
-//   Product({
-//     required this.id,
-//     required this.attributes,
-//   });
-
-//   factory Product.fromJson(Map<String, dynamic> json) =>
-//       Product(
-//         id: json["id"],
-//         attributes: ProductAttributes.fromJson(json["attributes"]),
-//       );
-
-//   Map<String, dynamic> toJson() => {
-//         "id": id,
-//         "attributes": attributes.toJson(),
-//       };
-// }
-
-// class ProductAttributes {
-//   String name;
-//   dynamic subtitle;
-//   String? description;
-//   String slug;
-//   double quotationPrice;
-//   DateTime createdAt;
-//   DateTime updatedAt;
-//   DateTime publishedAt;
-//   Image image;
-//   Thumbnail thumbnail;
-//   Categories categories;
-//   ProductSizes productSizes;
-
-//   ProductAttributes({
-//     required this.name,
-//     this.subtitle,
-//     this.description,
-//     required this.slug,
-//     required this.quotationPrice,
-//     required this.createdAt,
-//     required this.updatedAt,
-//     required this.publishedAt,
-//     required this.image,
-//     required this.thumbnail,
-//     required this.categories,
-//     required this.productSizes,
-//   });
-
-//   factory ProductAttributes.fromJson(Map<String, dynamic> json) =>
-//       ProductAttributes(
-//         name: json["name"],
-//         subtitle: json["subtitle"],
-//         description: json["description"],
-//         slug: json["slug"],
-//         quotationPrice: json["quotation_price"]?.toDouble(),
-//         createdAt: DateTime.parse(json["createdAt"]),
-//         updatedAt: DateTime.parse(json["updatedAt"]),
-//         publishedAt: DateTime.parse(json["publishedAt"]),
-//         image: Image.fromJson(json["image"]),
-//         thumbnail: Thumbnail.fromJson(json["thumbnail"]),
-//         categories: Categories.fromJson(json["categories"]),
-//         productSizes: ProductSizes.fromJson(json["product_sizes"]),
-//       );
-
-//   Map<String, dynamic> toJson() => {
-//         "name": name,
-//         "subtitle": subtitle,
-//         "description": description,
-//         "slug": slug,
-//         "quotation_price": quotationPrice,
-//         "createdAt": createdAt.toIso8601String(),
-//         "updatedAt": updatedAt.toIso8601String(),
-//         "publishedAt": publishedAt.toIso8601String(),
-//         "image": image.toJson(),
-//         "thumbnail": thumbnail.toJson(),
-//         "categories": categories.toJson(),
-//         "product_sizes": productSizes.toJson(),
-//       };
-// }
-
-class GetAllProductsModel {
-  List<Product> data;
+class ProductModel {
+  List<ProductModelData> data;
   Meta meta;
 
-  GetAllProductsModel({
+  ProductModel({
     required this.data,
     required this.meta,
   });
 
-  factory GetAllProductsModel.fromJson(Map<String, dynamic> json) =>
-      GetAllProductsModel(
-        data: List<Product>.from(json["data"].map((x) => Product.fromJson(x))),
+  factory ProductModel.fromJson(Map<String, dynamic> json) => ProductModel(
+        data: List<ProductModelData>.from(
+            json["data"].map((x) => ProductModelData.fromJson(x))),
         meta: Meta.fromJson(json["meta"]),
       );
 
@@ -122,18 +19,19 @@ class GetAllProductsModel {
       };
 }
 
-class Product {
+class ProductModelData {
   int id;
-  ProductAttributes attributes;
+  PurpleAttributes attributes;
 
-  Product({
+  ProductModelData({
     required this.id,
     required this.attributes,
   });
 
-  factory Product.fromJson(Map<String, dynamic> json) => Product(
+  factory ProductModelData.fromJson(Map<String, dynamic> json) =>
+      ProductModelData(
         id: json["id"],
-        attributes: ProductAttributes.fromJson(json["attributes"]),
+        attributes: PurpleAttributes.fromJson(json["attributes"]),
       );
 
   Map<String, dynamic> toJson() => {
@@ -142,95 +40,113 @@ class Product {
       };
 }
 
-class ProductAttributes {
+class PurpleAttributes {
   String name;
-  dynamic subtitle;
   String description;
   String slug;
-  double quotationPrice;
+  int rating;
   DateTime createdAt;
   DateTime updatedAt;
   DateTime publishedAt;
   Image image;
   Thumbnail thumbnail;
   Categories categories;
-  ProductSizes productSizes;
+  Brand brand;
+  Categories models;
+  Prices prices;
+  Documents sizes;
+  Categories subCategories;
+  Documents documents;
+  Categories productColors;
 
-  ProductAttributes({
+  PurpleAttributes({
     required this.name,
-    required this.subtitle,
     required this.description,
     required this.slug,
-    required this.quotationPrice,
+    required this.rating,
     required this.createdAt,
     required this.updatedAt,
     required this.publishedAt,
     required this.image,
     required this.thumbnail,
     required this.categories,
-    required this.productSizes,
+    required this.brand,
+    required this.models,
+    required this.prices,
+    required this.sizes,
+    required this.subCategories,
+    required this.documents,
+    required this.productColors,
   });
 
-  factory ProductAttributes.fromJson(Map<String, dynamic> json) =>
-      ProductAttributes(
+  factory PurpleAttributes.fromJson(Map<String, dynamic> json) =>
+      PurpleAttributes(
         name: json["name"],
-        subtitle: json["subtitle"],
         description: json["description"],
         slug: json["slug"],
-        quotationPrice: json["quotation_price"]?.toDouble(),
+        rating: json["rating"],
         createdAt: DateTime.parse(json["createdAt"]),
         updatedAt: DateTime.parse(json["updatedAt"]),
         publishedAt: DateTime.parse(json["publishedAt"]),
         image: Image.fromJson(json["image"]),
         thumbnail: Thumbnail.fromJson(json["thumbnail"]),
         categories: Categories.fromJson(json["categories"]),
-        productSizes: ProductSizes.fromJson(json["product_sizes"]),
+        brand: Brand.fromJson(json["brand"]),
+        models: Categories.fromJson(json["models"]),
+        prices: Prices.fromJson(json["prices"]),
+        sizes: Documents.fromJson(json["sizes"]),
+        subCategories: Categories.fromJson(json["sub_categories"]),
+        documents: Documents.fromJson(json["documents"]),
+        productColors: Categories.fromJson(json["product_colors"]),
       );
 
   Map<String, dynamic> toJson() => {
         "name": name,
-        "subtitle": subtitle,
         "description": description,
         "slug": slug,
-        "quotation_price": quotationPrice,
+        "rating": rating,
         "createdAt": createdAt.toIso8601String(),
         "updatedAt": updatedAt.toIso8601String(),
         "publishedAt": publishedAt.toIso8601String(),
         "image": image.toJson(),
         "thumbnail": thumbnail.toJson(),
         "categories": categories.toJson(),
-        "product_sizes": productSizes.toJson(),
+        "brand": brand.toJson(),
+        "models": models.toJson(),
+        "prices": prices.toJson(),
+        "sizes": sizes.toJson(),
+        "sub_categories": subCategories.toJson(),
+        "documents": documents.toJson(),
+        "product_colors": productColors.toJson(),
       };
 }
 
-class Categories {
-  List<CategoriesDatum> data;
+class Brand {
+  BrandData? data;
 
-  Categories({
+  Brand({
     required this.data,
   });
 
-  factory Categories.fromJson(Map<String, dynamic> json) => Categories(
-        data: List<CategoriesDatum>.from(
-            json["data"].map((x) => CategoriesDatum.fromJson(x))),
+  factory Brand.fromJson(Map<String, dynamic> json) => Brand(
+        data: json["data"] == null ? null : BrandData.fromJson(json["data"]),
       );
 
   Map<String, dynamic> toJson() => {
-        "data": List<dynamic>.from(data.map((x) => x.toJson())),
+        "data": data?.toJson(),
       };
 }
 
-class CategoriesDatum {
+class BrandData {
   int id;
   FluffyAttributes attributes;
 
-  CategoriesDatum({
+  BrandData({
     required this.id,
     required this.attributes,
   });
 
-  factory CategoriesDatum.fromJson(Map<String, dynamic> json) =>
-      CategoriesDatum(
+  factory BrandData.fromJson(Map<String, dynamic> json) => BrandData(
         id: json["id"],
         attributes: FluffyAttributes.fromJson(json["attributes"]),
       );
@@ -243,68 +159,89 @@ class CategoriesDatum {
 
 class FluffyAttributes {
   String name;
-  String slug;
+  String? slug;
+  String? description;
   DateTime createdAt;
   DateTime updatedAt;
   DateTime publishedAt;
+  String? code;
 
   FluffyAttributes({
     required this.name,
-    required this.slug,
+    this.slug,
+    required this.description,
     required this.createdAt,
     required this.updatedAt,
     required this.publishedAt,
+    this.code,
   });
 
   factory FluffyAttributes.fromJson(Map<String, dynamic> json) =>
       FluffyAttributes(
         name: json["name"],
         slug: json["slug"],
+        description: json["description"],
         createdAt: DateTime.parse(json["createdAt"]),
         updatedAt: DateTime.parse(json["updatedAt"]),
         publishedAt: DateTime.parse(json["publishedAt"]),
+        code: json["code"],
       );
 
   Map<String, dynamic> toJson() => {
         "name": name,
         "slug": slug,
+        "description": description,
         "createdAt": createdAt.toIso8601String(),
         "updatedAt": updatedAt.toIso8601String(),
         "publishedAt": publishedAt.toIso8601String(),
+        "code": code,
       };
 }
 
-class Image {
-  List<ImageDatum>? data;
+class Categories {
+  List<BrandData> data;
 
-  Image({
+  Categories({
     required this.data,
   });
 
-  factory Image.fromJson(Map<String, dynamic> json) => Image(
-        data: json["data"] == null
-            ? []
-            : List<ImageDatum>.from(
-                json["data"]!.map((x) => ImageDatum.fromJson(x))),
+  factory Categories.fromJson(Map<String, dynamic> json) => Categories(
+        data: List<BrandData>.from(
+            json["data"].map((x) => BrandData.fromJson(x))),
       );
 
   Map<String, dynamic> toJson() => {
-        "data": data == null
-            ? []
-            : List<dynamic>.from(data!.map((x) => x.toJson())),
+        "data": List<dynamic>.from(data.map((x) => x.toJson())),
       };
 }
 
-class ImageDatum {
+class Documents {
+  List<DocumentsDatum> data;
+
+  Documents({
+    required this.data,
+  });
+
+  factory Documents.fromJson(Map<String, dynamic> json) => Documents(
+        data: List<DocumentsDatum>.from(
+            json["data"].map((x) => DocumentsDatum.fromJson(x))),
+      );
+
+  Map<String, dynamic> toJson() => {
+        "data": List<dynamic>.from(data.map((x) => x.toJson())),
+      };
+}
+
+class DocumentsDatum {
   int id;
   TentacledAttributes attributes;
 
-  ImageDatum({
+  DocumentsDatum({
     required this.id,
     required this.attributes,
   });
 
-  factory ImageDatum.fromJson(Map<String, dynamic> json) => ImageDatum(
+  factory DocumentsDatum.fromJson(Map<String, dynamic> json) => DocumentsDatum(
         id: json["id"],
         attributes: TentacledAttributes.fromJson(json["attributes"]),
       );
@@ -317,23 +254,93 @@ class ImageDatum {
 
 class TentacledAttributes {
   String name;
+  DateTime createdAt;
+  DateTime updatedAt;
+  DateTime publishedAt;
+  double? value;
+
+  TentacledAttributes({
+    required this.name,
+    required this.createdAt,
+    required this.updatedAt,
+    required this.publishedAt,
+    this.value,
+  });
+
+  factory TentacledAttributes.fromJson(Map<String, dynamic> json) =>
+      TentacledAttributes(
+        name: json["name"],
+        createdAt: DateTime.parse(json["createdAt"]),
+        updatedAt: DateTime.parse(json["updatedAt"]),
+        publishedAt: DateTime.parse(json["publishedAt"]),
+        value: json["value"]?.toDouble(),
+      );
+
+  Map<String, dynamic> toJson() => {
+        "name": name,
+        "createdAt": createdAt.toIso8601String(),
+        "updatedAt": updatedAt.toIso8601String(),
+        "publishedAt": publishedAt.toIso8601String(),
+        "value": value,
+      };
+}
+
+class Image {
+  List<ImageData> data;
+
+  Image({
+    required this.data,
+  });
+
+  factory Image.fromJson(Map<String, dynamic> json) => Image(
+        data: List<ImageData>.from(
+            json["data"].map((x) => ImageData.fromJson(x))),
+      );
+
+  Map<String, dynamic> toJson() => {
+        "data": List<dynamic>.from(data.map((x) => x.toJson())),
+      };
+}
+
+class ImageData {
+  int id;
+  StickyAttributes attributes;
+
+  ImageData({
+    required this.id,
+    required this.attributes,
+  });
+
+  factory ImageData.fromJson(Map<String, dynamic> json) => ImageData(
+        id: json["id"],
+        attributes: StickyAttributes.fromJson(json["attributes"]),
+      );
+
+  Map<String, dynamic> toJson() => {
+        "id": id,
+        "attributes": attributes.toJson(),
+      };
+}
+
+class StickyAttributes {
+  String name;
   dynamic alternativeText;
   dynamic caption;
   int width;
   int height;
-  PurpleFormats formats;
+  Formats formats;
   String hash;
   Ext ext;
   Mime mime;
   double size;
   String url;
   dynamic previewUrl;
-  String provider;
+  Provider provider;
   ProviderMetadata providerMetadata;
   DateTime createdAt;
   DateTime updatedAt;
 
-  TentacledAttributes({
+  StickyAttributes({
     required this.name,
     required this.alternativeText,
     required this.caption,
@@ -352,21 +359,21 @@ class TentacledAttributes {
     required this.updatedAt,
   });
 
-  factory TentacledAttributes.fromJson(Map<String, dynamic> json) =>
-      TentacledAttributes(
+  factory StickyAttributes.fromJson(Map<String, dynamic> json) =>
+      StickyAttributes(
         name: json["name"],
         alternativeText: json["alternativeText"],
         caption: json["caption"],
         width: json["width"],
         height: json["height"],
-        formats: PurpleFormats.fromJson(json["formats"]),
+        formats: Formats.fromJson(json["formats"]),
         hash: json["hash"],
         ext: extValues.map[json["ext"]]!,
         mime: mimeValues.map[json["mime"]]!,
         size: json["size"]?.toDouble(),
         url: json["url"],
         previewUrl: json["previewUrl"],
-        provider: json["provider"],
+        provider: providerValues.map[json["provider"]]!,
         providerMetadata: ProviderMetadata.fromJson(json["provider_metadata"]),
         createdAt: DateTime.parse(json["createdAt"]),
         updatedAt: DateTime.parse(json["updatedAt"]),
@@ -385,7 +392,7 @@ class TentacledAttributes {
         "size": size,
         "url": url,
         "previewUrl": previewUrl,
-        "provider": provider,
+        "provider": providerValues.reverse[provider],
         "provider_metadata": providerMetadata.toJson(),
         "createdAt": createdAt.toIso8601String(),
         "updatedAt": updatedAt.toIso8601String(),
@@ -396,30 +403,22 @@ enum Ext { WEBP }
 
 final extValues = EnumValues({".webp": Ext.WEBP});
 
-class PurpleFormats {
-  Small? large;
+class Formats {
   Small small;
-  Small? medium;
   Small thumbnail;
 
-  PurpleFormats({
-    this.large,
+  Formats({
     required this.small,
-    this.medium,
     required this.thumbnail,
   });
 
-  factory PurpleFormats.fromJson(Map<String, dynamic> json) => PurpleFormats(
-        large: json["large"] == null ? null : Small.fromJson(json["large"]),
+  factory Formats.fromJson(Map<String, dynamic> json) => Formats(
         small: Small.fromJson(json["small"]),
-        medium: json["medium"] == null ? null : Small.fromJson(json["medium"]),
         thumbnail: Small.fromJson(json["thumbnail"]),
       );
 
   Map<String, dynamic> toJson() => {
-        "large": large?.toJson(),
         "small": small.toJson(),
-        "medium": medium?.toJson(),
         "thumbnail": thumbnail.toJson(),
       };
 }
@@ -435,6 +434,7 @@ class Small {
   int width;
   int height;
   ProviderMetadata providerMetadata;
+  int? sizeInBytes;
 
   Small({
     required this.ext,
@@ -447,6 +447,7 @@ class Small {
     required this.width,
     required this.height,
     required this.providerMetadata,
+    this.sizeInBytes,
   });
 
   factory Small.fromJson(Map<String, dynamic> json) => Small(
@@ -460,6 +461,7 @@ class Small {
         width: json["width"],
         height: json["height"],
         providerMetadata: ProviderMetadata.fromJson(json["provider_metadata"]),
+        sizeInBytes: json["sizeInBytes"],
       );
 
   Map<String, dynamic> toJson() => {
@@ -473,6 +475,7 @@ class Small {
         "width": width,
         "height": height,
         "provider_metadata": providerMetadata.toJson(),
+        "sizeInBytes": sizeInBytes,
       };
 }
 
@@ -505,16 +508,20 @@ enum ResourceType { IMAGE }
 
 final resourceTypeValues = EnumValues({"image": ResourceType.IMAGE});
 
-class ProductSizes {
-  List<ProductSizesDatum> data;
+enum Provider { CLOUDINARY }
 
-  ProductSizes({
+final providerValues = EnumValues({"cloudinary": Provider.CLOUDINARY});
+
+class Prices {
+  List<PricesDatum> data;
+
+  Prices({
     required this.data,
   });
 
-  factory ProductSizes.fromJson(Map<String, dynamic> json) => ProductSizes(
-        data: List<ProductSizesDatum>.from(
-            json["data"].map((x) => ProductSizesDatum.fromJson(x))),
+  factory Prices.fromJson(Map<String, dynamic> json) => Prices(
+        data: List<PricesDatum>.from(
+            json["data"].map((x) => PricesDatum.fromJson(x))),
       );
 
   Map<String, dynamic> toJson() => {
@@ -522,19 +529,18 @@ class ProductSizes {
       };
 }
 
-class ProductSizesDatum {
+class PricesDatum {
   int id;
-  StickyAttributes attributes;
+  IndigoAttributes attributes;
 
-  ProductSizesDatum({
+  PricesDatum({
     required this.id,
     required this.attributes,
   });
 
-  factory ProductSizesDatum.fromJson(Map<String, dynamic> json) =>
-      ProductSizesDatum(
+  factory PricesDatum.fromJson(Map<String, dynamic> json) => PricesDatum(
         id: json["id"],
-        attributes: StickyAttributes.fromJson(json["attributes"]),
+        attributes: IndigoAttributes.fromJson(json["attributes"]),
       );
 
   Map<String, dynamic> toJson() => {
@@ -543,33 +549,37 @@ class ProductSizesDatum {
       };
 }
 
-class StickyAttributes {
-  double quotationPrice;
-  String val;
+class IndigoAttributes {
+  String name;
+  double value;
+  double discount;
   DateTime createdAt;
   DateTime updatedAt;
   DateTime publishedAt;
 
-  StickyAttributes({
-    required this.quotationPrice,
-    required this.val,
+  IndigoAttributes({
+    required this.name,
+    required this.value,
+    required this.discount,
     required this.createdAt,
     required this.updatedAt,
     required this.publishedAt,
   });
 
-  factory StickyAttributes.fromJson(Map<String, dynamic> json) =>
-      StickyAttributes(
-        quotationPrice: json["quotation_price"]?.toDouble(),
-        val: json["val"],
+  factory IndigoAttributes.fromJson(Map<String, dynamic> json) =>
+      IndigoAttributes(
+        name: json["name"],
+        value: json["value"]?.toDouble(),
+        discount: json["discount"]?.toDouble(),
         createdAt: DateTime.parse(json["createdAt"]),
         updatedAt: DateTime.parse(json["updatedAt"]),
         publishedAt: DateTime.parse(json["publishedAt"]),
       );
 
   Map<String, dynamic> toJson() => {
-        "quotation_price": quotationPrice,
-        "val": val,
+        "name": name,
+        "value": value,
+        "discount": discount,
         "createdAt": createdAt.toIso8601String(),
         "updatedAt": updatedAt.toIso8601String(),
         "publishedAt": publishedAt.toIso8601String(),
@@ -577,134 +587,18 @@ class StickyAttributes {
 }
 
 class Thumbnail {
-  Data? data;
+  ImageData data;
 
   Thumbnail({
     required this.data,
   });
 
   factory Thumbnail.fromJson(Map<String, dynamic> json) => Thumbnail(
-        data: json["data"] == null ? null : Data.fromJson(json["data"]),
+        data: ImageData.fromJson(json["data"]),
       );
 
   Map<String, dynamic> toJson() => {
-        "data": data?.toJson(),
-      };
-}
-
-class Data {
-  int id;
-  DataAttributes attributes;
-
-  Data({
-    required this.id,
-    required this.attributes,
-  });
-
-  factory Data.fromJson(Map<String, dynamic> json) => Data(
-        id: json["id"],
-        attributes: DataAttributes.fromJson(json["attributes"]),
-      );
-
-  Map<String, dynamic> toJson() => {
-        "id": id,
-        "attributes": attributes.toJson(),
-      };
-}
-
-class DataAttributes {
-  String name;
-  dynamic alternativeText;
-  dynamic caption;
-  int width;
-  int height;
-  FluffyFormats formats;
-  String hash;
-  Ext ext;
-  Mime mime;
-  double size;
-  String url;
-  dynamic previewUrl;
-  String provider;
-  ProviderMetadata providerMetadata;
-  DateTime createdAt;
-  DateTime updatedAt;
-
-  DataAttributes({
-    required this.name,
-    required this.alternativeText,
-    required this.caption,
-    required this.width,
-    required this.height,
-    required this.formats,
-    required this.hash,
-    required this.ext,
-    required this.mime,
-    required this.size,
-    required this.url,
-    required this.previewUrl,
-    required this.provider,
-    required this.providerMetadata,
-    required this.createdAt,
-    required this.updatedAt,
-  });
-
-  factory DataAttributes.fromJson(Map<String, dynamic> json) => DataAttributes(
-        name: json["name"],
-        alternativeText: json["alternativeText"],
-        caption: json["caption"],
-        width: json["width"],
-        height: json["height"],
-        formats: FluffyFormats.fromJson(json["formats"]),
-        hash: json["hash"],
-        ext: extValues.map[json["ext"]]!,
-        mime: mimeValues.map[json["mime"]]!,
-        size: json["size"]?.toDouble(),
-        url: json["url"],
-        previewUrl: json["previewUrl"],
-        provider: json["provider"],
-        providerMetadata: ProviderMetadata.fromJson(json["provider_metadata"]),
-        createdAt: DateTime.parse(json["createdAt"]),
-        updatedAt: DateTime.parse(json["updatedAt"]),
-      );
-
-  Map<String, dynamic> toJson() => {
-        "name": name,
-        "alternativeText": alternativeText,
-        "caption": caption,
-        "width": width,
-        "height": height,
-        "formats": formats.toJson(),
-        "hash": hash,
-        "ext": extValues.reverse[ext],
-        "mime": mimeValues.reverse[mime],
-        "size": size,
-        "url": url,
-        "previewUrl": previewUrl,
-        "provider": provider,
-        "provider_metadata": providerMetadata.toJson(),
-        "createdAt": createdAt.toIso8601String(),
-        "updatedAt": updatedAt.toIso8601String(),
-      };
-}
-
-class FluffyFormats {
-  Small small;
-  Small thumbnail;
-
-  FluffyFormats({
-    required this.small,
-    required this.thumbnail,
-  });
-
-  factory FluffyFormats.fromJson(Map<String, dynamic> json) => FluffyFormats(
-        small: Small.fromJson(json["small"]),
-        thumbnail: Small.fromJson(json["thumbnail"]),
-      );
-
-  Map<String, dynamic> toJson() => {
-        "small": small.toJson(),
-        "thumbnail": thumbnail.toJson(),
+        "data": data.toJson(),
       };
 }
 
@@ -762,21 +656,4 @@ class EnumValues<T> {
     reverseMap = map.map((k, v) => MapEntry(v, k));
     return reverseMap;
   }
-}
-
-class ProductUpdateModel {
-  Product data;
-
-  ProductUpdateModel({
-    required this.data,
-  });
-
-  factory ProductUpdateModel.fromJson(Map<String, dynamic> json) =>
-      ProductUpdateModel(
-        data: Product.fromJson(json["data"]),
-      );
-
-  Map<String, dynamic> toJson() => {
-        "data": data.toJson(),
-      };
 }

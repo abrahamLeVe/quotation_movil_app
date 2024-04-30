@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:pract_01/providers/dataState_state.dart';
 import 'package:pract_01/services/authentication_service.dart';
+import 'package:provider/provider.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({Key? key}) : super(key: key);
@@ -34,8 +36,9 @@ class _LoginScreenState extends State<LoginScreen> {
     try {
       final authService = AuthenticationService(context: context);
       await authService.login(email, password);
-
       if (context.mounted) {
+        Provider.of<DataStateState>(context, listen: false)
+            .loadNewDataStates(context);
         showDialog(
           context: context,
           builder: (BuildContext context) {

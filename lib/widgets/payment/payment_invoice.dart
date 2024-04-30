@@ -58,7 +58,7 @@ void downloadInvoice(BuildContext context, Payment payment) async {
               style: titleStyle,
             ),
             pw.SizedBox(height: 10),
-            pw.Text('Estado: Aprobado', style: normalStyle),
+            pw.Text('Estado: ${payment.attributes.status}', style: normalStyle),
             pw.Text('Código Mercado Pago: ${payment.attributes.paymentId}',
                 style: normalStyle),
             pw.SizedBox(height: 20),
@@ -142,8 +142,10 @@ void downloadInvoice(BuildContext context, Payment payment) async {
   Share.shareXFiles([XFile(path)], text: 'Aquí está tu factura.');
 
   // Mostrar una notificación de que el PDF fue compartido
-  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-    content: Text('Factura guardada y lista para compartir: $fileName'),
-    duration: const Duration(seconds: 3),
-  ));
+  if (context.mounted) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text('Factura guardada y lista para compartir: $fileName'),
+      duration: const Duration(seconds: 3),
+    ));
+  }
 }

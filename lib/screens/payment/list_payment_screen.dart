@@ -34,14 +34,12 @@ class _PaymentListScreenState extends State<PaymentListScreen> {
   void filterPayments(List<Payment> payments) {
     final String searchText = searchController.text.toUpperCase();
     if (searchText.isNotEmpty) {
-      // Filtrar adicionalmente por el texto de búsqueda
-      filtersPayments = payments.where((payment) {
-        final String code = payment.attributes.cotizacion.data!.id.toString();
+      filtersPayments = payments.where((pay) {
+        final String code = pay.attributes.paymentId;
         return code.contains(searchText);
       }).toList();
     } else {
-      filtersPayments = List.from(
-          payments); // Mostrar todos los pagos si no hay texto de búsqueda
+      filtersPayments = List.from(payments);
     }
   }
 
@@ -49,17 +47,15 @@ class _PaymentListScreenState extends State<PaymentListScreen> {
   void initState() {
     super.initState();
     initializeDateFormatting();
-    final paymentState =
-        provider.Provider.of<PaymentState>(context, listen: false);
-    _subscription = _messagingService.onPaymentsUpdated.listen((_) {
-      setState(() {
-        filtersPayments = paymentState.payments;
-      });
-    });
 
-    // Escuchar el Stream para actualizaciones de cotizaciones debido a notificaciones
     _subscription = _messagingService.onPaymentsUpdated.listen((_) {
-      // Llamar a un método para resetear el estado seleccionado y recargar las cotizaciones
+      provider.Provider.of<PaymentState>(context, listen: false)
+          .loadNewPayments(context);
+      if (mounted) {
+        setState(() {
+          filtersPayments = paymentState.payments;
+        });
+      }
     });
   }
 
@@ -74,12 +70,10 @@ class _PaymentListScreenState extends State<PaymentListScreen> {
     return PopScope(
       canPop: false,
       child: Scaffold(
-        appBar: AppBar(
-          title: Row(
-            children: [
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.only(right: 10.0),
+          appBar: AppBar(
+            title: Row(
+              children: [
+                Expanded(
                   child: TextField(
                     controller: searchController,
                     onChanged: (value) {
@@ -101,44 +95,41 @@ class _PaymentListScreenState extends State<PaymentListScreen> {
                     ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
+            automaticallyImplyLeading: false,
           ),
-          automaticallyImplyLeading: false,
-        ),
-        body: isLoading
-            ? const Center(
-                child: CircularProgressIndicator()) // Mostrar spinner
-            : provider.Consumer<PaymentState>(
-                builder: (context, paymentState, _) {
-                  final payments = paymentState.payments;
+          body: isLoading
+              ? const Center(child: CircularProgressIndicator())
+              : provider.Consumer<PaymentState>(
+                  builder: (context, paymentState, _) {
+                    final payments = paymentState.payments;
 
-                  filterPayments(payments);
+                    filterPayments(payments);
 
-                  if (paymentState.isNewNotificationAvailable()) {
-                    filterPayments(paymentState.payments);
-                  }
+                    if (paymentState.isNewNotificationAvailable()) {
+                      filterPayments(paymentState.payments);
+                    }
 
-                  return SingleChildScrollView(
-                    child: Column(
-                      children: [
-                        ListView.builder(
-                          shrinkWrap: true,
-                          physics: const NeverScrollableScrollPhysics(),
-                          itemCount: filtersPayments.length,
-                          itemBuilder: (BuildContext context, int index) {
-                            final payment = filtersPayments[index];
-                            return PaymentItem(
-                              payment: payment,
-                            );
-                          },
-                        ),
-                      ],
-                    ),
-                  );
-                },
-              ),
-      ),
+                    return SingleChildScrollView(
+                      child: Column(
+                        children: [
+                          ListView.builder(
+                            shrinkWrap: true,
+                            physics: const NeverScrollableScrollPhysics(),
+                            itemCount: filtersPayments.length,
+                            itemBuilder: (BuildContext context, int index) {
+                              final payment = filtersPayments[index];
+                              return PaymentItem(
+                                payment: payment,
+                              );
+                            },
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                )),
     );
   }
 }
