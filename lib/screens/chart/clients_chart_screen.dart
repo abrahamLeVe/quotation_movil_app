@@ -24,50 +24,64 @@ class ChartClientsScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Informe de Clientes'),
+        actions: <Widget>[
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: () {
+              Provider.of<ClientState>(context, listen: false)
+                  .loadNewClients(context);
+            },
+          ),
+        ],
       ),
       body: Container(
-        // ignore: prefer_const_constructors
-        padding: EdgeInsets.all(16.0),
-        child: ListView.builder(
-          itemCount: sortedClients.length,
-          itemBuilder: (context, index) {
-            final client = sortedClients[index];
+        padding: const EdgeInsets.all(16.0),
+        child: sortedClients.isEmpty
+            ? const Center(
+                child: Text('No hay clientes con cotizaciones cerradas.',
+                    style:
+                        TextStyle(fontSize: 16.0, fontWeight: FontWeight.bold)),
+              )
+            : ListView.builder(
+                itemCount: sortedClients.length,
+                itemBuilder: (context, index) {
+                  final client = sortedClients[index];
 
-            return Card(
-              elevation: 4.0,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10.0),
-              ),
-              child: ListTile(
-                title: Text(client.username),
-                subtitle: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('Email: ${client.email}'),
-                    Text(
-                        'Cotizaciones Exitosas: ${_getSuccessQuotationsCount(client)}'),
-                    // Agregar más detalles según sea necesario
-                  ],
-                ),
-                trailing: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    IconButton(
-                      icon: const Icon(Icons.phone),
-                      onPressed: () =>
-                          _makePhoneCall(client.quotations[0].phone),
+                  return Card(
+                    elevation: 4.0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10.0),
                     ),
-                    IconButton(
-                      icon: const Icon(Icons.email),
-                      onPressed: () => _sendEmail(client),
+                    child: ListTile(
+                      title: Text(client.username),
+                      subtitle: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('Email: ${client.email}'),
+                          Text(
+                              'Cotizaciones Exitosas: ${_getSuccessQuotationsCount(client)}'),
+                          // Agregar más detalles según sea necesario
+                        ],
+                      ),
+                      trailing: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          IconButton(
+                            icon: const Icon(Icons.phone),
+                            onPressed: () =>
+                                _makePhoneCall(client.quotations[0].phone),
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.email),
+                            onPressed: () => _sendEmail(client),
+                          ),
+                        ],
+                      ),
+                      onTap: () => _showClientDetails(context, client),
                     ),
-                  ],
-                ),
-                onTap: () => _showClientDetails(context, client),
+                  );
+                },
               ),
-            );
-          },
-        ),
       ),
     );
   }
@@ -81,20 +95,46 @@ class ChartClientsScreen extends StatelessWidget {
 
   // Método para mostrar los detalles completos del cliente
   void _showClientDetails(BuildContext context, ClientModel client) {
+    var uniqueDocs = <String, Set<String>>{};
+    var uniquePhones = <String>{};
+
+    for (var quotation
+        in client.quotations.where((q) => q.codeStatus == 'Cerrada')) {
+      uniqueDocs
+          .putIfAbsent(quotation.tipeDoc, () => <String>{})
+          .add(quotation.numDoc);
+      uniquePhones
+          .add(quotation.phone); // Agregar teléfonos a la colección de únicos
+    }
+
     showDialog(
       context: context,
       builder: (context) {
         return AlertDialog(
           title: Text('Detalles de ${client.username}'),
-          content: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text('Email: ${client.email}'),
-              Text(
-                  'Cotizaciones Exitosas: ${_getSuccessQuotationsCount(client)}'),
-              // Agregar más detalles según sea necesario
-            ],
+          content: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text('Email: ${client.email}'),
+                Text(
+                    'Cotizaciones exitosas: ${_getSuccessQuotationsCount(client)}'),
+                const SizedBox(height: 10),
+                const Text('Documentos:',
+                    style: TextStyle(fontWeight: FontWeight.bold)),
+                ...uniqueDocs.entries.map((entry) {
+                  return Padding(
+                    padding: const EdgeInsets.only(top: 4.0),
+                    child: Text('${entry.key}: ${entry.value.join(", ")}'),
+                  );
+                }).toList(),
+                const SizedBox(height: 10),
+                const Text('Números de teléfono:',
+                    style: TextStyle(fontWeight: FontWeight.bold)),
+                Text(uniquePhones.join(", ")),
+              ],
+            ),
           ),
           actions: [
             TextButton(

@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:pract_01/models/enviroment_model.dart';
 import 'package:pract_01/models/product/get_all_product_model.dart';
@@ -46,16 +47,15 @@ class ProductService {
 
       return ProductModel.fromJson(response.data);
     } catch (error) {
-      print('Error in getAllProduct: $error');
+      if (kDebugMode) {
+        print('Error in getAllProduct: $error');
+      }
 
       rethrow;
     }
   }
 
   Future<void> updatePrice(int? id, Map<String, dynamic> data) async {
-    print('llego la data: $data');
-    print('llego el id: $id');
-
     try {
       final response = await _dio.put(
         "${Environment.apiUrl}/prices/$id?populate=*",
@@ -75,7 +75,9 @@ class ProductService {
         error: errorMessage,
       );
     } on DioException catch (error) {
-      print('Error in updateQuotation: $error');
+      if (kDebugMode) {
+        print('Error in updateQuotation: $error');
+      }
       rethrow;
     }
   }

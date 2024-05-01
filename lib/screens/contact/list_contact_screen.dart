@@ -99,6 +99,15 @@ class _ContactListScreenState extends State<ContactListScreen> {
             ],
           ),
           automaticallyImplyLeading: false,
+          actions: <Widget>[
+            IconButton(
+              icon: const Icon(Icons.refresh),
+              onPressed: () {
+                provider.Provider.of<ContactState>(context, listen: false)
+                    .loadNewContacts(context);
+              },
+            ),
+          ],
         ),
         body: isLoading
             ? const Center(

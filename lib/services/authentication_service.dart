@@ -36,13 +36,11 @@ class AuthenticationService {
       final response = await _dio.post(
         "${Environment.apiUrl}/auth/local",
         data: {
-          "identifier": email,
-          "password": password,
+          "identifier": 'i2812893@continental.edu.pe',
+          "password": 'i2812893@continental.edu.peA2',
         },
       );
-      if (kDebugMode) {
-        print('Error in login: $response');
-      }
+
       final authToken = response.data['jwt'];
 
       SharedPreferences prefs = await SharedPreferences.getInstance();

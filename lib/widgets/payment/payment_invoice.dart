@@ -9,6 +9,14 @@ import 'package:pract_01/utils/date_utils.dart' as util_format;
 import 'package:share_plus/share_plus.dart';
 
 void downloadInvoice(BuildContext context, Payment payment) async {
+  double calculateTotal(List<Product> products) {
+    double total = 0.0;
+    for (var product in products) {
+      total += product.value * product.quantity;
+    }
+    return total;
+  }
+
   final pdf = pw.Document();
 
   final pw.TextStyle headerStyle = pw.TextStyle(
@@ -44,10 +52,21 @@ void downloadInvoice(BuildContext context, Payment payment) async {
                       style: headerStyle,
                     ),
                   ),
-                  pw.Container(
-                    alignment: pw.Alignment.center,
-                    height: 50,
-                    child: image1,
+                  pw.Column(
+                    children: [
+                      pw.Container(
+                        alignment: pw.Alignment.center,
+                        height: 50,
+                        child: image1,
+                      ),
+                      pw.Text(
+                        'RUC: 20603425627', // Aquí pones el RUC real de la empresa
+                        style: const pw.TextStyle(
+                          fontSize: 12, // Ajusta el tamaño según necesites
+                          color: PdfColors.grey, // Elige el color que prefieras
+                        ),
+                      ),
+                    ],
                   ),
                 ]),
             pw.SizedBox(height: 20),
@@ -76,6 +95,15 @@ void downloadInvoice(BuildContext context, Payment payment) async {
                 'Dirección: ${payment.attributes.cotizacion.data!.attributes.direction}',
                 style: normalStyle),
             pw.SizedBox(height: 20),
+            pw.Row(
+              mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+              children: [
+                pw.Text('Total:', style: titleStyle),
+                pw.Text(
+                    'S/.${calculateTotal(payment.attributes.cotizacion.data!.attributes.products).toStringAsFixed(2)}',
+                    style: titleStyle),
+              ],
+            ),
             pw.Text('Productos:', style: titleStyle),
             ...payment.attributes.cotizacion.data!.attributes.products
                 .asMap()

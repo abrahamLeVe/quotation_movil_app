@@ -27,7 +27,13 @@ void downloadQuotation(BuildContext context, Quotation quotation) async {
   final img = await rootBundle.load('assets/logo_app.png');
   final imageBytes = img.buffer.asUint8List();
   pw.Image image1 = pw.Image(pw.MemoryImage(imageBytes));
-  // final List<String> recipients = [quotation.attributes.email];
+  double calculateTotal(List<Product> products) {
+    double total = 0.0;
+    for (var product in products) {
+      total += product.value * product.quantity;
+    }
+    return total;
+  }
 
   pdf.addPage(
     pw.MultiPage(
@@ -45,15 +51,26 @@ void downloadQuotation(BuildContext context, Quotation quotation) async {
                       style: headerStyle,
                     ),
                   ),
-                  pw.Container(
-                    alignment: pw.Alignment.center,
-                    height: 50,
-                    child: image1,
+                  pw.Column(
+                    children: [
+                      pw.Container(
+                        alignment: pw.Alignment.center,
+                        height: 50,
+                        child: image1,
+                      ),
+                      pw.Text(
+                        'RUC: 20603425627', // Aquí pones el RUC real de la empresa
+                        style: const pw.TextStyle(
+                          fontSize: 12, // Ajusta el tamaño según necesites
+                          color: PdfColors.grey, // Elige el color que prefieras
+                        ),
+                      ),
+                    ],
                   ),
                 ]),
             pw.SizedBox(height: 20),
             pw.Text(
-              'Fecha de Creación: ${util_format.DateFacUtils.formatCreationDate(
+              'Fecha de creación: ${util_format.DateFacUtils.formatCreationDate(
                 quotation.attributes.createdAt.toString(),
               )}',
               style: titleStyle,
@@ -74,6 +91,15 @@ void downloadQuotation(BuildContext context, Quotation quotation) async {
             pw.Text('Dirección: ${quotation.attributes.direction}',
                 style: normalStyle),
             pw.SizedBox(height: 20),
+            pw.Row(
+              mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+              children: [
+                pw.Text('Total:', style: titleStyle),
+                pw.Text(
+                    'S/.${calculateTotal(quotation.attributes.products).toStringAsFixed(2)}',
+                    style: titleStyle),
+              ],
+            ),
             pw.Text('Productos:', style: titleStyle),
             ...quotation.attributes.products.asMap().entries.map((entry) {
               int index = entry.key;

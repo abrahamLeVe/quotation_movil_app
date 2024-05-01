@@ -154,7 +154,14 @@ class PaymentItem extends StatelessWidget {
                   children: [
                     Text('ID del Pago: ${paymentDetails['id']}'),
                     Text('Estado: ${paymentDetails['status']}'),
+                    Text(
+                        'Dettalle de estado: ${paymentDetails['status_detail']}'),
                     Text('Monto: ${paymentDetails['transaction_amount']}'),
+                    const Text('Metodo de pago:',
+                        style: TextStyle(fontWeight: FontWeight.bold)),
+                    Text('id: ${paymentDetails['payment_method']["id"]}'),
+                    Text('type: ${paymentDetails['payment_method']["type"]}'),
+
                     // Muestra más detalles del pago según sea necesario...
                   ],
                 ),

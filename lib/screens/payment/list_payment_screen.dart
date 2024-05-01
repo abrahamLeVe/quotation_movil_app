@@ -98,6 +98,15 @@ class _PaymentListScreenState extends State<PaymentListScreen> {
               ],
             ),
             automaticallyImplyLeading: false,
+            actions: <Widget>[
+              IconButton(
+                icon: const Icon(Icons.refresh),
+                onPressed: () {
+                  provider.Provider.of<PaymentState>(context, listen: false)
+                      .loadNewPayments(context);
+                },
+              ),
+            ],
           ),
           body: isLoading
               ? const Center(child: CircularProgressIndicator())

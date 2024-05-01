@@ -151,7 +151,7 @@ class _EditQuotationScreenState extends State<EditQuotationScreen> {
     }
 
     // Mostrar mensaje si ha guardado con éxito y preguntar si desea guardar
-    final shouldSave = await showDialog(
+    final shouldSave = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Cotización actualizada'),
@@ -161,13 +161,15 @@ class _EditQuotationScreenState extends State<EditQuotationScreen> {
         actions: [
           TextButton(
             onPressed: () {
-              Navigator.pop(context, true);
+              Navigator.pop(
+                  context, true); // Retorna true si se presiona Guardar
             },
             child: const Text('Guardar'),
           ),
           TextButton(
             onPressed: () {
-              Navigator.pop(context, false);
+              Navigator.pop(
+                  context, false); // Retorna false si se presiona Cancelar
             },
             child: const Text('Cancelar'),
           ),
@@ -175,126 +177,125 @@ class _EditQuotationScreenState extends State<EditQuotationScreen> {
       ),
     );
 
-    try {
-      if (!shouldSave) {
-        return;
-      }
-    } catch (e) {}
+    if (shouldSave == true) {
+      setState(() => _isSaving = true);
 
-    setState(() => _isSaving = true);
+      try {
+        final List<int> changedProductIds = [];
+        final List<post_quotation_model.Product> updatedProducts = [];
 
-    try {
-      final List<int> changedProductIds = [];
-      final List<post_quotation_model.Product> updatedProducts = [];
+        for (int i = 0; i < widget.quotation.attributes.products.length; i++) {
+          final originalProduct = _originalQuotation.attributes.products[i];
+          final newPrice = double.parse(priceControllers[i][0].text);
 
-// Verificar si hay cambios en los precios de los productos y construir la lista de productos actualizados
-      for (int i = 0; i < widget.quotation.attributes.products.length; i++) {
-        final originalProduct = _originalQuotation.attributes.products[i];
-        final newPrice = double.parse(priceControllers[i][0].text);
+          if (newPrice != originalProduct.value) {
+            changedProductIds.add(originalProduct.id);
+          }
 
-        if (newPrice != originalProduct.value) {
-          changedProductIds.add(originalProduct.id);
-        }
-
-        updatedProducts.add(post_quotation_model.Product(
-          id: originalProduct.id,
-          title: originalProduct.title,
-          size: originalProduct.size,
-          quantity: originalProduct.quantity,
-          value: newPrice,
-          colors: originalProduct.colors
-              .map((color) => post_quotation_model.Color(
-                    id: color.id,
-                    color: post_quotation_model.ColorClass(
-                      id: color.color.id,
-                      attributes: post_quotation_model.ColorAttributes(
-                        code: color.color.attributes.code,
-                        name: color.color.attributes.name,
-                        createdAt: color.color.attributes.createdAt,
-                        updatedAt: color.color.attributes.updatedAt,
-                        description: color.color.attributes.description,
-                        publishedAt: color.color.attributes.publishedAt,
+          updatedProducts.add(post_quotation_model.Product(
+            id: originalProduct.id,
+            title: originalProduct.title,
+            size: originalProduct.size,
+            quantity: originalProduct.quantity,
+            value: newPrice,
+            colors: originalProduct.colors
+                .map((color) => post_quotation_model.Color(
+                      id: color.id,
+                      color: post_quotation_model.ColorClass(
+                        id: color.color.id,
+                        attributes: post_quotation_model.ColorAttributes(
+                          code: color.color.attributes.code,
+                          name: color.color.attributes.name,
+                          createdAt: color.color.attributes.createdAt,
+                          updatedAt: color.color.attributes.updatedAt,
+                          description: color.color.attributes.description,
+                          publishedAt: color.color.attributes.publishedAt,
+                        ),
                       ),
-                    ),
-                    quantity: color.quantity,
-                  ))
-              .toList(),
-          discount: originalProduct.discount,
-          pictureUrl: originalProduct.pictureUrl,
-          slug: originalProduct.slug,
-        ));
-      }
+                      quantity: color.quantity,
+                    ))
+                .toList(),
+            discount: originalProduct.discount,
+            pictureUrl: originalProduct.pictureUrl,
+            slug: originalProduct.slug,
+          ));
+        }
 
-      if (_selectedState.attributes!.name == 'En progreso') {
-        final updateQuotation = post_quotation_model.UpdateQuotationAtributes(
-          products: updatedProducts,
-          notes: '',
-          codeStatus: 'Completada',
-          state: 4,
-          email: widget.quotation.attributes.email,
-          id: widget.quotation.id,
-          userId: widget.quotation.attributes.user.data.id,
-        );
-        final updateData = {'data': updateQuotation.toJson()};
-        if (mounted) {
-          await QuotationService(context: context)
-              .updateQuotation(widget.quotation.id, updateData);
-        }
-        if (mounted) {
-          updatePricesInBackground(context, changedProductIds, updatedProducts,
-              () {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Precios actualizados con éxito')),
-            );
-          });
-        }
-      } else {
-        if (_hasChanges || stateChanged) {
+        if (_selectedState.attributes!.name == 'En progreso') {
           final updateQuotation = post_quotation_model.UpdateQuotationAtributes(
             products: updatedProducts,
             notes: '',
-            codeStatus: _selectedState.attributes!.name,
-            state: _selectedState.id,
+            codeStatus: 'Completada',
+            state: 4,
             email: widget.quotation.attributes.email,
             id: widget.quotation.id,
             userId: widget.quotation.attributes.user.data.id,
           );
-
           final updateData = {'data': updateQuotation.toJson()};
           if (mounted) {
             await QuotationService(context: context)
                 .updateQuotation(widget.quotation.id, updateData);
           }
-        } else {
           if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('No hay cambios para guardar')),
-            );
+            updatePricesInBackground(
+                context, changedProductIds, updatedProducts, () {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Precios actualizados con éxito')),
+              );
+            });
           }
-          return;
+        } else {
+          if (_hasChanges || stateChanged) {
+            final updateQuotation =
+                post_quotation_model.UpdateQuotationAtributes(
+              products: updatedProducts,
+              notes: '',
+              codeStatus: _selectedState.attributes!.name,
+              state: _selectedState.id,
+              email: widget.quotation.attributes.email,
+              id: widget.quotation.id,
+              userId: widget.quotation.attributes.user.data.id,
+            );
+
+            final updateData = {'data': updateQuotation.toJson()};
+            if (mounted) {
+              await QuotationService(context: context)
+                  .updateQuotation(widget.quotation.id, updateData);
+            }
+          } else {
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('No hay cambios para guardar')),
+              );
+            }
+            return;
+          }
         }
-      }
-      setState(() => _isSaved = true);
-      if (mounted) {
+        setState(() => _isSaved = true);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Cotización actualizada con éxito')),
+          );
+          await updateQuotationsCache(context, _initialStateId);
+        }
+      } catch (error) {
+        await Future.delayed(const Duration(seconds: 1));
+        if (!mounted) return;
+        showAuthenticationErrorDialog(context, error);
+        Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Cotización actualizada con éxito')),
+          const SnackBar(content: Text('Error no se pudo actualizar')),
         );
-        await updateQuotationsCache(context, _initialStateId);
+        setState(() => _isSaved = false);
+      } finally {
+        setState(() {
+          _isSaving = false;
+          _hasChanges = false;
+        });
       }
-    } catch (error) {
-      await Future.delayed(const Duration(seconds: 1));
-      if (!mounted) return;
-      showAuthenticationErrorDialog(context, error);
-      Navigator.pop(context);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Error no se pudo actualizar')),
-      );
-      setState(() => _isSaved = false);
-    } finally {
-      setState(() {
-        _isSaving = false;
-        _hasChanges = false;
-      });
+    } else {
+      // No hacer nada si shouldSave es false o null
+      return;
     }
   }
 
